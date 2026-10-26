@@ -1,10 +1,23 @@
 # Sudoku Together
 
-Two phones, one puzzle. An Android app for relaxed Sudoku co-op on home Wi-Fi. One phone hosts the game and the other joins. Playing does not require an account, internet connection, or a separate server.
+A native Android Sudoku game built for **solo, local Wi-Fi co-op, and head-to-head racing**. Co-op and versus use two phones: one hosts, the other joins on the same home Wi-Fi. Solo and local personal records work offline. A cloud account, internet rooms, and synced leaderboards are **not** included.
 
 The name is provisional. This project has its own implementation and original generated puzzles; an unrelated app already uses the same public title.
 
-## First test version
+## v0.2 development branch: solo, versus, and player records
+
+Branch: `feat/solo-profiles-race-v0.2` (based on the existing v0.1 co-op branch).
+
+- **Solo:** Standard 9×9 Sudoku, pencil marks, erase, undo, running active-play timer, resume after leaving, and save-on-edit. Solo progress is stored separately from any hosted multiplayer room.
+- **Versus:** host or join a same-Wi-Fi race; each phone gets the same starting clues on its own independent grid; the host accepts the first fully valid solution as the winner. Both players see fill counts, **never the opponent's values or notes**. Games pause if a phone leaves; host can create a fresh race, resume the room, or replace the rival.
+- **Personal profile:** solved count, best solo time, accumulated solo solving time, head-to-head W/L/D, co-op completions and recent results. Records and a random local profile ID are persisted atomically on the device and duplicate completions are prevented.
+- Existing v0.1 co-op remains the default `Host a puzzle` option, with `Host a versus race` offered separately.
+
+**Development status:** Source and regression/smoke tests are committed, but the new Android build and two-phone v0.2 acceptance tests **have not yet run**. Do not treat this branch as a validated release APK. All v0.2 test phones must install the same updated APK because the LAN wire protocol advances to version 2. The Android versionCode is 2 (`0.2.0-dev`).
+
+**No cloud sync yet:** local stats survive ordinary restarts and upgrades using the same package/signing key, but clearing app storage or uninstalling can erase them. Sync, sign-in, account recovery, and leaderboards require a separate secured service in a later milestone. See [v0.2 handoff](docs/V0.2_HANDOFF.md).
+
+## First test version (v0.1 co-op baseline)
 
 - Simultaneous shared entries and pencil marks.
 - Nearby-room discovery, a six-digit room code, and manual IP/port fallback.
@@ -23,10 +36,11 @@ The name is provisional. This project has its own implementation and original ge
 5. Both people can enter numbers and shared notes freely. Starting clues stay fixed. Duplicate numbers are highlighted; wrong guesses do not end the game.
 6. Keep both apps visible while playing. If either phone leaves the game, entries pause. Return to the apps, or use **Reconnect** and select the host's room again. The host can reopen **Resume your puzzle** after a restart.
 
-This version supports a trusted home LAN. The room code controls admission; LAN game traffic is not encrypted. Remote internet rooms, guaranteed background hosting, all hotspot configurations, competitive races, and public-store publication are outside v0.1.
+The multiplayer modes support a trusted home LAN. The room code controls admission; LAN game traffic is not encrypted. Remote internet rooms, guaranteed background hosting, all hotspot configurations, online accounts, and public-store publication are outside the currently tested v0.1 baseline.
 
 ## Build
 
+The v0.2 branch requires a fresh Android compile and physical multiplayer acceptance before sharing a new APK. Do not replace the original signed APK with a debug build if you plan to update in place; keep the same original signing identity.\n
 Install JDK 17 and Android SDK platform 35/build-tools 35.0.0. Set `ANDROID_HOME` to the SDK directory (or use an untracked `local.properties`).
 
 ```bash
