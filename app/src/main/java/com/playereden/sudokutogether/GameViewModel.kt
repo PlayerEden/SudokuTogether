@@ -77,13 +77,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val previous = _state.value
         if (previous.role == SOLO && previous.snapshot != null && !previous.snapshot.completed) {
             val elapsed = elapsedSolo()
-            val updated = localPlayer.update { data ->
-                val solo = data.activeSolo
-                if (solo != null && solo.id == previous.snapshot.sessionId)
-                    data.copy(activeSolo = PersonalPlay.withElapsed(solo, elapsed))
-                else data
+            try {
+                val updated = localPlayer.update { data ->
+                    val solo = data.activeSolo
+                    if (solo != null && solo.id == previous.snapshot.sessionId)
+                        data.copy(activeSolo = PersonalPlay.withElapsed(solo, elapsed))
+                    else data
+                }
+                _state.update { it.copy(profile = updated, soloElapsedMs = elapsed) }
+            } catch (_: Exception) {
+                _state.update { it.copy(saveIssue = "The latest solo time could not be saved. Check phone storage.") }
             }
-            _state.update { it.copy(profile = updated, soloElapsedMs = elapsed) }
         }
         soloStartedAt = null
         soloTick?.cancel()
