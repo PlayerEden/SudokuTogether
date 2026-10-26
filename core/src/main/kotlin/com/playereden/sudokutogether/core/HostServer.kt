@@ -27,7 +27,8 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
     private fun emit(outcome: Outcome? = null) { runCatching { listener(HostEvent(session.snapshot(), status(), partnerCell, outcome)) } }
     private fun publish(outcome: Outcome? = null) {
         syncPresence()
-        peer?.send(Message("state", snapshot = session.snapshotForGuest(), status = status(), outcome = outcome))
+        peer?.send(Message("state", snapshot = session.snapshotForGuest(), status = status(),
+            outcome = outcome?.copy(snapshot = session.snapshotForGuest())))
         emit(outcome)
     }
     fun start(): Int = synchronized(lock) {
