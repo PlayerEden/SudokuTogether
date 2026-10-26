@@ -54,7 +54,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         guestResume = when (joined) { is LoadResult.Loaded -> joined.data; is LoadResult.Recovered -> joined.data; else -> null }
         _state.update { it.copy(busy = false, resumeHost = hosted is LoadResult.Loaded || hosted is LoadResult.Recovered,
             resumeGuest = guestResume != null, resumeRace = raced is LoadResult.Loaded || raced is LoadResult.Recovered,
-            saveIssue = when (hosted) {
+            saveIssue = localPlayer.recoveryWarning ?: when (hosted) {
                 is LoadResult.Invalid -> hosted.message
                 is LoadResult.Recovered -> "Your previous backup was recovered. Resume to continue from that saved point."
                 else -> null
