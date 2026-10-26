@@ -150,17 +150,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun hostRace(resume: Boolean) = hostInternal(resume, versus = true)
 
-    private fun recordRace(snapshot: Snapshot, role: String) {
-        if (snapshot.mode != VERSUS || !snapshot.completed || snapshot.winner == null) return
+    private fun recordMultiplayer(snapshot: Snapshot, role: String) {
+        if (!snapshot.completed) return
+        if (snapshot.mode == VERSUS && snapshot.winner == null) return
         val id = snapshot.sessionId + ":" + snapshot.epoch + ":" + role
         try {
             val saved = localPlayer.update { data ->
                 if (data.records.any { it.id == id }) data
                 else {
                     val now = System.currentTimeMillis()
-                    val elapsed = (now - (snapshot.raceStartedAtMs ?: now)).coerceAtLeast(0L)
-                    val record = GameRecord(id, VERSUS,
-                        if (snapshot.winner == role) "WIN" else "LOSS",
+                    val elapsed = if (snapshot.mode == VERSUS)
+                        (now - (snapshot.raceStartedAtMs ?: now)).coerceAtLeast(0L) else 0L
+                    val record = GameRecord(id, snapshot.mode,
+                        if (snapshot.mode == COOP) "SOLVED" else if (snapshot.winner == role) "WIN" else "LOSS",
                         snapshot.puzzle.id, elapsed, 0, now)
                     data.copy(records = (data.records + record).takeLast(500))
                 }
@@ -185,7 +187,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 } else GameSession.create(Sudoku.generate(nextSeed()), name, store::save, if (versus) VERSUS else COOP)
                 if (generation.get() != current) return@launch
                 val hosted = HostServer(session) { event -> if (generation.get() == current) {
-                    recordRace(event.snapshot, HOST)
+                    recordMultiplayer(event.snapshot, HOST)
                     _state.update { previous ->
                         val changed = previous.snapshot?.epoch != event.snapshot.epoch
                         previous.copy(snapshot = event.snapshot, status = event.status, connected = event.status.guestActive,
@@ -223,7 +225,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 if (generation.get() == current) {
                     if (event.token != null) savedToken = event.token
                     val snapshot = event.snapshot
-                    if (snapshot != null) recordRace(snapshot, GUEST)
+                    if (snapshot != null) recordMultiplayer(snapshot, GUEST)
                     var saveMessage: String? = null
                     if (snapshot != null && savedToken != null) {
                         if (expectedSession != null && snapshot.sessionId != expectedSession) {
