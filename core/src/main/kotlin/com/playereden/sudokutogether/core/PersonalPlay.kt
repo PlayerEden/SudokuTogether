@@ -58,7 +58,7 @@ object PersonalPlay {
         return SoloProgress(UUID.randomUUID().toString(), puzzle, puzzle.clues.map { Cell(it) }, timeMs)
     }
 
-    fun edit(s: SoloProgress, cell: Int, kind: Kind, number: Int = 0, enabled: Boolean = true, elapsedMs: Long): SoloProgress? {
+    fun edit(s: SoloProgress, cell: Int, kind: Kind, number: Int = 0, enabled: Boolean = true, elapsedMs: Long, nowMs: Long = System.currentTimeMillis()): SoloProgress? {
         if (s.completed || cell !in 0..80 || s.puzzle.clues[cell] != 0 || elapsedMs < s.elapsedMs) return null
         if (kind in listOf(Kind.NOTE, Kind.VALUE) && number !in 1..9) return null
         val before = s.cells[cell]
@@ -86,7 +86,7 @@ object PersonalPlay {
             history = (s.history + SoloUndo(cell, before)).takeLast(128)
         }
         val cells = s.cells.toMutableList().also { it[cell] = after }
-        val finished = if (Sudoku.complete(s.puzzle, cells.map { it.value })) s.startedAtMs + elapsedMs else null
+        val finished = if (Sudoku.complete(s.puzzle, cells.map { it.value })) nowMs else null
         return s.copy(cells = cells, history = history, moves = nextMove, elapsedMs = elapsedMs, finishedAtMs = finished)
     }
 
