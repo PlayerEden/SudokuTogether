@@ -57,7 +57,26 @@ fun validateSnapshot(s: Snapshot) {
         require(c.value == 0 || c.notes == 0)
         if (s.puzzle.clues[i] != 0) require(c.value == s.puzzle.clues[i] && c.notes == 0)
     }
-    require(s.completed == Sudoku.complete(s.puzzle, s.cells.map { it.value }))
+    require(s.mode == COOP || s.mode == VERSUS)
+    if (s.mode == COOP) {
+        require(s.guestCells.isEmpty() && s.winner == null)
+        require(s.completed == Sudoku.complete(s.puzzle, s.cells.map { it.value }))
+    } else {
+        require(s.guestCells.isEmpty() || s.guestCells.size == 81)
+        s.guestCells.forEachIndexed { i, c ->
+            require(c.value in 0..9 && c.notes in 0..511 && c.revision in 0..s.revision)
+            require(c.value == 0 || c.notes == 0)
+            if (s.puzzle.clues[i] != 0) require(c.value == s.puzzle.clues[i])
+        }
+        require(s.winner == null || s.winner == HOST || s.winner == GUEST)
+        require(s.completed == (s.winner != null))
+        require(s.raceStartedAtMs == null || s.raceStartedAtMs > 0)
+        if (s.winner == HOST && s.guestCells.isNotEmpty())
+            require(Sudoku.complete(s.puzzle, s.cells.map { it.value }))
+        if (s.winner == GUEST && s.guestCells.isNotEmpty())
+            require(Sudoku.complete(s.puzzle, s.guestCells.map { it.value }))
+    }
+    require(s.hostProgress in 0..81 && s.guestProgress in 0..81)
     require(s.undoTargets.all { (p, i) -> p in listOf(HOST, GUEST) && i in 0..80 })
 }
 
