@@ -4,6 +4,35 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class GameSessionTest {
+    @Test fun consecutiveOwnUndosOnOneSquareRestoreEveryEarlierState() {
+        val game = session()
+        game.submit(HOST, game.snapshot().move(0, Kind.NOTE, 2))
+        game.submit(HOST, game.snapshot().move(0, number = 1))
+        assertTrue(game.submit(HOST, game.snapshot().move(0, Kind.UNDO)).accepted)
+        assertEquals(2, game.snapshot().cells[0].notes)
+        assertTrue(game.submit(HOST, game.snapshot().move(0, Kind.UNDO)).accepted)
+        assertEquals(Cell(revision = 4), game.snapshot().cells[0])
+    }
+    @Test fun undoLineageSurvivesSavingAndStillRejectsPartnerIntervention() {
+        val game = session()
+        game.submit(HOST, game.snapshot().move(0, Kind.NOTE, 2))
+        game.submit(HOST, game.snapshot().move(0, number = 1))
+        game.submit(HOST, game.snapshot().move(0, Kind.UNDO))
+        val restored = GameSession(game.saved()).also { it.setPresence() }
+        assertTrue(restored.submit(HOST, restored.snapshot().move(0, Kind.UNDO)).accepted)
+        restored.submit(HOST, restored.snapshot().move(0, Kind.NOTE, 2))
+        restored.submit(GUEST, restored.snapshot().move(0, Kind.NOTE, 3))
+        assertFalse(restored.submit(HOST, restored.snapshot().move(0, Kind.UNDO)).accepted)
+        assertEquals(6, restored.snapshot().cells[0].notes)
+    }
+    @Test fun undoingOwnReplacementRestoresThePartnersEarlierUndoEligibility() {
+        val game = session()
+        game.submit(GUEST, game.snapshot().move(0, Kind.NOTE, 3))
+        game.submit(HOST, game.snapshot().move(0, number = 1))
+        game.submit(HOST, game.snapshot().move(0, Kind.UNDO))
+        assertTrue(game.submit(GUEST, game.snapshot().move(0, Kind.UNDO)).accepted)
+        assertEquals(0, game.snapshot().cells[0].notes)
+    }
     @Test fun startingCluesCannotBeEditedOrErased() {
         val game = session()
         assertEquals(ResultCode.GIVEN, game.submit(HOST, game.snapshot().move(2, number = 8)).code)

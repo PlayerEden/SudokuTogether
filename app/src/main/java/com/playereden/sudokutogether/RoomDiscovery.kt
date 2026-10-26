@@ -10,6 +10,8 @@ import android.os.Handler
 import android.os.Looper
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import java.net.Socket
+import java.io.IOException
 import java.util.ArrayDeque
 
 data class NearbyRoom(val name: String, val host: String, val port: Int, val sessionId: String = "")
@@ -99,9 +101,24 @@ class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
         if (multicast.isHeld) runCatching { multicast.release() }
     }
 
+    @Suppress("DEPRECATION")
+    private fun wifiNetworks(): List<android.net.Network> {
+        val connectivity = app.getSystemService(ConnectivityManager::class.java)
+        // Deliberately include Wi-Fi without INTERNET/VALIDATED capability.
+        return connectivity.allNetworks.filter { network ->
+            val caps = connectivity.getNetworkCapabilities(network)
+            caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true && !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        }
+    }
+    fun hasWifi(): Boolean = wifiNetworks().isNotEmpty()
+    fun newWifiSocket(): Socket {
+        val network = wifiNetworks().firstOrNull() ?: throw IOException("Connect both phones to the same home Wi-Fi, then join again.")
+        return try { network.socketFactory.createSocket() }
+        catch (e: IOException) { throw IOException("Wi-Fi changed. Reconnect both phones and join again.", e) }
+    }
     fun localAddresses(): List<String> {
         val connectivity = app.getSystemService(ConnectivityManager::class.java)
-        val wifi = connectivity.allNetworks.filter { connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
+        val wifi = wifiNetworks()
             .flatMap { connectivity.getLinkProperties(it)?.linkAddresses.orEmpty() }.map { it.address }
             .filterIsInstance<Inet4Address>().filterNot { it.isLoopbackAddress }.mapNotNull { it.hostAddress }
         if (wifi.isNotEmpty()) return wifi.distinct()

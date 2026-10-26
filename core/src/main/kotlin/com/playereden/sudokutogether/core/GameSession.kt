@@ -51,7 +51,12 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
             Kind.UNDO -> {
                 val record = eligible(state, player) ?: return result(false, ResultCode.NO_UNDO)
                 if (record.cell != i) return result(false, ResultCode.NO_UNDO)
-                history = history.map { if (it.id == record.id) it.copy(undone = true) else it }
+                // The restored state may be an earlier edit's result. Carry its
+                // lineage to the fresh revision, so another safe Undo is possible.
+                val predecessor = history.indexOfLast { !it.undone && it.cell == i && it.afterRevision == record.before.revision }
+                history = history.mapIndexed { index, edit ->
+                    when { edit.id == record.id -> edit.copy(undone = true); index == predecessor -> edit.copy(afterRevision = revision); else -> edit }
+                }
                 record.before.copy(revision = revision)
             }
         }

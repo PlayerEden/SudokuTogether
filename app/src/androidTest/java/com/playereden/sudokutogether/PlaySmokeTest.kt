@@ -6,6 +6,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import androidx.compose.ui.text.TextLayoutResult
+import org.junit.Assert.assertTrue
 
 @RunWith(AndroidJUnit4::class)
 class PlaySmokeTest {
@@ -22,6 +24,15 @@ class PlaySmokeTest {
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.contains("empty") } }
         compose.onNodeWithText("Notes").performClick()
         compose.onNodeWithTag("number_3").performClick()
+        compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.contains("notes 3") } }
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose.onNode(hasText("3") and hasAnyAncestor(hasTestTag(tag)), useUnmergedTree = true)
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        val glyph = layout.getBoundingBox(0)
+        assertTrue("Pencil glyph must fit: glyph=$glyph, box=${layout.size}",
+            glyph.left >= -1f && glyph.top >= -1f && glyph.right <= layout.size.width + 1f && glyph.bottom <= layout.size.height + 1f)
+        compose.activityRule.scenario.recreate()
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.contains("notes 3") } }
         compose.onNodeWithText("Erase").performClick()
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.endsWith("empty") } }

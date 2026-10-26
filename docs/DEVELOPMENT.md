@@ -12,7 +12,7 @@ The guest token is random, privately saved, and absent from discovery advertisem
 
 JDK 17; Gradle 8.11.1 with distribution SHA-256 verification; Android Gradle Plugin 8.9.2; Kotlin/Compose compiler 2.1.20; Compose BOM 2025.04.01; serialization 1.8.1. Minimum SDK 26; compile/target SDK 35. This is a sideloaded test release. When raising the target to API 37, implement and verify Android 17's `ACCESS_LOCAL_NETWORK` permission flow before broad LAN use.
 
-The app checks Wi-Fi transport rather than requiring a validated internet connection. Discovery uses `_sudokut._tcp.` and serializes older NSD resolution calls. Manual joining remains available. The screen stays awake only during visible play. Background participation is announced as paused; socket timeouts handle unannounced loss.
+Join and rejoin explicitly create sockets through a TRANSPORT_WIFI network socket factory, without requiring INTERNET or VALIDATED capabilities. This keeps LAN connections on Wi-Fi even when cellular remains the default network. Discovery uses `_sudokut._tcp.` and serializes older NSD resolution calls. Manual joining remains available. The screen stays awake only during visible play. Background participation is announced as paused; socket timeouts handle unannounced loss.
 
 ## Stable signing identity
 

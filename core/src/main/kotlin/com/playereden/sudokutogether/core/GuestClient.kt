@@ -5,14 +5,14 @@ import java.net.InetSocketAddress
 import java.io.IOException
 import java.util.concurrent.Executors
 
-class GuestClient(private val listener: (ClientEvent) -> Unit = {}) : AutoCloseable {
+class GuestClient(private val socketFactory: () -> Socket = { Socket() }, private val listener: (ClientEvent) -> Unit = {}) : AutoCloseable {
     private val reader = Executors.newSingleThreadExecutor(threads("sudoku-input"))
     @Volatile private var link: Link? = null
     private fun emit(event: ClientEvent) { runCatching { listener(event) } }
     fun connect(host: String, port: Int, code: String, name: String, resumeToken: String? = null) {
         if (host.isBlank() || port !in 1..65535) throw IOException("Enter a valid host address and port.")
         check(link == null) { "Already connected" }
-        val socket = Socket()
+        val socket = socketFactory()
         try {
             socket.connect(InetSocketAddress(host, port), 5000); socket.soTimeout = 8000; socket.tcpNoDelay = true
             Protocol.write(socket.getOutputStream(), Message("hello", code = code, name = cleanName(name, "Partner"), token = resumeToken))

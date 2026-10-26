@@ -8,6 +8,26 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 class TransportTest {
+    @Test fun outgoingConnectionsUseTheProvidedNetworkSocketFactory() {
+        val events = LinkedBlockingQueue<ClientEvent>(); var created = 0
+        HostServer(GameSession.create(fixture())).use { host ->
+            val port = host.start()
+            GuestClient(socketFactory = { created++; Socket() }, listener = events::offer).use { client ->
+                client.connect("127.0.0.1", port, host.code, "Partner")
+                await(events) { it.token != null }
+                assertEquals(1, created)
+            }
+        }
+    }
+    @Test fun aLostSelectedNetworkProducesARecoverableConnectionFailure() {
+        HostServer(GameSession.create(fixture())).use { host ->
+            val port = host.start()
+            GuestClient(socketFactory = { throw IOException("Wi-Fi disconnected. Reconnect and try again.") }).use { client ->
+                val error = assertThrows(IOException::class.java) { client.connect("127.0.0.1", port, host.code, "Partner") }
+                assertTrue(error.message!!.contains("Wi-Fi disconnected"))
+            }
+        }
+    }
     private fun <T> await(queue: LinkedBlockingQueue<T>, predicate: (T) -> Boolean): T {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(8)
         while (System.nanoTime() < deadline) { val item = queue.poll(100, TimeUnit.MILLISECONDS); if (item != null && predicate(item)) return item }
@@ -17,7 +37,7 @@ class TransportTest {
         val hostEvents = LinkedBlockingQueue<HostEvent>(); val events = LinkedBlockingQueue<ClientEvent>()
         HostServer(GameSession.create(fixture()), hostEvents::offer).use { server ->
             val port = server.start()
-            GuestClient(events::offer).use { guest ->
+            GuestClient(listener = events::offer).use { guest ->
                 guest.connect("127.0.0.1", port, server.code, "Partner")
                 val joined = await(events) { it.token != null }.snapshot!!
                 assertEquals("Partner", joined.guestName)
@@ -36,7 +56,7 @@ class TransportTest {
         val events = LinkedBlockingQueue<ClientEvent>()
         HostServer(GameSession.create(fixture())).use { host ->
             val port = host.start()
-            GuestClient(events::offer).use { guest ->
+            GuestClient(listener = events::offer).use { guest ->
                 guest.connect("127.0.0.1", port, host.code, "Partner")
                 val start = await(events) { it.token != null }.snapshot!!
                 host.submitLocal(start.move(0))
@@ -64,7 +84,7 @@ class TransportTest {
         val events = LinkedBlockingQueue<ClientEvent>(); val hosts = LinkedBlockingQueue<HostEvent>()
         HostServer(GameSession.create(fixture()), hosts::offer).use { host ->
             val port = host.start()
-            GuestClient(events::offer).use { guest ->
+            GuestClient(listener = events::offer).use { guest ->
                 guest.connect("127.0.0.1", port, host.code, "Partner"); await(events) { it.token != null }
                 guest.setForeground(false)
                 await(hosts) { it.status.reserved && it.status.paused }
@@ -94,7 +114,7 @@ class TransportTest {
         val events = LinkedBlockingQueue<ClientEvent>()
         HostServer(GameSession(saved)).use { restored ->
             val port = restored.start()
-            GuestClient(events::offer).use { guest ->
+            GuestClient(listener = events::offer).use { guest ->
                 guest.connect("127.0.0.1", port, "", "Partner", token)
                 val rejoined = await(events) { it.token != null }.snapshot!!
                 assertEquals(1, rejoined.cells[0].value); assertEquals(1L, rejoined.revision)
@@ -105,7 +125,7 @@ class TransportTest {
         val events = LinkedBlockingQueue<ClientEvent>()
         HostServer(GameSession.create(fixture())).use { host ->
             val port = host.start(); var token: String
-            GuestClient(events::offer).use { guest ->
+            GuestClient(listener = events::offer).use { guest ->
                 guest.connect("127.0.0.1", port, host.code, "Partner")
                 val welcome = await(events) { it.token != null }; token = welcome.token!!
                 val old = welcome.snapshot!!.move(0)

@@ -28,7 +28,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = application.getSharedPreferences("settings", 0)
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
     private val guestStore = AtomicSessionStore(File(application.filesDir, "guest-session.json"))
-    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player"))
+    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
     @Volatile private var server: HostServer? = null
@@ -41,7 +41,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     init { viewModelScope.launch(Dispatchers.IO) {
         val hosted = hostStore.load(); val joined = guestStore.load()
         guestResume = when (joined) { is LoadResult.Loaded -> joined.data; is LoadResult.Recovered -> joined.data; else -> null }
-        _state.update { it.copy(resumeHost = hosted is LoadResult.Loaded || hosted is LoadResult.Recovered,
+        _state.update { it.copy(busy = false, resumeHost = hosted is LoadResult.Loaded || hosted is LoadResult.Recovered,
             resumeGuest = guestResume != null, saveIssue = when (hosted) {
                 is LoadResult.Invalid -> hosted.message
                 is LoadResult.Recovered -> "Your previous backup was recovered. Resume to continue from that saved point."
@@ -68,6 +68,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost, resumeGuest = guestResume != null, saveIssue = it.saveIssue) }
     }
     fun host(resume: Boolean) {
+        if (_state.value.busy) return
         val current = closeRoom(); val name = cleanName(_state.value.name, "Player")
         _state.update { it.copy(page = Page.PLAY, role = HOST, snapshot = null, busy = true, pendingId = null, selected = -1, partnerCell = -1, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
@@ -83,7 +84,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         previous.copy(snapshot = event.snapshot, status = event.status, connected = event.status.guestActive,
                             partnerCell = event.partnerCell, selected = if (changed) -1 else previous.selected,
                             pendingId = if (changed || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
-                            message = event.outcome?.let { if (it.accepted) null else explain(it.code) } ?: previous.message)
+                            message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message)
                     }
                 } }
                 server = hosted; val port = hosted.start(); hosted.setForeground(visible)
@@ -95,6 +96,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun showJoin(resume: Boolean = false) {
+        if (_state.value.busy) return
         val current = closeRoom()
         _state.update { it.copy(page = Page.JOIN, role = GUEST, snapshot = null, busy = false, rooms = emptyList(), pendingId = null,
             resumingGuest = resume && guestResume != null, address = if (resume) preferences.getString("lastAddress", "") ?: "" else "", message = null) }
@@ -108,7 +110,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(busy = true, role = GUEST, connected = false, pendingId = null, message = null, selected = -1, partnerCell = -1) }
         viewModelScope.launch(Dispatchers.IO) {
             var savedToken = identity?.token
-            val client = GuestClient { event ->
+            val client = GuestClient(socketFactory = discovery::newWifiSocket) { event ->
                 if (generation.get() == current) {
                     if (event.token != null) savedToken = event.token
                     val snapshot = event.snapshot
@@ -131,7 +133,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             selected = if (changed) -1 else previous.selected,
                             partnerCell = if (changed || event.disconnected) -1 else event.selected ?: previous.partnerCell,
                             pendingId = if (changed || event.disconnected || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
-                            message = saveMessage ?: event.message ?: event.outcome?.let { if (it.accepted) null else explain(it.code) } ?: previous.message)
+                            message = when { saveMessage != null -> saveMessage; event.message != null -> event.message; event.outcome != null -> event.outcome?.let { if (it.accepted) null else explain(it.code) }; changed -> null; else -> previous.message })
                     }
                 }
             }
@@ -143,7 +145,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 preferences.edit().putString("lastAddress", formatted).apply()
             } catch (e: Exception) {
                 client.close()
-                if (generation.get() == current) _state.update { it.copy(busy = false, connected = false, message = e.message ?: "Couldn't reach the host. Check that both phones are on the same Wi-Fi.") }
+                if (generation.get() == current) _state.update { it.copy(busy = false, connected = false, message = if (!discovery.hasWifi()) "Wi-Fi disconnected. Connect both phones to the same home Wi-Fi and join again." else e.message ?: "Couldn't reach the host. Check that both phones are on the same Wi-Fi.") }
             }
         }
     }
