@@ -1,6 +1,6 @@
 # Sudoku Together: local co-op Android design
 
-Status: draft for user review. This document records the proposed first playable version; it is not a claim that an app or APK already exists.
+Status: approved by the user on 2026-10-25. This document records the first playable version; implementation and device verification are tracked separately.
 
 ## Intent
 
