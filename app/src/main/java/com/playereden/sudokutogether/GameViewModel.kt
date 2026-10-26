@@ -146,7 +146,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace) }
     }
-    fun hostRace(resume: Boolean) = host(resume, versus = true)
+    fun host(resume: Boolean) = hostInternal(resume, versus = false)
+
+    fun hostRace(resume: Boolean) = hostInternal(resume, versus = true)
 
     private fun recordRace(snapshot: Snapshot, role: String) {
         if (snapshot.mode != VERSUS || !snapshot.completed || snapshot.winner == null) return
@@ -169,7 +171,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun host(resume: Boolean, versus: Boolean = false) {
+    private fun hostInternal(resume: Boolean, versus: Boolean) {
         if (_state.value.busy) return
         stopSoloClock()
         val current = closeRoom(); val name = cleanName(_state.value.name, "Player")
