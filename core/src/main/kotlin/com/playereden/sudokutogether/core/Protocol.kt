@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
     val paused: Boolean get() = !hostActive || (reserved && !guestActive)
 }
 @Serializable data class Message(
-    val type: String, val version: Int = 1, val code: String = "", val name: String = "", val token: String? = null,
+    val type: String, val version: Int = 2, val code: String = "", val name: String = "", val token: String? = null,
     val snapshot: Snapshot? = null, val status: RoomStatus? = null, val operation: Operation? = null,
     val outcome: Outcome? = null, val cell: Int = -1, val active: Boolean = true, val text: String = ""
 )
