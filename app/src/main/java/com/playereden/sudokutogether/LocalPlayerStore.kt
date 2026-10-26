@@ -13,7 +13,24 @@ import java.io.File
 class LocalPlayerStore(file: File) {
     private val atomic = AtomicFile(file)
     private val json = Json { encodeDefaults = true }
-    private var data: LocalPlayerData = load()
+    val recoveryWarning: String?
+    private var data: LocalPlayerData
+
+    init {
+        val attempt = runCatching { load() }
+        if (attempt.isSuccess) {
+            data = attempt.getOrThrow()
+            recoveryWarning = null
+        } else {
+            // Keep a copy of unreadable data before allowing new offline play.
+            val source = atomic.baseFile
+            runCatching {
+                if (source.isFile) source.copyTo(File(source.path + ".unreadable"), overwrite = true)
+            }
+            data = LocalPlayerData()
+            recoveryWarning = "Your old local records could not be read. An unreadable copy was kept in private app storage."
+        }
+    }
 
     private fun load(): LocalPlayerData {
         if (!atomic.baseFile.exists() && !File(atomic.baseFile.path + ".bak").exists()) return LocalPlayerData()
