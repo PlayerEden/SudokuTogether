@@ -24,14 +24,16 @@ data class GameUiState(
     val busy: Boolean = false, val connected: Boolean = false, val roomCode: String = "",
     val address: String = "", val rooms: List<NearbyRoom> = emptyList(), val resumeHost: Boolean = false,
     val resumeGuest: Boolean = false, val resumingGuest: Boolean = false, val saveIssue: String? = null, val message: String? = null,
-    val profile: LocalPlayerData = LocalPlayerData(), val resumeSolo: Boolean = false, val soloElapsedMs: Long = 0L
+    val profile: LocalPlayerData = LocalPlayerData(), val resumeSolo: Boolean = false, val soloElapsedMs: Long = 0L,
+    val resumeRace: Boolean = false
 ) {
-    val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (role == HOST || connected)))
+    val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = application.getSharedPreferences("settings", 0)
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
+    private val raceStore = AtomicSessionStore(File(application.filesDir, "host-race-session.json"))
     private val guestStore = AtomicSessionStore(File(application.filesDir, "guest-session.json"))
     private val localPlayer = LocalPlayerStore(File(application.filesDir, "local-player.json"))
     private var soloStartedAt: Long? = null
@@ -48,10 +50,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val seeds = longArrayOf(20261025, 2048, 729, 81, 314159, 271828, 1009, 303)
 
     init { viewModelScope.launch(Dispatchers.IO) {
-        val hosted = hostStore.load(); val joined = guestStore.load()
+        val hosted = hostStore.load(); val raced = raceStore.load(); val joined = guestStore.load()
         guestResume = when (joined) { is LoadResult.Loaded -> joined.data; is LoadResult.Recovered -> joined.data; else -> null }
         _state.update { it.copy(busy = false, resumeHost = hosted is LoadResult.Loaded || hosted is LoadResult.Recovered,
-            resumeGuest = guestResume != null, saveIssue = when (hosted) {
+            resumeGuest = guestResume != null, resumeRace = raced is LoadResult.Loaded || raced is LoadResult.Recovered,
+            saveIssue = when (hosted) {
                 is LoadResult.Invalid -> hosted.message
                 is LoadResult.Recovered -> "Your previous backup was recovered. Resume to continue from that saved point."
                 else -> null
@@ -141,33 +144,59 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val saved = localPlayer.current()
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
-            resumeSolo = saved.activeSolo != null) }
+            resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace) }
     }
-    fun host(resume: Boolean) {
+    fun hostRace(resume: Boolean) = host(resume, versus = true)
+
+    private fun recordRace(snapshot: Snapshot, role: String) {
+        if (snapshot.mode != VERSUS || !snapshot.completed || snapshot.winner == null) return
+        val id = snapshot.sessionId + ":" + snapshot.epoch + ":" + role
+        try {
+            val saved = localPlayer.update { data ->
+                if (data.records.any { it.id == id }) data
+                else {
+                    val now = System.currentTimeMillis()
+                    val elapsed = (now - (snapshot.raceStartedAtMs ?: now)).coerceAtLeast(0L)
+                    val record = GameRecord(id, VERSUS,
+                        if (snapshot.winner == role) "WIN" else "LOSS",
+                        snapshot.puzzle.id, elapsed, 0, now)
+                    data.copy(records = (data.records + record).takeLast(500))
+                }
+            }
+            _state.update { it.copy(profile = saved) }
+        } catch (_: Exception) {
+            _state.update { it.copy(message = "Match finished, but this phone could not save your record.") }
+        }
+    }
+
+    fun host(resume: Boolean, versus: Boolean = false) {
         if (_state.value.busy) return
         stopSoloClock()
         val current = closeRoom(); val name = cleanName(_state.value.name, "Player")
+        val store = if (versus) raceStore else hostStore
         _state.update { it.copy(page = Page.PLAY, role = HOST, snapshot = null, busy = true, pendingId = null, selected = -1, partnerCell = -1, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val session = if (resume) {
-                    val saved = when (val loaded = hostStore.load()) { is LoadResult.Loaded -> loaded.data; is LoadResult.Recovered -> loaded.data; else -> error("The saved puzzle is unavailable. It has not been replaced.") }
-                    GameSession(saved, hostStore::save)
-                } else GameSession.create(Sudoku.generate(nextSeed()), name, hostStore::save)
+                    val saved = when (val loaded = store.load()) { is LoadResult.Loaded -> loaded.data; is LoadResult.Recovered -> loaded.data; else -> error("The saved puzzle is unavailable. It has not been replaced.") }
+                    GameSession(saved, store::save)
+                } else GameSession.create(Sudoku.generate(nextSeed()), name, store::save, if (versus) VERSUS else COOP)
                 if (generation.get() != current) return@launch
                 val hosted = HostServer(session) { event -> if (generation.get() == current) {
+                    recordRace(event.snapshot, HOST)
                     _state.update { previous ->
                         val changed = previous.snapshot?.epoch != event.snapshot.epoch
                         previous.copy(snapshot = event.snapshot, status = event.status, connected = event.status.guestActive,
                             partnerCell = event.partnerCell, selected = if (changed) -1 else previous.selected,
                             pendingId = if (changed || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
-                            message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message)
+                            message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message,
+                            resumeRace = if (versus) true else previous.resumeRace)
                     }
                 } }
                 server = hosted; val port = hosted.start(); hosted.setForeground(visible)
                 if (generation.get() != current) { hosted.close(); return@launch }
                 val address = discovery.localAddresses().firstOrNull()?.let { "$it:$port" } ?: "Connect this phone to home Wi-Fi"
-                _state.update { it.copy(busy = false, roomCode = hosted.code, address = address, resumeHost = true, saveIssue = null) }
+                _state.update { it.copy(busy = false, roomCode = hosted.code, address = address, resumeHost = if (versus) it.resumeHost else true, resumeRace = if (versus) true else it.resumeRace, saveIssue = null) }
                 discovery.startHosting(session.snapshot().hostName, port, session.snapshot().sessionId)
             } catch (e: Exception) { if (generation.get() == current) _state.update { it.copy(page = Page.HOME, busy = false, message = e.message ?: "Couldn't open the saved puzzle.") } }
         }
@@ -192,6 +221,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 if (generation.get() == current) {
                     if (event.token != null) savedToken = event.token
                     val snapshot = event.snapshot
+                    if (snapshot != null) recordRace(snapshot, GUEST)
                     var saveMessage: String? = null
                     if (snapshot != null && savedToken != null) {
                         if (expectedSession != null && snapshot.sessionId != expectedSession) {
