@@ -11,24 +11,33 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
 import java.util.concurrent.atomic.AtomicLong
+import android.os.SystemClock
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
-enum class Page { HOME, JOIN, PLAY }
+enum class Page { HOME, JOIN, PLAY, PROFILE }
 data class GameUiState(
     val page: Page = Page.HOME, val name: String = "Player", val role: String = HOST,
     val snapshot: Snapshot? = null, val status: RoomStatus = RoomStatus(), val selected: Int = -1,
     val partnerCell: Int = -1, val notes: Boolean = false, val pendingId: String? = null,
     val busy: Boolean = false, val connected: Boolean = false, val roomCode: String = "",
     val address: String = "", val rooms: List<NearbyRoom> = emptyList(), val resumeHost: Boolean = false,
-    val resumeGuest: Boolean = false, val resumingGuest: Boolean = false, val saveIssue: String? = null, val message: String? = null
+    val resumeGuest: Boolean = false, val resumingGuest: Boolean = false, val saveIssue: String? = null, val message: String? = null,
+    val profile: LocalPlayerData = LocalPlayerData(), val resumeSolo: Boolean = false, val soloElapsedMs: Long = 0L
 ) {
-    val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && !status.paused && (role == HOST || connected)
+    val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (role == HOST || connected)))
 }
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = application.getSharedPreferences("settings", 0)
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
     private val guestStore = AtomicSessionStore(File(application.filesDir, "guest-session.json"))
-    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true))
+    private val localPlayer = LocalPlayerStore(File(application.filesDir, "local-player.json"))
+    private var soloStartedAt: Long? = null
+    private var soloElapsedAnchor: Long = 0L
+    private var soloTick: Job? = null
+    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
     @Volatile private var server: HostServer? = null
@@ -58,17 +67,85 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         preferences.edit().putInt("puzzleIndex", (index + 1) % seeds.size).apply()
         return seeds[index % seeds.size]
     }
+    private fun elapsedSolo(): Long =
+        soloElapsedAnchor + (soloStartedAt?.let { (SystemClock.elapsedRealtime() - it).coerceAtLeast(0L) } ?: 0L)
+
+    private fun stopSoloClock() {
+        val previous = _state.value
+        if (previous.role == SOLO && previous.snapshot != null && !previous.snapshot.completed) {
+            val elapsed = elapsedSolo()
+            val updated = localPlayer.update { data ->
+                val solo = data.activeSolo
+                if (solo != null && solo.id == previous.snapshot.sessionId)
+                    data.copy(activeSolo = PersonalPlay.withElapsed(solo, elapsed))
+                else data
+            }
+            _state.update { it.copy(profile = updated, soloElapsedMs = elapsed) }
+        }
+        soloStartedAt = null
+        soloTick?.cancel()
+        soloTick = null
+    }
+
+    private fun startSoloClock(progress: SoloProgress) {
+        soloTick?.cancel()
+        soloElapsedAnchor = progress.elapsedMs
+        soloStartedAt = if (progress.completed || !visible) null else SystemClock.elapsedRealtime()
+        soloTick = viewModelScope.launch {
+            while (isActive && _state.value.role == SOLO && !_state.value.snapshot.let { it == null || it.completed }) {
+                _state.update { it.copy(soloElapsedMs = elapsedSolo()) }
+                delay(500)
+            }
+        }
+    }
+
+    fun solo(resume: Boolean) {
+        if (_state.value.busy) return
+        stopSoloClock()
+        val current = closeRoom()
+        _state.update { it.copy(page = Page.PLAY, role = SOLO, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null) }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val saved = localPlayer.update { data ->
+                    if (resume && data.activeSolo != null) data
+                    else data.copy(activeSolo = PersonalPlay.newSolo(Sudoku.generate(nextSeed()), System.currentTimeMillis()))
+                }
+                if (generation.get() != current) return@launch
+                val progress = saved.activeSolo!!
+                _state.update { it.copy(page = Page.PLAY, role = SOLO, snapshot = progress.snapshot(),
+                    profile = saved, resumeSolo = true, status = RoomStatus(), connected = true,
+                    busy = false, soloElapsedMs = progress.elapsedMs) }
+                startSoloClock(progress)
+            } catch (e: Exception) {
+                if (generation.get() == current) _state.update { it.copy(page = Page.HOME, busy = false, message = "Could not save the solo puzzle: " + (e.message ?: "storage unavailable")) }
+            }
+        }
+    }
+
+    fun showProfile() {
+        stopSoloClock()
+        closeRoom()
+        val saved = localPlayer.current()
+        _state.update { it.copy(page = Page.PROFILE, profile = saved, resumeSolo = saved.activeSolo != null,
+            snapshot = null, pendingId = null, busy = false, role = SOLO, message = null) }
+    }
+
     private fun closeRoom(): Long {
         val current = generation.incrementAndGet()
         guest?.close(); guest = null; server?.close(); server = null; discovery.stop()
         return current
     }
     fun home() {
+        stopSoloClock()
         closeRoom()
-        _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost, resumeGuest = guestResume != null, saveIssue = it.saveIssue) }
+        val saved = localPlayer.current()
+        _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
+            resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
+            resumeSolo = saved.activeSolo != null) }
     }
     fun host(resume: Boolean) {
         if (_state.value.busy) return
+        stopSoloClock()
         val current = closeRoom(); val name = cleanName(_state.value.name, "Player")
         _state.update { it.copy(page = Page.PLAY, role = HOST, snapshot = null, busy = true, pendingId = null, selected = -1, partnerCell = -1, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
@@ -97,6 +174,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun showJoin(resume: Boolean = false) {
         if (_state.value.busy) return
+        stopSoloClock()
         val current = closeRoom()
         _state.update { it.copy(page = Page.JOIN, role = GUEST, snapshot = null, busy = false, rooms = emptyList(), pendingId = null,
             resumingGuest = resume && guestResume != null, address = if (resume) preferences.getString("lastAddress", "") ?: "" else "", message = null) }
@@ -152,7 +230,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun select(cell: Int) {
         if (cell !in 0..80) return
         _state.update { it.copy(selected = cell) }
-        if (_state.value.role == HOST) server?.select(cell) else guest?.select(cell)
+        if (_state.value.role == HOST) server?.select(cell) else if (_state.value.role == GUEST) guest?.select(cell)
     }
     fun toggleNotes() { _state.update { it.copy(notes = !it.notes) } }
     fun number(number: Int) {
@@ -168,6 +246,38 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (!value.canEdit || cell !in 0..80) return
         val operation = Operation(snapshot.sessionId, snapshot.epoch, cell, snapshot.cells[cell].revision, kind, number, enabled)
         val current = generation.get(); _state.update { it.copy(pendingId = operation.id, message = null) }
+        if (value.role == SOLO) {
+            val elapsed = elapsedSolo()
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val saved = localPlayer.update { data ->
+                        val progress = data.activeSolo
+                        if (progress == null || progress.id != snapshot.sessionId) data
+                        else {
+                            val next = PersonalPlay.edit(progress, cell, kind, number, enabled, elapsed)
+                            if (next == null) data else if (next.completed) PersonalPlay.addCompletedSolo(data, next)
+                            else data.copy(activeSolo = next)
+                        }
+                    }
+                    if (generation.get() == current) {
+                        val progress = saved.activeSolo!!
+                        if (progress.completed) {
+                            soloStartedAt = null
+                            soloTick?.cancel()
+                        } else {
+                            soloElapsedAnchor = progress.elapsedMs
+                            soloStartedAt = if (visible) SystemClock.elapsedRealtime() else null
+                        }
+                        _state.update { it.copy(snapshot = progress.snapshot(), profile = saved,
+                            soloElapsedMs = progress.elapsedMs, pendingId = null) }
+                    }
+                } catch (_: Exception) {
+                    if (generation.get() == current) _state.update { it.copy(pendingId = null,
+                        message = "That move could not be saved. Check available phone storage.") }
+                }
+            }
+            return
+        }
         viewModelScope.launch(Dispatchers.IO) {
             try { if (generation.get() == current) { if (value.role == HOST) server?.submitLocal(operation) else guest?.submit(operation) } }
             catch (_: Exception) { if (generation.get() == current) _state.update { it.copy(pendingId = null, message = "The connection paused. Reconnect before entering another move.") } }
@@ -175,16 +285,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun foreground(active: Boolean) {
         visible = active
+        if (_state.value.role == SOLO && _state.value.snapshot != null) {
+            if (!active) stopSoloClock()
+            else if (!_state.value.snapshot!!.completed) {
+                val progress = localPlayer.current().activeSolo
+                if (progress != null) startSoloClock(progress)
+            }
+        }
         viewModelScope.launch(Dispatchers.IO) { server?.setForeground(active); guest?.setForeground(active) }
     }
     fun replacePartner() { viewModelScope.launch(Dispatchers.IO) {
         try { server?.replaceGuest() } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save the partner change. Try again.") } }
     } }
-    fun newPuzzle() { _state.update { it.copy(busy = true, message = null) }; viewModelScope.launch(Dispatchers.IO) {
+    fun newPuzzle() { if (_state.value.role == SOLO) { solo(false); return }; _state.update { it.copy(busy = true, message = null) }; viewModelScope.launch(Dispatchers.IO) {
         try { server?.newPuzzle(nextSeed()) } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save a new puzzle. Your current puzzle is still here.") } }
         finally { _state.update { it.copy(busy = false) } }
     } }
-    override fun onCleared() { closeRoom(); super.onCleared() }
+    override fun onCleared() { stopSoloClock(); closeRoom(); super.onCleared() }
     private fun explain(code: ResultCode): String = when (code) {
         ResultCode.STALE -> "Your partner changed that square. Check the updated square and try again."
         ResultCode.GIVEN -> "Starting clues stay fixed. Choose an empty square."
