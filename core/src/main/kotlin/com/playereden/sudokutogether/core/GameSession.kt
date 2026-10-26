@@ -105,7 +105,19 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
         return identity
     }
     @Synchronized fun replaceGuest() {
-        commit(state.copy(guest = null, snapshot = state.snapshot.copy(guestName = null), history = state.history.filter { it.player != GUEST }, recent = state.recent.filter { it.player != GUEST }))
+        val previous = state.snapshot
+        if (previous.mode == VERSUS) {
+            val fresh = previous.puzzle.clues.map { Cell(it) }
+            commit(state.copy(guest = null, snapshot = previous.copy(guestName = null,
+                epoch = UUID.randomUUID().toString(), cells = fresh, guestCells = fresh,
+                winner = null, completed = false, raceStartedAtMs = null,
+                revision = 0, hostProgress = 0, guestProgress = 0),
+                history = emptyList(), recent = emptyList()))
+        } else {
+            commit(state.copy(guest = null, snapshot = previous.copy(guestName = null),
+                history = state.history.filter { it.player != GUEST },
+                recent = state.recent.filter { it.player != GUEST }))
+        }
         guestPresent = false
     }
     @Synchronized fun newPuzzle(puzzle: Puzzle) {
