@@ -125,4 +125,4 @@ All spec sections map to Tasks 1–6. Interface names and values are consistent 
 
 ## Completion checkpoint
 
-The user approved implementation. The signed 0.1.0 APK and its private signing backup have been saved as separate durable files. The full unit suite has 34 passing tests; the extended API-26 Android UI test passed with rotation and glyph bounds. Physical two-phone Wi-Fi validation remains the documented acceptance handoff. Final source is retained in the supplied GitHub repository on the local-coop feature branch.
+The user approved implementation. The signed 0.1.0 APK and its private signing backup have been saved as separate durable files. The full unit suite has 34 passing tests; the extended API-26 Android UI test passed with activity recreation and glyph bounds. Physical two-phone Wi-Fi validation remains the documented acceptance handoff. Final source is retained in the supplied GitHub repository on the local-coop feature branch.

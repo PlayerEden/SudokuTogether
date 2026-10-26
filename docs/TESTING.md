@@ -25,7 +25,7 @@ adb shell am instrument -w -r com.playereden.sudokutogether.test/androidx.test.r
 - Extended Android 8/API 26 instrumentation flow: **1 passed**, 73.273 seconds. It covers host creation, number entry, own undo, shared-note state, actual pencil-glyph bounds, activity recreation with retained notes, erase, and room information.
 - An earlier basic flow also passed on Android 11/API 30.
 - Signed release assembly and debug lint completed successfully. Lint has zero errors; advisory warnings remain for pinned dependency updates, platform backup guidance, and optional SharedPreferences KTX syntax.
-- Final visual/large-font and APK-share checks: being recorded separately.
+- Final Android-8 emulator visual checks: default portrait reviewed; Notes and number controls remain reachable by scrolling at 200% system text. The in-app Share APK action opened Android's sharing chooser successfully. Delivery to another physical phone is part of the remaining home-Wi-Fi check.
 - APK package `com.playereden.sudokutogether`, version `0.1.0` / code `1`, minimum API 26, target API 35. Its v2 RSA-3072 signature verifies against the public certificate in DEVELOPMENT.md.
 - APK bytes: `7139268`. SHA-256: `29cf0f758b18ac6d3f36ad85580a93fbe28c24c624494b78767ca7fdc4c0cb07`.
 
