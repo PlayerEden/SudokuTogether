@@ -321,7 +321,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         visible = active
         if (_state.value.role == SOLO && _state.value.snapshot != null) {
             if (!active) stopSoloClock()
-            else if (!_state.value.snapshot!!.completed) {
+            else if (soloStartedAt == null && !_state.value.snapshot!!.completed) {
                 val progress = localPlayer.current().activeSolo
                 if (progress != null) startSoloClock(progress)
             }
