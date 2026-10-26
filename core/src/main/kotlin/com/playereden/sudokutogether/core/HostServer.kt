@@ -27,7 +27,8 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
     private fun emit(outcome: Outcome? = null) { runCatching { listener(HostEvent(session.snapshot(), status(), partnerCell, outcome)) } }
     private fun publish(outcome: Outcome? = null) {
         syncPresence()
-        peer?.send(Message("state", snapshot = session.snapshot(), status = status(), outcome = outcome))
+        peer?.send(Message("state", snapshot = session.snapshotForGuest(), status = status(),
+            outcome = outcome?.copy(snapshot = session.snapshotForGuest())))
         emit(outcome)
     }
     fun start(): Int = synchronized(lock) {
@@ -58,7 +59,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
             synchronized(lock) {
                 fun reject(text: String): Nothing { Protocol.write(incoming.getOutputStream(), Message("error", text = text)); throw IOException(text) }
                 if (closed) reject("This room has closed.")
-                if (hello.type != "hello" || hello.version != 1) reject("Install the same app version on both phones.")
+                if (hello.type != "hello" || hello.version != 2) reject("Install the same app version on both phones.")
                 if (peer != null) reject("This room already has two players.")
                 val address = incoming.inetAddress.hostAddress ?: "local"
                 val now = System.currentTimeMillis()
@@ -69,7 +70,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
                 val identity = try { session.admitGuest(hello.name, hello.token) } catch (e: Exception) { reject(e.message ?: "Could not join this room.") }
                 incoming.soTimeout = 10_000
                 val link = Link(incoming, ::drop); admitted = link; peer = link; guestActive = true; partnerCell = -1; syncPresence()
-                Protocol.write(incoming.getOutputStream(), Message("welcome", snapshot = session.snapshot(), status = status(), token = identity.token))
+                Protocol.write(incoming.getOutputStream(), Message("welcome", snapshot = session.snapshotForGuest(), status = status(), token = identity.token))
                 emit()
             }
             val link = admitted!!
@@ -77,7 +78,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
                 val message = Protocol.read(incoming.getInputStream()); link.lastRead = System.nanoTime()
                 synchronized(lock) {
                     if (peer !== link) throw IOException("Room connection changed")
-                    if (message.version != 1) throw IOException("Incompatible game message")
+                    if (message.version != 2) throw IOException("Incompatible game message")
                     when (message.type) {
                         "move" -> {
                             val operation = message.operation ?: throw IOException("Missing move")
@@ -85,7 +86,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
                         }
                         "select" -> {
                             if (message.cell !in -1..80) throw IOException("Invalid selection")
-                            partnerCell = if (guestActive) message.cell else -1; emit()
+                            partnerCell = if (guestActive && session.snapshot().mode != VERSUS) message.cell else -1; emit()
                         }
                         "presence" -> { guestActive = message.active; if (!guestActive) partnerCell = -1; publish() }
                         "pong" -> Unit
@@ -104,7 +105,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
         syncPresence(); session.submit(HOST, operation).also { publish(it) }
     }
     fun select(cell: Int) = synchronized(lock) {
-        if (cell in -1..80) peer?.send(Message("select", cell = if (hostActive) cell else -1))
+        if (cell in -1..80 && session.snapshot().mode != VERSUS) peer?.send(Message("select", cell = if (hostActive) cell else -1))
         Unit
     }
     fun setForeground(active: Boolean) = synchronized(lock) {

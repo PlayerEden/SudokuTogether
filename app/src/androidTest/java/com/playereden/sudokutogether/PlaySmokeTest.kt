@@ -12,6 +12,26 @@ import org.junit.Assert.assertTrue
 @RunWith(AndroidJUnit4::class)
 class PlaySmokeTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @Test fun soloPlayCanResumeAndOpenLocalProfile() {
+        compose.onNodeWithText("New solo puzzle").performClick()
+        compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Solo Sudoku").assertExists()
+        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithText("Leave room").performClick()
+        compose.onNodeWithText("Resume solo puzzle").assertExists()
+        compose.onNodeWithText("My profile & records").performClick()
+        compose.onNodeWithText("Your records").assertExists()
+        compose.onNodeWithText("Offline profile", substring = true).assertExists()
+    }
+
+    @Test fun raceHostWaitsForSecondPlayerBeforeAllowingInput() {
+        compose.onNodeWithText("Host a versus race").performClick()
+        compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Versus Sudoku").assertExists()
+        compose.onNodeWithText("Waiting for your rival", substring = true).assertExists()
+        compose.onNodeWithText("Notes").assertIsNotEnabled()
+    }
+
     @Test fun hostCanEnterUndoAndSharePencilMarksWithoutInternet() {
         compose.onNodeWithText("Host a puzzle").assertExists().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
