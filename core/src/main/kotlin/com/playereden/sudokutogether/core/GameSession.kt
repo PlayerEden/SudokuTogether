@@ -134,7 +134,8 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
             val initial = SavedSession(snapshot = Snapshot(UUID.randomUUID().toString(), UUID.randomUUID().toString(), puzzle,
                 puzzle.clues.map { Cell(it) }, hostName = cleanName(hostName, "Host"), mode = mode,
                 guestCells = if (mode == VERSUS) puzzle.clues.map { Cell(it) } else emptyList()))
-            persist(initial); return GameSession(initial, persist)
+            val session = GameSession(initial, persist)
+            persist(session.saved()); return session
         }
     }
 }
