@@ -328,6 +328,7 @@ private fun formatElapsed(milliseconds: Long): String {
                 Text("Wins " + stats.versusWins + "   Losses " + stats.versusLosses +
                     "   Draws " + stats.versusDraws, color = Ink)
                 Text("Head-to-head results are saved only on this phone.", fontSize = 12.sp, color = Muted)
+                Text("Co-op puzzles completed: " + stats.coopCompletions, color = Ink)
             }
         }
         Text("RECENT FINISHES", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
@@ -336,7 +337,7 @@ private fun formatElapsed(milliseconds: Long): String {
         recent.forEach { result ->
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(result.mode.uppercase() + "  ·  " + result.result, fontSize = 12.sp, color = Ink)
-                Text(formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest)
+                Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest)
             }
             HorizontalDivider(color = Rule)
         }
