@@ -1,0 +1,51 @@
+name: Build signed Android APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Prepare private signing identity
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SUDOKU_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.SUDOKU_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo 'Configure SUDOKU_KEYSTORE_BASE64 and SUDOKU_KEYSTORE_PASSWORD from the private signing backup before building update APKs.'
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/sudoku-signing"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/sudoku-signing/sudoku-together.jks"
+          {
+            printf 'storeFile=%s\n' "$RUNNER_TEMP/sudoku-signing/sudoku-together.jks"
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=sudokutogether\n'
+            printf 'keyPassword=%s\n' "$KEYSTORE_PASSWORD"
+          } > "$RUNNER_TEMP/sudoku-signing/signing.properties"
+          chmod 600 "$RUNNER_TEMP/sudoku-signing/"*
+      - name: Verify and build
+        env:
+          SUDOKU_SIGNING_FILE: ${{ runner.temp }}/sudoku-signing/signing.properties
+        run: |
+          chmod +x gradlew
+          ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleRelease --console=plain
+          cp app/build/outputs/apk/release/app-release.apk SudokuTogether.apk
+          sha256sum SudokuTogether.apk > SudokuTogether.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SudokuTogether-signed-${{ github.sha }}
+          path: |
+            SudokuTogether.apk
+            SudokuTogether.apk.sha256
+          retention-days: 30
+      - name: Remove temporary signing files
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/sudoku-signing"
