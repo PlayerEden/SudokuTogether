@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(background, Forest.toArgb()), navigationBarStyle = SystemBarStyle.light(background, Forest.toArgb()))
         setContent {
             val state by model.state.collectAsStateWithLifecycle()
-            val actions = remember { GameActions(model::setName, model::host, model::showJoin, model::home, model::join, model::select, model::number, model::toggleNotes, model::erase, model::undo, model::replacePartner, model::newPuzzle) }
+            val actions = remember { GameActions(model::setName, model::host, model::showJoin, model::home, model::join, model::select, model::number, model::toggleNotes, model::erase, model::undo, model::replacePartner, model::newPuzzle, model::solo, model::showProfile) }
             DisposableEffect(state.page) {
                 if (state.page == Page.PLAY) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
