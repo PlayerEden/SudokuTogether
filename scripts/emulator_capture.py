@@ -38,9 +38,14 @@ def tap_text(wanted):
 def main():
     adb("shell", "settings", "put", "system", "font_scale", "1.0")
     adb("shell", "am", "start", "-n", "com.playereden.sudokutogether.qa/com.playereden.sudokutogether.MainActivity")
-    time.sleep(8)
+    time.sleep(10)
+    # Google API emulator images can briefly show a Pixel Launcher ANR on first
+    # cold boot, over the correctly running app. Dismiss this SYSTEM dialog
+    # before capturing game screens; it is unrelated to Sudoku Together.
+    if tap_text("Wait"):
+        time.sleep(4)
     screenshot("01-home.png")
-    if tap_text("How to play"):
+    if tap_text("Help"):
         time.sleep(1)
         screenshot("02-how-to-play.png")
         tap_text("Got it")
