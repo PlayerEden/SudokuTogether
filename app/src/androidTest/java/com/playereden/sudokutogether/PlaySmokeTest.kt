@@ -21,6 +21,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Player emblems").assertExists()
         compose.onNodeWithText("ACHIEVEMENTS").assertExists()
         compose.onNodeWithText("Classic number display").assertExists()
+        compose.onNodeWithText("Touch feedback").assertExists()
         compose.onNodeWithText("First Grid").assertExists()
         assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
@@ -45,6 +46,7 @@ class PlaySmokeTest {
             compose.onNodeWithText("Start new").performClick()
         }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Copy code").assertExists()
         compose.onNodeWithText("Chat").performClick()
         compose.onNodeWithText("Room chat").assertExists()
         compose.onNodeWithText("Message your partner").assertExists()
@@ -54,7 +56,7 @@ class PlaySmokeTest {
     @Test fun soloPlayCanResumeAndOpenLocalProfile() {
         compose.onNodeWithText("New solo puzzle").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Solo Sudoku").assertExists()
+        compose.onNodeWithText("Solo").assertExists()
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
@@ -67,7 +69,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Versus", substring = false).performClick()
         compose.onNodeWithText("Host a versus race").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Versus Sudoku").assertExists()
+        compose.onNodeWithText("Versus").assertExists()
         compose.onNodeWithText("Waiting for your rival", substring = true).assertExists()
         compose.onNodeWithText("Notes").assertIsNotEnabled()
     }
@@ -84,7 +86,7 @@ class PlaySmokeTest {
         val empty = compose.onAllNodes(hasContentDescription("empty", substring = true)).fetchSemanticsNodes().first()
         val tag = empty.config[androidx.compose.ui.semantics.SemanticsProperties.TestTag]
         compose.onNodeWithTag(tag).performClick()
-        compose.onNodeWithTag("number_9").performClick()
+        compose.onNodeWithTag("number_9").assertExists().performClick()
         compose.waitUntil(10000) { compose.onAllNodes(hasContentDescription("value 9", substring = true)).fetchSemanticsNodes().any { it.id == empty.id } }
         compose.onNodeWithText("Undo").performClick()
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.contains("empty") } }
