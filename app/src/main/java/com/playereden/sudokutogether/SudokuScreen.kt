@@ -326,9 +326,9 @@ data class GameActions(
                 }
                 val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
                 Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Notes", fontSize = 13.sp) }
-                    OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell, modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
-                    OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role), modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
+                    OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp) }
+                    OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell, modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
+                    OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role), modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
                 }
                 for (row in listOf((1..5).toList(), (6..9).toList())) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -409,15 +409,29 @@ data class GameActions(
                 }
                 val authoredFont = fontFor(authored.font)
                 val authoredInk = inkFor(authored.ink, darkBoard)
+                val sameHouse = selected in 0..80 && (
+                    row == selected / 9 || col == selected % 9 ||
+                    (row / 3 == selected / 27 && col / 3 == (selected % 9) / 3)
+                )
                 val background = when {
                     i == selected -> if (darkBoard) Color(0xFF555336) else AmberLight
                     i == partner -> if (darkBoard) Color(0xFF305C55) else TealLight
                     i in conflicts -> if (darkBoard) Color(0xFF63362C) else Color(0xFFF8E7DF)
                     selectedValue != 0 && selectedValue == cell.value -> if (darkBoard) Color(0xFF37473B) else Color(0xFFF5EEDB)
+                    sameHouse -> if (darkBoard) Color(0xFF213B3E) else Color(0xFFF0F3EB)
                     else -> boardPaper
                 }
                 Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, boardEdge) else Modifier)
-                    .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) { contentDescription = content }, contentAlignment = Alignment.Center) {
+                    .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) {
+                         contentDescription = content
+                         selected = i == selected
+                         stateDescription = when {
+                             i == selected -> "Selected square"
+                             i == partner -> "Partner's selected square"
+                             i in conflicts -> "Conflicting value"
+                             else -> "Puzzle square"
+                         }
+                     }, contentAlignment = Alignment.Center) {
                     if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = if (given) FontFamily.SansSerif else authoredFont),
                         maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (i in conflicts) (if (darkBoard) Color(0xFFFFB7A6) else Brick) else if (given) neutralInk else authoredInk)
