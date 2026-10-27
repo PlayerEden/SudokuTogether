@@ -1,8 +1,13 @@
 name: Sudoku Together — Build & QA APK
 
-# Manual-only: compile, test and package APKs when explicitly requested.
+# One scoped calibration run for v0.8B; revert the push trigger afterward.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/qa-debug.yml
 
 
 
