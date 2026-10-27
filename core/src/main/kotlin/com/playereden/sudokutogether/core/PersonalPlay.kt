@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 const val SOLO = "solo"
+const val MAX_RECORDS = 10_000
 
 @Serializable data class SoloUndo(val cell: Int, val before: Cell)
 
@@ -98,7 +99,7 @@ object PersonalPlay {
         if (data.records.any { it.id == finished.id }) return data.copy(activeSolo = finished)
         val record = GameRecord(finished.id, SOLO, "SOLVED", finished.puzzle.id,
             finished.elapsedMs, finished.moves, finished.finishedAtMs!!)
-        return data.copy(activeSolo = finished, records = (data.records + record).takeLast(500))
+        return data.copy(activeSolo = finished, records = (data.records + record).takeLast(MAX_RECORDS))
     }
 
     fun stats(data: LocalPlayerData): PersonalStats {

@@ -80,7 +80,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
             synchronized(lock) {
                 fun reject(text: String): Nothing { Protocol.write(incoming.getOutputStream(), Message("error", text = text)); throw IOException(text) }
                 if (closed) reject("This room has closed.")
-                if (hello.type != "hello" || hello.version != 3) reject("Install the same app version on both phones.")
+                if (hello.type != "hello" || hello.version != 4) reject("Install the same app version on both phones.")
                 if (peer != null) reject("This room already has two players.")
                 val address = incoming.inetAddress.hostAddress ?: "local"
                 val now = System.currentTimeMillis()
@@ -99,7 +99,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
                 val message = Protocol.read(incoming.getInputStream()); link.lastRead = System.nanoTime()
                 synchronized(lock) {
                     if (peer !== link) throw IOException("Room connection changed")
-                    if (message.version != 3) throw IOException("Incompatible game message")
+                    if (message.version != 4) throw IOException("Incompatible game message")
                     when (message.type) {
                         "move" -> {
                             val operation = message.operation ?: throw IOException("Missing move")
