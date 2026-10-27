@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,64 +86,108 @@ data class GameActions(
     }
 }
 
-@Composable private fun HomeScreen(state: GameUiState, actions: GameActions, share: () -> Unit, fresh: () -> Unit, freshSolo: () -> Unit, freshRace: () -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(Modifier.height(14.dp))
-        Text("A LITTLE THINKING, TOGETHER", fontSize = 10.sp, letterSpacing = 2.sp, color = Muted)
-        Spacer(Modifier.height(22.dp))
-        Canvas(Modifier.size(126.dp).clip(RoundedCornerShape(10.dp)).background(Paper).clearAndSetSemantics {}) {
-            val unit = size.width / 9
-            drawRect(AmberLight, Offset(unit * 2, unit * 2), Size(unit * 2, unit))
-            drawRect(TealLight, Offset(unit * 5, unit * 5), Size(unit, unit * 2))
-            for (i in 0..9) {
-                val stroke = if (i % 3 == 0) 2.dp.toPx() else 0.5.dp.toPx()
-                drawLine(if (i % 3 == 0) Forest else Rule, Offset(i * unit, 0f), Offset(i * unit, size.height), stroke)
-                drawLine(if (i % 3 == 0) Forest else Rule, Offset(0f, i * unit), Offset(size.width, i * unit), stroke)
+@Composable private fun HomeScreen(
+    state: GameUiState, actions: GameActions, share: () -> Unit,
+    fresh: () -> Unit, freshSolo: () -> Unit, freshRace: () -> Unit, help: () -> Unit
+) {
+    var mode by rememberSaveable { mutableStateOf("solo") }
+    val modeName = when (mode) { "together" -> "Together"; "versus" -> "Versus"; else -> "Solo" }
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(42.dp).background(Paper, RoundedCornerShape(11.dp))
+                .border(1.dp, Rule, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) {
+                Text("9×9", color = Forest, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
-            drawCircle(Gold, unit * .23f, Offset(unit * 2.5f, unit * 2.5f))
-            drawCircle(Forest, unit * .23f, Offset(unit * 5.5f, unit * 5.5f))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 26.sp,
+                    fontWeight = FontWeight.SemiBold, color = Forest)
+                Text("Your puzzle. Your pace. Your people.", fontSize = 12.sp, color = Muted)
+            }
+            TextButton(onClick = help) { Text("How to play", fontSize = 12.sp) }
         }
-        Spacer(Modifier.height(20.dp))
-        Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 34.sp, color = Forest, textAlign = TextAlign.Center)
-        Text("Solve solo. Team up. Race a friend.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
-        Column(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = state.name, onValueChange = actions.name, label = { Text("Your name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
-            PlayerIdentity(state.appearance, state.name, compact = true)
-            Text("Equipped · " + styleLabel(state.appearance), fontSize = 11.sp,
-                color = inkFor(state.appearance.ink, false), maxLines = 2)
-            Spacer(Modifier.height(2.dp))
-            Text("PLAY ON YOUR OWN", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
-            if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) {
-                Text(if (state.profile.activeSolo?.completed == true) "Review last solo puzzle" else "Resume solo puzzle")
+        (state.message ?: state.saveIssue)?.let { Notice(it) }
+        OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(containerColor = Paper)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("CHOOSE YOUR MODE", color = Muted, fontSize = 10.sp, letterSpacing = 1.2.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf(Triple("solo", "Solo", "01"), Triple("together", "Co-op", "02"),
+                        Triple("versus", "Versus", "03")).forEach { (id, label, order) ->
+                        val chosen = mode == id
+                        OutlinedCard(onClick = { mode = id }, modifier = Modifier.weight(1f),
+                            border = BorderStroke(if (chosen) 2.dp else 1.dp, if (chosen) Forest else Rule),
+                            colors = CardDefaults.outlinedCardColors(containerColor = if (chosen) TealLight else Paper)) {
+                            Column(Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 5.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(order, fontSize = 10.sp, color = if (chosen) Forest else Muted)
+                                Text(label, color = Forest, fontWeight = if (chosen) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 14.sp, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+                Text(when (mode) {
+                    "together" -> "One shared grid, two phones. Work together over the same Wi-Fi."
+                    "versus" -> "Same starting puzzle, separate private boards. First valid finish wins."
+                    else -> "A quiet puzzle with your own timer, pencil marks and saved progress."
+                }, color = Muted, fontSize = 13.sp, lineHeight = 19.sp)
+                when (mode) {
+                    "solo" -> {
+                        if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                            Text(if (state.profile.activeSolo?.completed == true) "Review last solo puzzle" else "Resume solo puzzle")
+                        }
+                        Button(onClick = freshSolo, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("New solo puzzle") }
+                    }
+                    "together" -> {
+                        if (state.resumeHost) OutlinedButton(onClick = { actions.host(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Resume your puzzle") }
+                        Button(onClick = fresh, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                            Text("Host a puzzle")
+                        }
+                        OutlinedButton(onClick = { actions.showJoin(false) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Join a puzzle") }
+                        if (state.resumeGuest) TextButton(onClick = { actions.showJoin(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth()) { Text("Rejoin last puzzle") }
+                    }
+                    else -> {
+                        if (state.resumeRace) OutlinedButton(onClick = { actions.hostRace(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Resume head-to-head room") }
+                        Button(onClick = freshRace, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Host a versus race") }
+                        Text("Invite a friend after hosting. Both players need the same QA app version.",
+                            color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
+                    }
+                }
             }
-            Button(onClick = freshSolo, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = RoundedCornerShape(14.dp)) { Text("New solo puzzle") }
-            OutlinedButton(onClick = actions.profile, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(14.dp)) { Text("My profile & records") }
-            Spacer(Modifier.height(7.dp))
-            Text("PLAY TOGETHER", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
-            if (state.resumeHost) Button(onClick = { actions.host(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) { Text("Resume your puzzle") }
-            Button(onClick = fresh, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) { Text("Host a puzzle") }
-            OutlinedButton(onClick = { actions.showJoin(false) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) { Text("Join a puzzle") }
-            if (state.resumeGuest) TextButton(onClick = { actions.showJoin(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Rejoin last puzzle") }
-            Spacer(Modifier.height(7.dp))
-            Text("HEAD-TO-HEAD RACE", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
-            if (state.resumeRace) OutlinedButton(onClick = { actions.hostRace(true) }, enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(14.dp)) {
-                Text("Resume head-to-head room")
-            }
-            Button(onClick = freshRace, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = RoundedCornerShape(14.dp)) { Text("Host a versus race") }
-            Text("Both phones solve the same starting clues on private boards. First valid finish wins.",
-                color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
-            if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            (state.message ?: state.saveIssue)?.let { Notice(it) }
         }
-        Spacer(Modifier.height(22.dp))
-        Text("Solo records stay on this device.\nCo-op uses two phones on the same Wi-Fi.", textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp, lineHeight = 20.sp)
-        TextButton(onClick = share) { Text("Share APK") }
-        Text("SOLO + LOCAL CO-OP  ·  ${BuildConfig.VERSION_NAME}", fontSize = 10.sp, letterSpacing = 1.5.sp, color = Muted)
+        OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(containerColor = Paper)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("YOUR PLAYER", fontSize = 10.sp, letterSpacing = 1.2.sp,
+                        color = Muted, modifier = Modifier.weight(1f))
+                    Text(modeName + " ready", fontSize = 11.sp, color = Forest)
+                }
+                PlayerIdentity(state.appearance, state.name, compact = true)
+                OutlinedTextField(value = state.name, onValueChange = actions.name,
+                    label = { Text("Player name") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                OutlinedButton(onClick = actions.profile,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("My profile & records") }
+            }
+        }
+        if (state.busy) LinearProgressIndicator(Modifier.widthIn(max = 440.dp).fillMaxWidth())
+        TextButton(onClick = share) { Text("Share the game with a friend", fontSize = 12.sp) }
+        Text("LOCAL PLAY  ·  " + BuildConfig.VERSION_NAME,
+            fontSize = 10.sp, letterSpacing = 1.2.sp, color = Muted)
     }
 }
 
