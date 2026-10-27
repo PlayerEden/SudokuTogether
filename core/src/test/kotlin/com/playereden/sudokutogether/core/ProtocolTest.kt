@@ -21,7 +21,7 @@ class ProtocolTest {
         assertEquals(correct, read(Message("chat", line = correct)).line)
         for (invalid in listOf(
             correct.copy(player = "intruder"),
-            correct.copy(text = "untrusted\\u0000text"),
+            correct.copy(text = "untrusted" + 0.toChar() + "text"),
             correct.copy(text = "x".repeat(ChatRules.MAX_LENGTH + 1)),
             correct.copy(atMs = -1L),
             correct.copy(id = "")
@@ -34,7 +34,7 @@ class ProtocolTest {
         }
     }
 
-        @Test fun rejectsNegativeOversizedTruncatedAndMalformedFrames() {
+    @Test fun rejectsNegativeOversizedTruncatedAndMalformedFrames() {
         for (length in listOf(-1, 0, 131073)) {
             val bytes = ByteArrayOutputStream().also { DataOutputStream(it).writeInt(length) }
             assertThrows(IOException::class.java) { Protocol.read(ByteArrayInputStream(bytes.toByteArray())) }
