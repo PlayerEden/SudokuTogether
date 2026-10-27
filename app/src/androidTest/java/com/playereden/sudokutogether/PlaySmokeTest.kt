@@ -25,7 +25,21 @@ class PlaySmokeTest {
         assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
+    @Test fun homePresentsThreeDistinctModesAndNativeRuleSheet() {
+        compose.onNodeWithText("How to play").performClick()
+        compose.onNodeWithText("How to play Sudoku").assertExists()
+        compose.onNodeWithText("Fill each row", substring = true).assertExists()
+        compose.onNodeWithText("Got it").performClick()
+        compose.onNodeWithText("Co-op").performClick()
+        compose.onNodeWithText("Join a puzzle").assertExists()
+        compose.onNodeWithText("Versus", substring = false).performClick()
+        compose.onNodeWithText("Host a versus race").assertExists()
+        compose.onNodeWithText("Solo").performClick()
+        compose.onNodeWithText("New solo puzzle").assertExists()
+    }
+
     @Test fun hostedRoomHasCompactChatSheet() {
+        compose.onNodeWithText("Co-op").performClick()
         compose.onNodeWithText("Host a puzzle").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Chat").performClick()
@@ -47,6 +61,7 @@ class PlaySmokeTest {
     }
 
     @Test fun raceHostWaitsForSecondPlayerBeforeAllowingInput() {
+        compose.onNodeWithText("Versus", substring = false).performClick()
         compose.onNodeWithText("Host a versus race").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Versus Sudoku").assertExists()
@@ -55,6 +70,7 @@ class PlaySmokeTest {
     }
 
     @Test fun hostCanEnterUndoAndSharePencilMarksWithoutInternet() {
+        compose.onNodeWithText("Co-op").performClick()
         compose.onNodeWithText("Host a puzzle").assertExists().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         val empty = compose.onAllNodes(hasContentDescription("empty", substring = true)).fetchSemanticsNodes().first()
