@@ -33,7 +33,8 @@ const val MAX_RECORDS = 10_000
     val puzzleId: String,
     val elapsedMs: Long,
     val moves: Int,
-    val finishedAtMs: Long
+    val finishedAtMs: Long,
+    val difficulty: String? = null
 )
 
 @Serializable data class LocalPlayerData(
