@@ -4,14 +4,15 @@ import java.security.MessageDigest
 import kotlin.random.Random
 
 object Sudoku {
-    fun generate(seed: Long): Puzzle {
+    fun generate(seed: Long, minClues: Int = 36): Puzzle {
+        require(minClues in 24..45) { "Calibration clue floor must be between 24 and 45" }
         val random = Random(seed)
         fun order(): List<Int> = (0..2).shuffled(random).flatMap { band -> (0..2).shuffled(random).map { band * 3 + it } }
         val rows = order(); val cols = order(); val digits = (1..9).shuffled(random)
         val clues = rows.flatMap { r -> cols.map { c -> digits[(r * 3 + r / 3 + c) % 9] } }.toMutableList()
         var remaining = 81
         for (i in (0..80).shuffled(random)) {
-            if (remaining <= 36) break
+            if (remaining <= minClues) break
             val old = clues[i]; clues[i] = 0
             if (solutionCount(clues) == 1) remaining-- else clues[i] = old
         }
