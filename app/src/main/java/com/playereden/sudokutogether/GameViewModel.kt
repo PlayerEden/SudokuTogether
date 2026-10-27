@@ -27,7 +27,8 @@ data class GameUiState(
     val profile: LocalPlayerData = LocalPlayerData(), val resumeSolo: Boolean = false, val soloElapsedMs: Long = 0L,
     val resumeRace: Boolean = false, val appearance: Appearance = Appearance(),
     val chat: List<ChatLine> = emptyList(), val unreadChat: Int = 0,
-    val chatVisible: Boolean = false
+    val chatVisible: Boolean = false,
+    val uniformNumbers: Boolean = false
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -49,7 +50,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var soloStartedAt: Long? = null
     private var soloElapsedAnchor: Long = 0L
     private var soloTick: Job? = null
-    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null, appearance = savedAppearance()))
+    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null, appearance = savedAppearance(),
+        uniformNumbers = preferences.getBoolean("uniformNumbers", false)))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
     @Volatile private var server: HostServer? = null
@@ -101,6 +103,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _state.update { it.copy(message = "Your style is saved for your next room.") }
             }
         }
+    }
+    fun setUniformNumbers(enabled: Boolean) {
+        preferences.edit().putBoolean("uniformNumbers", enabled).apply()
+        _state.update { it.copy(uniformNumbers = enabled) }
     }
     fun chatVisible(open: Boolean) { _state.update { it.copy(chatVisible = open, unreadChat = if (open) 0 else it.unreadChat) } }
     fun sendChat(raw: String) {
@@ -203,7 +209,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val saved = localPlayer.current()
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
-            resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance) }
+            resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
+            uniformNumbers = it.uniformNumbers) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
 
