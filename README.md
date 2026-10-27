@@ -1,5 +1,9 @@
 # Sudoku Together
 
+> **Current development:** v0.8A puzzle-supply foundation on branch `feat/v0.8-puzzle-foundation` (draft PR #9, stacked on v0.7). The previous hardcoded eight-seed loop has been replaced with fresh random seeds and recent-puzzle history. Automated core/Android tests, lint, and debug APK assembly passed in [GitHub Actions run 40535745302](https://github.com/PlayerEden/SudokuTogether/actions/runs/40535745302). **Human-rated Easy/Medium/Hard, optional hints, Split Clues, remote play and Play Store release are not implemented yet.** Actual two-phone Wi-Fi testing is still needed. Full plan: [v0.8 → launch roadmap](docs/ROADMAP_V08_TO_LAUNCH.md).
+
+> **Historical notes below** document the original v0.1–v0.4 development stages, including test-status statements from those stages. They are preserved for traceability, not the current build status.
+
 A native Android Sudoku game built for **solo, local Wi-Fi co-op, and head-to-head racing**. Co-op and versus use two phones: one hosts, the other joins on the same home Wi-Fi. Solo and local personal records work offline. A cloud account, internet rooms, and synced leaderboards are **not** included.
 
 The name is provisional. This project has its own implementation and original generated puzzles; an unrelated app already uses the same public title.

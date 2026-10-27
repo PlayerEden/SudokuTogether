@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
+import java.security.SecureRandom
 import java.util.concurrent.atomic.AtomicLong
 import android.os.SystemClock
 import kotlinx.coroutines.Job
@@ -61,7 +62,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     @Volatile private var guestResume: SavedSession? = null
     @Volatile private var visible = true
     private val discovery = RoomDiscovery(application) { message -> _state.update { it.copy(message = message) } }
-    private val seeds = longArrayOf(20261025, 2048, 729, 81, 314159, 271828, 1009, 303)
+    // Fresh puzzles use unpredictable seeds. The previous eight-seed rotation
+    // caused regular players to replay identical boards.
+    private val puzzleRandom = SecureRandom()
 
     init { viewModelScope.launch(Dispatchers.IO) {
         val hosted = hostStore.load(); val raced = raceStore.load(); val joined = guestStore.load()
@@ -132,10 +135,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    private fun nextSeed(): Long {
-        val index = preferences.getInt("puzzleIndex", 0).coerceAtLeast(0)
-        preferences.edit().putInt("puzzleIndex", (index + 1) % seeds.size).apply()
-        return seeds[index % seeds.size]
+    @Synchronized private fun nextPuzzle(): Puzzle {
+        // History is deliberately independent of saved solo/host/guest sessions:
+        // installing this update doesn't modify or invalidate unfinished games.
+        val recent = preferences.getString("recentPuzzleIds", "")
+            .orEmpty().split('|').filter { it.isNotBlank() }
+        val puzzle = PuzzleSupply.next(recent, puzzleRandom::nextLong)
+        val updated = PuzzleSupply.remember(recent, puzzle.id).joinToString("|")
+        check(preferences.edit().putString("recentPuzzleIds", updated).commit()) {
+            "Could not save your puzzle history"
+        }
+        return puzzle
     }
     private fun elapsedSolo(): Long =
         soloElapsedAnchor + (soloStartedAt?.let { (SystemClock.elapsedRealtime() - it).coerceAtLeast(0L) } ?: 0L)
@@ -182,7 +192,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val saved = localPlayer.update { data ->
                     if (resume && data.activeSolo != null) data
-                    else data.copy(activeSolo = PersonalPlay.newSolo(Sudoku.generate(nextSeed()), System.currentTimeMillis()))
+                    else data.copy(activeSolo = PersonalPlay.newSolo(nextPuzzle(), System.currentTimeMillis()))
                 }
                 if (generation.get() != current) return@launch
                 val progress = saved.activeSolo!!
@@ -260,7 +270,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 val session = if (resume) {
                     val saved = when (val loaded = store.load()) { is LoadResult.Loaded -> loaded.data; is LoadResult.Recovered -> loaded.data; else -> error("The saved puzzle is unavailable. It has not been replaced.") }
                     GameSession(saved, store::save).also { it.setAppearance(HOST, selectedStyle) }
-                } else GameSession.create(Sudoku.generate(nextSeed()), name, store::save, if (versus) VERSUS else COOP, selectedStyle)
+                } else GameSession.create(nextPuzzle(), name, store::save, if (versus) VERSUS else COOP, selectedStyle)
                 if (generation.get() != current) return@launch
                 val hosted = HostServer(session) { event -> if (generation.get() == current) {
                     recordMultiplayer(event.snapshot, HOST)
@@ -412,7 +422,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         try { server?.replaceGuest() } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save the partner change. Try again.") } }
     } }
     fun newPuzzle() { if (_state.value.role == SOLO) { solo(false); return }; _state.update { it.copy(busy = true, message = null) }; viewModelScope.launch(Dispatchers.IO) {
-        try { server?.newPuzzle(nextSeed()) } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save a new puzzle. Your current puzzle is still here.") } }
+        try { server?.newPuzzle(nextPuzzle()) } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save a new puzzle. Your current puzzle is still here.") } }
         finally { _state.update { it.copy(busy = false) } }
     } }
     override fun onCleared() { stopSoloClock(); closeRoom(); super.onCleared() }
