@@ -1,8 +1,13 @@
 name: Sudoku Together — Build & QA APK
 
-# Manual-only: building an APK is opt-in and never triggered by ordinary commits.
+# One scoped QA check for the v0.5 polish branch. Disable push after this run.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/qa-debug.yml
 
 permissions:
   contents: read
@@ -17,7 +22,7 @@ jobs:
         with:
           # The default branch contains only docs and this workflow.
           # First public build uses the latest tested development branch.
-          ref: ${{ github.ref_name == 'main' && 'fix/v0.4-build-readiness' || github.ref_name }}
+          ref: ${{ github.ref_name == 'main' && 'polish/v0.5-native-ux' || github.ref_name }}
       - name: Report exact source commit
         run: |
           echo "Building $(git rev-parse --short HEAD) from $(git branch --show-current)"
@@ -35,7 +40,7 @@ jobs:
       - name: Run core tests, Android unit tests and lint
         run: |
           chmod +x gradlew
-          ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug --console=plain --stacktrace
+          ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain --stacktrace
       - name: Assemble isolated test APK
         run: ./gradlew :app:assembleDebug --console=plain --stacktrace
       - name: Copy and checksum test APK
