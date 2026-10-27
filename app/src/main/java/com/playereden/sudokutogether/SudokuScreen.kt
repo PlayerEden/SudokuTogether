@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,8 +36,8 @@ val Cream = Color(0xFFF7F4EC)
 val Paper = Color(0xFFFFFDF8)
 val Forest = Color(0xFF234F48)
 val Ink = Color(0xFF263D36)
-val Muted = Color(0xFF6D7C73)
-val Gold = Color(0xFFC39443)
+val Muted = Color(0xFF55665C)
+val Gold = Color(0xFF8A6729)
 val Rule = Color(0xFFCED4C8)
 private val AmberLight = Color(0xFFF3E5BF)
 private val TealLight = Color(0xFFDCECE4)
@@ -54,19 +55,33 @@ data class GameActions(
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
     var confirmation by remember { mutableStateOf<String?>(null) }
+    var helpOpen by rememberSaveable { mutableStateOf(false) }
     BackHandler(state.page != Page.HOME) { if (state.page == Page.PLAY) confirmation = "leave" else actions.home() }
     Surface(Modifier.fillMaxSize(), color = Cream) {
         Box(Modifier.fillMaxSize().safeDrawingPadding()) {
             when (state.page) {
                 Page.HOME -> HomeScreen(state, actions, share, { if (state.resumeHost || state.saveIssue != null) confirmation = "fresh" else actions.host(false) },
                     { if (state.resumeSolo && state.profile.activeSolo?.completed == false) confirmation = "freshSolo" else actions.solo(false) },
-                    { if (state.resumeRace) confirmation = "freshRace" else actions.hostRace(false) })
+                    { if (state.resumeRace) confirmation = "freshRace" else actions.hostRace(false) }, { helpOpen = true })
                 Page.JOIN -> JoinScreen(state, actions)
-                Page.PLAY -> PlayScreen(state, actions, { confirmation = "leave" }, { confirmation = "new" }, { confirmation = "partner" })
+                Page.PLAY -> PlayScreen(state, actions, { confirmation = "leave" }, { confirmation = "new" }, { confirmation = "partner" }, { helpOpen = true })
                 Page.PROFILE -> ProfileScreen(state, actions)
             }
         }
     }
+    if (helpOpen) AlertDialog(
+        onDismissRequest = { helpOpen = false },
+        title = { Text("How to play Sudoku", color = Forest, fontFamily = FontFamily.Serif) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Fill each row, column and 3×3 box with the numbers 1 through 9. Each number appears only once in each.", color = Ink)
+                Text("Tap an empty square, then tap a number. Notes lets you add small pencil marks instead of a final answer.", color = Ink)
+                Text("Erase clears a square. Undo reverses your most recent safe move.", color = Ink)
+                Text("Co-op: both phones edit one board. Versus: race on separate private boards. Both modes use the same local Wi-Fi.", color = Ink)
+            }
+        },
+        confirmButton = { TextButton(onClick = { helpOpen = false }) { Text("Got it") } }
+    )
     confirmation?.let { kind ->
         val title = when (kind) { "leave" -> "Leave the room?"; "partner" -> "Replace your partner?"; else -> "Start a new puzzle?" }
         val body = when (kind) {
@@ -85,64 +100,108 @@ data class GameActions(
     }
 }
 
-@Composable private fun HomeScreen(state: GameUiState, actions: GameActions, share: () -> Unit, fresh: () -> Unit, freshSolo: () -> Unit, freshRace: () -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(Modifier.height(14.dp))
-        Text("A LITTLE THINKING, TOGETHER", fontSize = 10.sp, letterSpacing = 2.sp, color = Muted)
-        Spacer(Modifier.height(22.dp))
-        Canvas(Modifier.size(126.dp).clip(RoundedCornerShape(10.dp)).background(Paper).clearAndSetSemantics {}) {
-            val unit = size.width / 9
-            drawRect(AmberLight, Offset(unit * 2, unit * 2), Size(unit * 2, unit))
-            drawRect(TealLight, Offset(unit * 5, unit * 5), Size(unit, unit * 2))
-            for (i in 0..9) {
-                val stroke = if (i % 3 == 0) 2.dp.toPx() else 0.5.dp.toPx()
-                drawLine(if (i % 3 == 0) Forest else Rule, Offset(i * unit, 0f), Offset(i * unit, size.height), stroke)
-                drawLine(if (i % 3 == 0) Forest else Rule, Offset(0f, i * unit), Offset(size.width, i * unit), stroke)
+@Composable private fun HomeScreen(
+    state: GameUiState, actions: GameActions, share: () -> Unit,
+    fresh: () -> Unit, freshSolo: () -> Unit, freshRace: () -> Unit, help: () -> Unit
+) {
+    var mode by rememberSaveable { mutableStateOf("solo") }
+    val modeName = when (mode) { "together" -> "Together"; "versus" -> "Versus"; else -> "Solo" }
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(42.dp).background(Paper, RoundedCornerShape(11.dp))
+                .border(1.dp, Rule, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) {
+                Text("9×9", color = Forest, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
-            drawCircle(Gold, unit * .23f, Offset(unit * 2.5f, unit * 2.5f))
-            drawCircle(Forest, unit * .23f, Offset(unit * 5.5f, unit * 5.5f))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold, color = Forest)
+                Text("Solo · Co-op · Versus", fontSize = 12.sp, color = Muted)
+            }
+            TextButton(onClick = help, contentPadding = PaddingValues(horizontal = 7.dp)) { Text("Help", fontSize = 12.sp) }
         }
-        Spacer(Modifier.height(20.dp))
-        Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 34.sp, color = Forest, textAlign = TextAlign.Center)
-        Text("Solve solo. Team up. Race a friend.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
-        Column(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(value = state.name, onValueChange = actions.name, label = { Text("Your name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
-            PlayerIdentity(state.appearance, state.name, compact = true)
-            Text("Equipped · " + styleLabel(state.appearance), fontSize = 11.sp,
-                color = inkFor(state.appearance.ink, false), maxLines = 2)
-            Spacer(Modifier.height(2.dp))
-            Text("PLAY ON YOUR OWN", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
-            if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) {
-                Text(if (state.profile.activeSolo?.completed == true) "Review last solo puzzle" else "Resume solo puzzle")
+        (state.message ?: state.saveIssue)?.let { Notice(it) }
+        OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(containerColor = Paper)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("CHOOSE YOUR MODE", color = Muted, fontSize = 10.sp, letterSpacing = 1.2.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    listOf(Triple("solo", "Solo", "01"), Triple("together", "Co-op", "02"),
+                        Triple("versus", "Versus", "03")).forEach { (id, label, order) ->
+                        val chosen = mode == id
+                        OutlinedCard(onClick = { mode = id }, modifier = Modifier.weight(1f).semantics { selected = chosen },
+                            border = BorderStroke(if (chosen) 2.dp else 1.dp, if (chosen) Forest else Rule),
+                            colors = CardDefaults.outlinedCardColors(containerColor = if (chosen) TealLight else Paper)) {
+                            Column(Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 5.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(order, fontSize = 10.sp, color = if (chosen) Forest else Muted)
+                                Text(label, color = Forest, fontWeight = if (chosen) FontWeight.Bold else FontWeight.Medium,
+                                    fontSize = 14.sp, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+                Text(when (mode) {
+                    "together" -> "One shared grid, two phones. Work together over the same Wi-Fi."
+                    "versus" -> "Same starting puzzle, separate private boards. First valid finish wins."
+                    else -> "A quiet puzzle with your own timer, pencil marks and saved progress."
+                }, color = Muted, fontSize = 13.sp, lineHeight = 19.sp)
+                when (mode) {
+                    "solo" -> {
+                        if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                            Text(if (state.profile.activeSolo?.completed == true) "Review last solo puzzle" else "Resume solo puzzle")
+                        }
+                        Button(onClick = freshSolo, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("New solo puzzle") }
+                    }
+                    "together" -> {
+                        if (state.resumeHost) OutlinedButton(onClick = { actions.host(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Resume your puzzle") }
+                        Button(onClick = fresh, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
+                            Text("Host a puzzle")
+                        }
+                        OutlinedButton(onClick = { actions.showJoin(false) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Join a puzzle") }
+                        if (state.resumeGuest) TextButton(onClick = { actions.showJoin(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth()) { Text("Rejoin last puzzle") }
+                    }
+                    else -> {
+                        if (state.resumeRace) OutlinedButton(onClick = { actions.hostRace(true) }, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("Resume head-to-head room") }
+                        Button(onClick = freshRace, enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Host a versus race") }
+                        Text("Invite a friend after hosting. Both players need the same QA app version.",
+                            color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
+                    }
+                }
             }
-            Button(onClick = freshSolo, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = RoundedCornerShape(14.dp)) { Text("New solo puzzle") }
-            OutlinedButton(onClick = actions.profile, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                shape = RoundedCornerShape(14.dp)) { Text("My profile & records") }
-            Spacer(Modifier.height(7.dp))
-            Text("PLAY TOGETHER", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
-            if (state.resumeHost) Button(onClick = { actions.host(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) { Text("Resume your puzzle") }
-            Button(onClick = fresh, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) { Text("Host a puzzle") }
-            OutlinedButton(onClick = { actions.showJoin(false) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(14.dp)) { Text("Join a puzzle") }
-            if (state.resumeGuest) TextButton(onClick = { actions.showJoin(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Rejoin last puzzle") }
-            Spacer(Modifier.height(7.dp))
-            Text("HEAD-TO-HEAD RACE", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
-            if (state.resumeRace) OutlinedButton(onClick = { actions.hostRace(true) }, enabled = !state.busy,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(14.dp)) {
-                Text("Resume head-to-head room")
-            }
-            Button(onClick = freshRace, enabled = !state.busy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                shape = RoundedCornerShape(14.dp)) { Text("Host a versus race") }
-            Text("Both phones solve the same starting clues on private boards. First valid finish wins.",
-                color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
-            if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            (state.message ?: state.saveIssue)?.let { Notice(it) }
         }
-        Spacer(Modifier.height(22.dp))
-        Text("Solo records stay on this device.\nCo-op uses two phones on the same Wi-Fi.", textAlign = TextAlign.Center, color = Muted, fontSize = 13.sp, lineHeight = 20.sp)
-        TextButton(onClick = share) { Text("Share APK") }
-        Text("SOLO + LOCAL CO-OP  ·  ${BuildConfig.VERSION_NAME}", fontSize = 10.sp, letterSpacing = 1.5.sp, color = Muted)
+        OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(containerColor = Paper)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("YOUR PLAYER", fontSize = 10.sp, letterSpacing = 1.2.sp,
+                        color = Muted, modifier = Modifier.weight(1f))
+                    Text(modeName + " ready", fontSize = 11.sp, color = Forest)
+                }
+                PlayerIdentity(state.appearance, state.name, compact = true)
+                OutlinedTextField(value = state.name, onValueChange = actions.name,
+                    label = { Text("Player name") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
+                OutlinedButton(onClick = actions.profile,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("My profile & records") }
+            }
+        }
+        if (state.busy) LinearProgressIndicator(Modifier.widthIn(max = 440.dp).fillMaxWidth())
+        TextButton(onClick = share) { Text("Share the game with a friend", fontSize = 12.sp) }
+        Text("LOCAL PLAY  ·  " + BuildConfig.VERSION_NAME,
+            fontSize = 10.sp, letterSpacing = 1.2.sp, color = Muted)
     }
 }
 
@@ -171,7 +230,7 @@ data class GameActions(
     }
 }
 
-@Composable private fun PlayScreen(state: GameUiState, actions: GameActions, leave: () -> Unit, new: () -> Unit, replace: () -> Unit) {
+@Composable private fun PlayScreen(state: GameUiState, actions: GameActions, leave: () -> Unit, new: () -> Unit, replace: () -> Unit, help: () -> Unit) {
     var details by remember { mutableStateOf(false) }
     var chatOpen by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -183,10 +242,14 @@ data class GameActions(
                     Text(if (state.role == SOLO) "Solo Sudoku" else if (snapshotMode(state) == VERSUS) "Versus Sudoku" else "Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 23.sp, color = Forest)
                     SelectionContainer { Text(when { state.role == SOLO -> "STANDARD  ·  PERSONAL PUZZLE"; state.role == HOST -> "Room code  ${state.roomCode}"; state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD  ·  PRIVATE GRIDS"; else -> "STANDARD  ·  ONE SHARED GRID" }, fontSize = if (state.role == HOST) 12.sp else 9.sp, letterSpacing = 1.sp, color = if (state.role == HOST) Forest else Muted) }
                 }
-                if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatVisible(true) }) {
-                    Text(if (state.unreadChat > 0) "Chat (" + state.unreadChat + ")" else "Chat")
+                if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatVisible(true) },
+                    contentPadding = PaddingValues(horizontal = 7.dp)) {
+                    Text(if (state.unreadChat > 0) "Chat (" + state.unreadChat + ")" else "Chat", fontSize = 12.sp)
                 }
-                TextButton(onClick = leave) { Text("Home") }
+                IconButton(onClick = help, modifier = Modifier.size(42.dp)) {
+                    Text("?", color = Forest, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                }
+                TextButton(onClick = leave, contentPadding = PaddingValues(horizontal = 6.dp)) { Text("Home", fontSize = 12.sp) }
             }
             val snapshot = state.snapshot
             if (snapshot == null) {
@@ -227,11 +290,24 @@ data class GameActions(
                 }
                 SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
                     boardSize, actions.select, state.appearance, state.role == SOLO, state.uniformNumbers)
+                if (state.selected == -1 && state.canEdit) {
+                    Text("Tap a square, then choose a number.", fontSize = 11.sp, color = Muted)
+                }
                 if (state.role != SOLO) {
                     val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
-                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(Modifier.weight(1f)) { PlayerIdentity(state.appearance, state.name, compact = true) }
-                        Box(Modifier.weight(1f)) { PlayerIdentity(other, partnerName ?: "Partner", compact = true) }
+                    Row(Modifier.width(boardSize).background(Paper, RoundedCornerShape(9.dp))
+                        .border(1.dp, Rule, RoundedCornerShape(9.dp))
+                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text(emblemSymbol(state.appearance.emblem) + "  " + state.name,
+                            modifier = Modifier.weight(1f), color = inkFor(state.appearance.ink, false),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold)
+                        Text(emblemSymbol(other.emblem) + "  " + (partnerName ?: "Waiting for partner"),
+                            modifier = Modifier.weight(1f), color = inkFor(other.ink, false),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 12.sp,
+                            textAlign = TextAlign.End)
                     }
                 }
                 if (snapshot.mode == COOP && snapshot.completed && snapshot.guestName != null) {
@@ -248,25 +324,68 @@ data class GameActions(
                         }
                     }
                 }
-                val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
-                Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Notes", fontSize = 13.sp) }
-                    OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell, modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
-                    OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role), modifier = Modifier.weight(1f), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
-                }
-                for (row in listOf((1..5).toList(), (6..9).toList())) {
-                    Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        for (number in row) OutlinedButton(onClick = { actions.number(number) }, enabled = state.canEdit && editableCell, modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number"), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp), colors = ButtonDefaults.outlinedButtonColors(containerColor = Paper)) { Text(number.toString(), fontSize = 23.sp, fontWeight = FontWeight.Medium) }
-                        if (row.size == 4) Box(Modifier.weight(1f).height(keypadHeight), contentAlignment = Alignment.Center) { Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted) }
+                if (snapshot.completed) {
+                    OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+                        colors = CardDefaults.outlinedCardColors(containerColor = TealLight)) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(when {
+                                state.role == SOLO -> "Puzzle completed"
+                                snapshot.mode == VERSUS && snapshot.winner == state.role -> "Victory!"
+                                snapshot.mode == VERSUS -> "Race finished"
+                                else -> "Solved together!"
+                            }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
+                                fontWeight = FontWeight.SemiBold)
+                            if (state.role == HOST || state.role == SOLO) {
+                                Button(onClick = new, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
+                                    Text(if (state.role == SOLO) "Play another solo puzzle"
+                                        else if (snapshot.mode == VERSUS) "Start another race"
+                                        else "Start another co-op puzzle")
+                                }
+                            } else Text("Your host can start the next puzzle.", color = Muted, fontSize = 12.sp)
+                            if (state.role == SOLO) TextButton(onClick = actions.profile) {
+                                Text("View personal records")
+                            }
+                        }
+                    }
+                } else {
+                    val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
+                    Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit,
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper),
+                            border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule),
+                            shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) {
+                            Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp)
+                        }
+                        OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell,
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
+                        OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role),
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
+                    }
+                    for (row in listOf((1..5).toList(), (6..9).toList())) {
+                        Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            for (number in row) OutlinedButton(onClick = { actions.number(number) },
+                                enabled = state.canEdit && editableCell,
+                                modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number"),
+                                shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Paper)) {
+                                Text(number.toString(), fontSize = 23.sp, fontWeight = FontWeight.Medium)
+                            }
+                            if (row.size == 4) Box(Modifier.weight(1f).height(keypadHeight), contentAlignment = Alignment.Center) {
+                                Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
+                            }
+                        }
                     }
                 }
                 state.message?.let { Notice(it) }
                 if (state.role == SOLO) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Saved on this device", Modifier.weight(1f), color = Muted, fontSize = 11.sp)
-                        TextButton(onClick = new) { Text("New solo puzzle", fontSize = 11.sp) }
+                        if (!snapshot.completed) TextButton(onClick = new) { Text("New solo puzzle", fontSize = 11.sp) }
                     }
-                    if (snapshot.completed) TextButton(onClick = actions.profile) { Text("View your personal records") }
                 } else if (state.role == HOST) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Saved on this phone", Modifier.weight(1f), color = Muted, fontSize = 11.sp)
@@ -333,15 +452,29 @@ data class GameActions(
                 }
                 val authoredFont = fontFor(authored.font)
                 val authoredInk = inkFor(authored.ink, darkBoard)
+                val sameHouse = selected in 0..80 && (
+                    row == selected / 9 || col == selected % 9 ||
+                    (row / 3 == selected / 27 && col / 3 == (selected % 9) / 3)
+                )
                 val background = when {
                     i == selected -> if (darkBoard) Color(0xFF555336) else AmberLight
                     i == partner -> if (darkBoard) Color(0xFF305C55) else TealLight
                     i in conflicts -> if (darkBoard) Color(0xFF63362C) else Color(0xFFF8E7DF)
                     selectedValue != 0 && selectedValue == cell.value -> if (darkBoard) Color(0xFF37473B) else Color(0xFFF5EEDB)
+                    sameHouse -> if (darkBoard) Color(0xFF213B3E) else Color(0xFFF0F3EB)
                     else -> boardPaper
                 }
                 Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, boardEdge) else Modifier)
-                    .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) { contentDescription = content }, contentAlignment = Alignment.Center) {
+                    .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) {
+                         contentDescription = content
+                         this.selected = i == selected
+                         stateDescription = when {
+                             i == selected -> "Selected square"
+                             i == partner -> "Partner's selected square"
+                             i in conflicts -> "Conflicting value"
+                             else -> "Puzzle square"
+                         }
+                     }, contentAlignment = Alignment.Center) {
                     if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = if (given) FontFamily.SansSerif else authoredFont),
                         maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (i in conflicts) (if (darkBoard) Color(0xFFFFB7A6) else Brick) else if (given) neutralInk else authoredInk)
