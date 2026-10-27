@@ -119,11 +119,11 @@ data class GameActions(
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 26.sp,
+                Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold, color = Forest)
-                Text("Your puzzle. Your pace. Your people.", fontSize = 12.sp, color = Muted)
+                Text("Solo · Co-op · Versus", fontSize = 12.sp, color = Muted)
             }
-            TextButton(onClick = help) { Text("How to play", fontSize = 12.sp) }
+            TextButton(onClick = help, contentPadding = PaddingValues(horizontal = 7.dp)) { Text("Help", fontSize = 12.sp) }
         }
         (state.message ?: state.saveIssue)?.let { Notice(it) }
         OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
