@@ -64,6 +64,31 @@ class VersusTest {
         }
     }
 
+    @Test fun tamperedRaceProgressOrOwnershipIsRejectedOnSaveAndWire() {
+        val game = GameSession.create(fixture(), mode = VERSUS)
+        game.admitGuest("Rival")
+        game.setPresence()
+        assertTrue(game.submit(HOST, game.snapshot().move(0, number = 1)).accepted)
+        val master = game.saved()
+        validateSnapshot(master.snapshot)
+        assertThrows(IllegalArgumentException::class.java) {
+            validateSnapshot(master.snapshot.copy(hostProgress = 81))
+        }
+        val guestBoard = master.snapshot.guestCells.toMutableList()
+        guestBoard[0] = Cell(value = 3, owner = HOST, revision = master.snapshot.revision)
+        assertThrows(IllegalArgumentException::class.java) {
+            validateSnapshot(master.snapshot.copy(guestCells = guestBoard))
+        }
+        val filtered = game.snapshotForGuest()
+        validateSnapshot(filtered)
+        assertThrows(IllegalArgumentException::class.java) {
+            validateSnapshot(filtered.copy(winner = GUEST, completed = true))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            validateSnapshot(filtered.copy(guestProgress = 81))
+        }
+    }
+
     private fun <T> await(queue: LinkedBlockingQueue<T>, predicate: (T) -> Boolean): T {
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(8)
         while (System.nanoTime() < deadline) {
