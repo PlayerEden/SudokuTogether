@@ -74,6 +74,28 @@ class HumanSudokuTest {
         }
     }
 
+    @Test fun calibratesCandidateGenerationClueFloorsWithoutChangingLegacySeedOutput() {
+        val seeds = (2001L..2048L).toList()
+        for (floor in listOf(36, 32, 29, 26, 24)) {
+            val started = System.nanoTime()
+            val sample = seeds.map { seed ->
+                val puzzle = Sudoku.generate(seed, floor)
+                assertEquals(1, Sudoku.solutionCount(puzzle.clues))
+                if (floor == 36) assertEquals(Sudoku.generate(seed), puzzle)
+                puzzle to HumanSudoku.assess(puzzle)
+            }
+            val distribution = sample.groupingBy { it.second.grade }.eachCount()
+            val clueCounts = sample.map { it.first.clues.count { x -> x != 0 } }
+            val elapsedMs = (System.nanoTime() - started) / 1_000_000
+            println("SUDOKU_V08B_FLOOR_$floor=" + distribution.toSortedMap(compareBy { it.ordinal }) +
+                ", clues_min=${clueCounts.minOrNull()}, clues_max=${clueCounts.maxOrNull()}, " +
+                "millis=$elapsedMs")
+            assertEquals(seeds.size, sample.size)
+            assertEquals(0, distribution[HumanSudoku.Grade.INVALID] ?: 0)
+            assertTrue(clueCounts.all { it >= floor })
+        }
+    }
+
     @Test fun reportCalibratesCurrent36ClueGeneratorWithoutClaimingAllTiersAvailable() {
         val distribution = (101L..148L).map { HumanSudoku.assess(Sudoku.generate(it)) }
             .groupingBy { it.grade }.eachCount()
