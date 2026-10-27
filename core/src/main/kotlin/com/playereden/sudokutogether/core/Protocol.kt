@@ -14,11 +14,13 @@ import java.util.concurrent.ThreadFactory
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+const val WIRE_PROTOCOL_VERSION = 4
+
 @Serializable data class RoomStatus(val hostActive: Boolean = true, val guestActive: Boolean = false, val reserved: Boolean = false) {
     val paused: Boolean get() = !hostActive || (reserved && !guestActive)
 }
 @Serializable data class Message(
-    val type: String, val version: Int = 4, val code: String = "", val name: String = "", val token: String? = null,
+    val type: String, val version: Int = WIRE_PROTOCOL_VERSION, val code: String = "", val name: String = "", val token: String? = null,
     val snapshot: Snapshot? = null, val status: RoomStatus? = null, val operation: Operation? = null,
     val outcome: Outcome? = null, val cell: Int = -1, val active: Boolean = true, val text: String = "",
     val appearance: Appearance = Appearance(), val line: ChatLine? = null, val lines: List<ChatLine> = emptyList()
