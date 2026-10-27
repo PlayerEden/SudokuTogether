@@ -283,12 +283,22 @@ data class GameActions(
     val noteStyle = TextStyle(fontSize = noteSize, lineHeight = noteSize, platformStyle = PlatformTextStyle(includeFontPadding = false))
     val conflicts = remember(snapshot.cells) { Sudoku.conflicts(snapshot.cells.map { it.value }) }
     val selectedValue = snapshot.cells.getOrNull(selected)?.value ?: 0
-    Column(Modifier.size(size).clip(RoundedCornerShape(3.dp)).background(Paper).drawWithContent {
+    val darkBoard = localStyle.board == "midnight" || localStyle.board == "circuit"
+    val boardPaper = when (localStyle.board) {
+        "linen" -> Color(0xFFFFF6DF)
+        "midnight" -> Color(0xFF152A36)
+        "circuit" -> Color(0xFF102A2B)
+        else -> Paper
+    }
+    val boardRule = if (darkBoard) Color(0xFF49616B) else Rule
+    val boardEdge = if (darkBoard) Color(0xFFA9C8C3) else Forest
+    val neutralInk = if (darkBoard) Color(0xFFF2F2E9) else Ink
+    Column(Modifier.size(size).clip(RoundedCornerShape(3.dp)).background(boardPaper).drawWithContent {
         drawContent()
         val step = this.size.width / 9
         for (i in 0..9) {
             val stroke = if (i % 3 == 0) 1.8.dp.toPx() else .5.dp.toPx()
-            val color = if (i % 3 == 0) Forest else Rule
+            val color = if (i % 3 == 0) boardEdge else boardRule
             drawLine(color, Offset(i * step, 0f), Offset(i * step, this.size.height), stroke)
             drawLine(color, Offset(0f, i * step), Offset(this.size.width, i * step), stroke)
         }
@@ -298,16 +308,31 @@ data class GameActions(
                 val i = row * 9 + col; val cell = snapshot.cells[i]; val given = snapshot.puzzle.clues[i] != 0
                 val noteNumbers = (1..9).filter { cell.notes and (1 shl (it - 1)) != 0 }
                 val content = "Row ${row + 1} column ${col + 1}, " + when { given -> "clue ${cell.value}"; cell.value != 0 -> "value ${cell.value}"; noteNumbers.isNotEmpty() -> "empty, notes ${noteNumbers.joinToString(" ")}"; else -> "empty" }
-                val background = when { i == selected -> AmberLight; i == partner -> TealLight; i in conflicts -> Color(0xFFF8E7DF); selectedValue != 0 && selectedValue == cell.value -> Color(0xFFF5EEDB); else -> Paper }
-                Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, Forest) else Modifier)
+                val authored = if (solo && !given) localStyle else when (cell.owner) {
+                    HOST -> snapshot.hostAppearance
+                    GUEST -> snapshot.guestAppearance
+                    else -> Appearance()
+                }
+                val authoredFont = fontFor(authored.font)
+                val authoredInk = inkFor(authored.ink, darkBoard)
+                val background = when {
+                    i == selected -> if (darkBoard) Color(0xFF555336) else AmberLight
+                    i == partner -> if (darkBoard) Color(0xFF305C55) else TealLight
+                    i in conflicts -> if (darkBoard) Color(0xFF63362C) else Color(0xFFF8E7DF)
+                    selectedValue != 0 && selectedValue == cell.value -> if (darkBoard) Color(0xFF37473B) else Color(0xFFF5EEDB)
+                    else -> boardPaper
+                }
+                Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, boardEdge) else Modifier)
                     .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) { contentDescription = content }, contentAlignment = Alignment.Center) {
-                    if (cell.value != 0) Text(cell.value.toString(), style = digitStyle, maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal, color = if (i in conflicts) Brick else if (given) Ink else Forest)
+                    if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = if (given) FontFamily.SansSerif else authoredFont),
+                        maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (i in conflicts) (if (darkBoard) Color(0xFFFFB7A6) else Brick) else if (given) neutralInk else authoredInk)
                     else if (cell.notes != 0) Column(Modifier.fillMaxSize().padding(1.dp)) {
                         for (r in 0..2) Row(Modifier.weight(1f).fillMaxWidth()) {
                             for (c in 0..2) {
                                 val n = r * 3 + c + 1
                                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                    if (n in noteNumbers) Text(n.toString(), color = Muted, style = noteStyle, maxLines = 1, softWrap = false)
+                                    if (n in noteNumbers) Text(n.toString(), color = if (darkBoard) authoredInk else Muted, style = noteStyle.copy(fontFamily = authoredFont), maxLines = 1, softWrap = false)
                                 }
                             }
                         }
