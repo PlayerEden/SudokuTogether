@@ -3,6 +3,9 @@ package com.playereden.sudokutogether
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -44,7 +47,8 @@ data class GameActions(
     val home: () -> Unit, val join: (Endpoint, String) -> Unit, val select: (Int) -> Unit,
     val number: (Int) -> Unit, val toggleNotes: () -> Unit, val erase: () -> Unit,
     val undo: () -> Unit, val replacePartner: () -> Unit, val newPuzzle: () -> Unit,
-    val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit
+    val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
+    val sendChat: (String) -> Unit, val chatRead: () -> Unit, val cosmetic: (String, String) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -165,6 +169,7 @@ data class GameActions(
 
 @Composable private fun PlayScreen(state: GameUiState, actions: GameActions, leave: () -> Unit, new: () -> Unit, replace: () -> Unit) {
     var details by remember { mutableStateOf(false) }
+    var chatOpen by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val boardSize = minOf((maxWidth - 32.dp).coerceAtLeast(180.dp), (maxHeight - 300.dp).coerceAtLeast(220.dp), 440.dp)
         val keypadHeight = maxOf(48.dp, (40 * LocalDensity.current.fontScale).dp)
@@ -173,6 +178,9 @@ data class GameActions(
                 Column(Modifier.weight(1f)) {
                     Text(if (state.role == SOLO) "Solo Sudoku" else if (snapshotMode(state) == VERSUS) "Versus Sudoku" else "Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 23.sp, color = Forest)
                     SelectionContainer { Text(when { state.role == SOLO -> "STANDARD  ·  PERSONAL PUZZLE"; state.role == HOST -> "Room code  ${state.roomCode}"; state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD  ·  PRIVATE GRIDS"; else -> "STANDARD  ·  ONE SHARED GRID" }, fontSize = if (state.role == HOST) 12.sp else 9.sp, letterSpacing = 1.sp, color = if (state.role == HOST) Forest else Muted) }
+                }
+                if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatRead() }) {
+                    Text(if (state.unreadChat > 0) "Chat (" + state.unreadChat + ")" else "Chat")
                 }
                 TextButton(onClick = leave) { Text("Home") }
             }
@@ -213,7 +221,15 @@ data class GameActions(
                         " C" + (state.partnerCell % 9 + 1) else "◇ Partner", color = Forest, fontSize = 10.sp)
                     else Text("Time  " + formatElapsed(state.soloElapsedMs), color = Forest, fontSize = 10.sp)
                 }
-                SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell, boardSize, actions.select)
+                SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
+                    boardSize, actions.select, state.appearance, state.role == SOLO)
+                if (state.role != SOLO) {
+                    val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
+                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("You: " + styleLabel(state.appearance), color = inkFor(state.appearance.ink, false), fontSize = 10.sp)
+                        Text("Rival: " + styleLabel(other), color = inkFor(other.ink, false), fontSize = 10.sp)
+                    }
+                }
                 val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
                 Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Notes", fontSize = 13.sp) }
@@ -250,9 +266,13 @@ data class GameActions(
             }
         }
     }
+    if (chatOpen && state.role != SOLO) RoomChatSheet(state, actions) {
+        chatOpen = false
+        actions.chatRead()
+    }
 }
 
-@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit) {
+@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit, localStyle: Appearance, solo: Boolean) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -331,6 +351,12 @@ private fun formatElapsed(milliseconds: Long): String {
                 Text("Co-op puzzles completed: " + stats.coopCompletions, color = Ink)
             }
         }
+        Text("YOUR COLLECTION", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
+        Text("Earn styles by finishing puzzles. Number colors and fonts travel with your moves in co-op.",
+            color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        CosmeticSelector("Number colors", "ink", Cosmetics.inks, state.appearance.ink, state, actions)
+        CosmeticSelector("Board styles", "board", Cosmetics.boards, state.appearance.board, state, actions)
+        CosmeticSelector("Number fonts", "font", Cosmetics.fonts, state.appearance.font, state, actions)
         Text("RECENT FINISHES", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
         val recent = state.profile.records.takeLast(15).reversed()
         if (recent.isEmpty()) Text("Finish a solo puzzle to save your first record.", fontSize = 14.sp, color = Muted)
