@@ -77,12 +77,13 @@ class PuzzleSupplyTest {
             assertTrue(expected.message!!.contains("no saved puzzle was replaced"))
         }
         assertEquals(4, attempts)
+        val easyAtHardFloor = (2001L..2048L).first {
+            HumanSudoku.assess(Sudoku.generate(it, 24)).grade == HumanSudoku.Grade.EASY
+        }
         try {
             PuzzleSupply.nextRated(HumanSudoku.Grade.HARD, emptyList(),
-                { easySeed }, attempts = 2)
-            // A particular 24-clue seed may actually be Hard. If so, this
-            // cannot test non-downgrading, so we test an explicitly Easy
-            // grade below using the same deterministic candidate floor.
+                { easyAtHardFloor }, attempts = 2)
+            fail("A genuinely Easy 24-clue puzzle must not be presented as Hard")
         } catch (expected: IllegalStateException) {
             assertTrue(expected.message!!.contains("hard"))
         }
