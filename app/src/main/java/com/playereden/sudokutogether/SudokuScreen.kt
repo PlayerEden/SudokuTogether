@@ -3,6 +3,9 @@ package com.playereden.sudokutogether
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -44,7 +47,8 @@ data class GameActions(
     val home: () -> Unit, val join: (Endpoint, String) -> Unit, val select: (Int) -> Unit,
     val number: (Int) -> Unit, val toggleNotes: () -> Unit, val erase: () -> Unit,
     val undo: () -> Unit, val replacePartner: () -> Unit, val newPuzzle: () -> Unit,
-    val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit
+    val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
+    val sendChat: (String) -> Unit, val chatRead: () -> Unit, val cosmetic: (String, String) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -99,9 +103,11 @@ data class GameActions(
         }
         Spacer(Modifier.height(20.dp))
         Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 34.sp, color = Forest, textAlign = TextAlign.Center)
-        Text("One grid. Two minds.", color = Muted, fontSize = 16.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
+        Text("Solve solo. Team up. Race a friend.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
         Column(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedTextField(value = state.name, onValueChange = actions.name, label = { Text("Your name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
+            Text("EQUIPPED STYLE  ·  " + styleLabel(state.appearance), fontSize = 11.sp,
+                color = inkFor(state.appearance.ink, false), maxLines = 2)
             Spacer(Modifier.height(2.dp))
             Text("PLAY ON YOUR OWN", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
             if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
@@ -165,6 +171,7 @@ data class GameActions(
 
 @Composable private fun PlayScreen(state: GameUiState, actions: GameActions, leave: () -> Unit, new: () -> Unit, replace: () -> Unit) {
     var details by remember { mutableStateOf(false) }
+    var chatOpen by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val boardSize = minOf((maxWidth - 32.dp).coerceAtLeast(180.dp), (maxHeight - 300.dp).coerceAtLeast(220.dp), 440.dp)
         val keypadHeight = maxOf(48.dp, (40 * LocalDensity.current.fontScale).dp)
@@ -173,6 +180,9 @@ data class GameActions(
                 Column(Modifier.weight(1f)) {
                     Text(if (state.role == SOLO) "Solo Sudoku" else if (snapshotMode(state) == VERSUS) "Versus Sudoku" else "Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 23.sp, color = Forest)
                     SelectionContainer { Text(when { state.role == SOLO -> "STANDARD  ·  PERSONAL PUZZLE"; state.role == HOST -> "Room code  ${state.roomCode}"; state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD  ·  PRIVATE GRIDS"; else -> "STANDARD  ·  ONE SHARED GRID" }, fontSize = if (state.role == HOST) 12.sp else 9.sp, letterSpacing = 1.sp, color = if (state.role == HOST) Forest else Muted) }
+                }
+                if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatRead() }) {
+                    Text(if (state.unreadChat > 0) "Chat (" + state.unreadChat + ")" else "Chat")
                 }
                 TextButton(onClick = leave) { Text("Home") }
             }
@@ -213,7 +223,19 @@ data class GameActions(
                         " C" + (state.partnerCell % 9 + 1) else "◇ Partner", color = Forest, fontSize = 10.sp)
                     else Text("Time  " + formatElapsed(state.soloElapsedMs), color = Forest, fontSize = 10.sp)
                 }
-                SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell, boardSize, actions.select)
+                SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
+                    boardSize, actions.select, state.appearance, state.role == SOLO)
+                if (state.role != SOLO) {
+                    val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
+                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("YOU · " + styleLabel(state.appearance), modifier = Modifier.weight(1f),
+                            color = inkFor(state.appearance.ink, false), fontSize = 10.sp, maxLines = 2,
+                            overflow = TextOverflow.Ellipsis)
+                        Text("RIVAL · " + styleLabel(other), modifier = Modifier.weight(1f),
+                            color = inkFor(other.ink, false), fontSize = 10.sp, maxLines = 2,
+                            overflow = TextOverflow.Ellipsis)
+                    }
+                }
                 val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
                 Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Notes", fontSize = 13.sp) }
@@ -250,9 +272,13 @@ data class GameActions(
             }
         }
     }
+    if (chatOpen && state.role != SOLO) RoomChatSheet(state, actions) {
+        chatOpen = false
+        actions.chatRead()
+    }
 }
 
-@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit) {
+@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit, localStyle: Appearance, solo: Boolean) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -263,12 +289,22 @@ data class GameActions(
     val noteStyle = TextStyle(fontSize = noteSize, lineHeight = noteSize, platformStyle = PlatformTextStyle(includeFontPadding = false))
     val conflicts = remember(snapshot.cells) { Sudoku.conflicts(snapshot.cells.map { it.value }) }
     val selectedValue = snapshot.cells.getOrNull(selected)?.value ?: 0
-    Column(Modifier.size(size).clip(RoundedCornerShape(3.dp)).background(Paper).drawWithContent {
+    val darkBoard = localStyle.board == "midnight" || localStyle.board == "circuit"
+    val boardPaper = when (localStyle.board) {
+        "linen" -> Color(0xFFFFF6DF)
+        "midnight" -> Color(0xFF152A36)
+        "circuit" -> Color(0xFF102A2B)
+        else -> Paper
+    }
+    val boardRule = if (darkBoard) Color(0xFF49616B) else Rule
+    val boardEdge = if (darkBoard) Color(0xFFA9C8C3) else Forest
+    val neutralInk = if (darkBoard) Color(0xFFF2F2E9) else Ink
+    Column(Modifier.size(size).clip(RoundedCornerShape(3.dp)).background(boardPaper).drawWithContent {
         drawContent()
         val step = this.size.width / 9
         for (i in 0..9) {
             val stroke = if (i % 3 == 0) 1.8.dp.toPx() else .5.dp.toPx()
-            val color = if (i % 3 == 0) Forest else Rule
+            val color = if (i % 3 == 0) boardEdge else boardRule
             drawLine(color, Offset(i * step, 0f), Offset(i * step, this.size.height), stroke)
             drawLine(color, Offset(0f, i * step), Offset(this.size.width, i * step), stroke)
         }
@@ -278,16 +314,31 @@ data class GameActions(
                 val i = row * 9 + col; val cell = snapshot.cells[i]; val given = snapshot.puzzle.clues[i] != 0
                 val noteNumbers = (1..9).filter { cell.notes and (1 shl (it - 1)) != 0 }
                 val content = "Row ${row + 1} column ${col + 1}, " + when { given -> "clue ${cell.value}"; cell.value != 0 -> "value ${cell.value}"; noteNumbers.isNotEmpty() -> "empty, notes ${noteNumbers.joinToString(" ")}"; else -> "empty" }
-                val background = when { i == selected -> AmberLight; i == partner -> TealLight; i in conflicts -> Color(0xFFF8E7DF); selectedValue != 0 && selectedValue == cell.value -> Color(0xFFF5EEDB); else -> Paper }
-                Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, Forest) else Modifier)
+                val authored = if (solo && !given) localStyle else when (cell.owner) {
+                    HOST -> snapshot.hostAppearance
+                    GUEST -> snapshot.guestAppearance
+                    else -> Appearance()
+                }
+                val authoredFont = fontFor(authored.font)
+                val authoredInk = inkFor(authored.ink, darkBoard)
+                val background = when {
+                    i == selected -> if (darkBoard) Color(0xFF555336) else AmberLight
+                    i == partner -> if (darkBoard) Color(0xFF305C55) else TealLight
+                    i in conflicts -> if (darkBoard) Color(0xFF63362C) else Color(0xFFF8E7DF)
+                    selectedValue != 0 && selectedValue == cell.value -> if (darkBoard) Color(0xFF37473B) else Color(0xFFF5EEDB)
+                    else -> boardPaper
+                }
+                Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, boardEdge) else Modifier)
                     .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) { contentDescription = content }, contentAlignment = Alignment.Center) {
-                    if (cell.value != 0) Text(cell.value.toString(), style = digitStyle, maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal, color = if (i in conflicts) Brick else if (given) Ink else Forest)
+                    if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = if (given) FontFamily.SansSerif else authoredFont),
+                        maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (i in conflicts) (if (darkBoard) Color(0xFFFFB7A6) else Brick) else if (given) neutralInk else authoredInk)
                     else if (cell.notes != 0) Column(Modifier.fillMaxSize().padding(1.dp)) {
                         for (r in 0..2) Row(Modifier.weight(1f).fillMaxWidth()) {
                             for (c in 0..2) {
                                 val n = r * 3 + c + 1
                                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                    if (n in noteNumbers) Text(n.toString(), color = Muted, style = noteStyle, maxLines = 1, softWrap = false)
+                                    if (n in noteNumbers) Text(n.toString(), color = if (darkBoard) authoredInk else Muted, style = noteStyle.copy(fontFamily = authoredFont), maxLines = 1, softWrap = false)
                                 }
                             }
                         }
@@ -331,6 +382,12 @@ private fun formatElapsed(milliseconds: Long): String {
                 Text("Co-op puzzles completed: " + stats.coopCompletions, color = Ink)
             }
         }
+        Text("YOUR COLLECTION", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
+        Text("Earn styles by finishing puzzles. Number colors and fonts travel with your moves in co-op.",
+            color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        CosmeticSelector("Number colors", "ink", Cosmetics.inks, state.appearance.ink, state, actions)
+        CosmeticSelector("Board styles", "board", Cosmetics.boards, state.appearance.board, state, actions)
+        CosmeticSelector("Number fonts", "font", Cosmetics.fonts, state.appearance.font, state, actions)
         Text("RECENT FINISHES", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
         val recent = state.profile.records.takeLast(15).reversed()
         if (recent.isEmpty()) Text("Finish a solo puzzle to save your first record.", fontSize = 14.sp, color = Muted)

@@ -4,6 +4,14 @@ A native Android Sudoku game built for **solo, local Wi-Fi co-op, and head-to-he
 
 The name is provisional. This project has its own implementation and original generated puzzles; an unrelated app already uses the same public title.
 
+## v0.3 experimental: player identity and local chat
+
+The stacked `feat/chat-cosmetics-v0.3` branch introduces an optional collapsible room chat for co-op and versus, with quick phrases and a 30-line memory-only chat history. It also adds earned number colors, local board backgrounds and built-in font choices under **My profile & records**.
+
+In co-op, numbers written by each player carry that player's equipped color and number font. The starting clues stay neutral; undo restores the previous contributor's style. In versus, an opponent's equipped cosmetic set is visible as a small identity label, but their private solution entries remain hidden. Profile unlocks are earned from device-local saved achievements, not online accounts or a store.
+
+**Status:** source and tests have been authored; compilation, Android tests, signing and two-phone acceptance are pending. Wi-Fi protocol **v3** and Android `0.3.0-dev` require both players to upgrade together. [Implementation and QA handoff](docs/V0.3_HANDOFF.md).
+
 ## v0.2 development branch: solo, versus, and player records
 
 Branch: `feat/solo-profiles-race-v0.2` (based on the existing v0.1 co-op branch).

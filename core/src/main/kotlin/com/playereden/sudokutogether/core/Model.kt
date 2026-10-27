@@ -8,14 +8,15 @@ const val GUEST = "guest"
 const val COOP = "coop"
 const val VERSUS = "versus"
 @Serializable data class Puzzle(val id: String, val clues: List<Int>)
-@Serializable data class Cell(val value: Int = 0, val notes: Int = 0, val revision: Long = 0)
+@Serializable data class Cell(val value: Int = 0, val notes: Int = 0, val revision: Long = 0, val owner: String? = null)
 @Serializable data class Snapshot(
     val sessionId: String, val epoch: String, val puzzle: Puzzle, val cells: List<Cell>,
     val revision: Long = 0, val completed: Boolean = false, val hostName: String = "Host",
     val guestName: String? = null, val undoTargets: Map<String, Int> = emptyMap(),
     val mode: String = COOP, val guestCells: List<Cell> = emptyList(),
     val winner: String? = null, val raceStartedAtMs: Long? = null,
-    val hostProgress: Int = 0, val guestProgress: Int = 0
+    val hostProgress: Int = 0, val guestProgress: Int = 0,
+    val hostAppearance: Appearance = Appearance(), val guestAppearance: Appearance = Appearance()
 )
 @Serializable enum class Kind { VALUE, NOTE, CLEAR, UNDO }
 @Serializable data class Operation(

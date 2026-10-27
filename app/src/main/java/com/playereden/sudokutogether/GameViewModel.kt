@@ -25,13 +25,21 @@ data class GameUiState(
     val address: String = "", val rooms: List<NearbyRoom> = emptyList(), val resumeHost: Boolean = false,
     val resumeGuest: Boolean = false, val resumingGuest: Boolean = false, val saveIssue: String? = null, val message: String? = null,
     val profile: LocalPlayerData = LocalPlayerData(), val resumeSolo: Boolean = false, val soloElapsedMs: Long = 0L,
-    val resumeRace: Boolean = false
+    val resumeRace: Boolean = false, val appearance: Appearance = Appearance(),
+    val chat: List<ChatLine> = emptyList(), val unreadChat: Int = 0
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences = application.getSharedPreferences("settings", 0)
+    private fun savedAppearance(): Appearance = Cosmetics.accessible(
+        Appearance(
+            preferences.getString("cosmeticInk", "forest") ?: "forest",
+            preferences.getString("cosmeticBoard", "classic") ?: "classic",
+            preferences.getString("cosmeticFont", "clear") ?: "clear"
+        ), localPlayer.current().records
+    )
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
     private val raceStore = AtomicSessionStore(File(application.filesDir, "host-race-session.json"))
     private val guestStore = AtomicSessionStore(File(application.filesDir, "guest-session.json"))
@@ -39,7 +47,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var soloStartedAt: Long? = null
     private var soloElapsedAnchor: Long = 0L
     private var soloTick: Job? = null
-    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null))
+    private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null, appearance = savedAppearance()))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
     @Volatile private var server: HostServer? = null
@@ -64,6 +72,49 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun setName(name: String) {
         val value = name.filterNot { it.isISOControl() }.take(24)
         _state.update { it.copy(name = value) }; preferences.edit().putString("name", value).apply()
+    }
+    fun chooseCosmetic(group: String, id: String) {
+        val state = _state.value
+        if (!Cosmetics.allowed(id, state.profile.records)) return
+        val next = when (group) {
+            "ink" -> state.appearance.copy(ink = id)
+            "board" -> state.appearance.copy(board = id)
+            "font" -> state.appearance.copy(font = id)
+            else -> return
+        }
+        if (!Cosmetics.valid(next)) return
+        preferences.edit().putString("cosmeticInk", next.ink)
+            .putString("cosmeticBoard", next.board).putString("cosmeticFont", next.font).apply()
+        _state.update { it.copy(appearance = next) }
+        val current = generation.get()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (generation.get() == current) {
+                    if (state.role == HOST) server?.setHostAppearance(next)
+                    else if (state.role == GUEST) guest?.changeAppearance(next)
+                }
+            } catch (_: Exception) {
+                _state.update { it.copy(message = "Your style is saved for your next room.") }
+            }
+        }
+    }
+    fun chatRead() { _state.update { it.copy(unreadChat = 0) } }
+    fun sendChat(raw: String) {
+        val content = ChatRules.clean(raw)
+        val s = _state.value
+        if (content.isBlank() || s.role == SOLO || s.page != Page.PLAY || s.snapshot == null) return
+        val current = generation.get()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (generation.get() == current) {
+                    if (s.role == HOST) {
+                        if (server?.chat(content) != true) _state.update { it.copy(message = "Chat is busy. Try again shortly.") }
+                    } else guest?.sendChat(content)
+                }
+            } catch (_: Exception) {
+                _state.update { it.copy(message = "Could not send chat. Check your connection.") }
+            }
+        }
     }
     private fun nextSeed(): Long {
         val index = preferences.getInt("puzzleIndex", 0).coerceAtLeast(0)
@@ -110,7 +161,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.busy) return
         stopSoloClock()
         val current = closeRoom()
-        _state.update { it.copy(page = Page.PLAY, role = SOLO, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null) }
+        _state.update { it.copy(page = Page.PLAY, role = SOLO, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null, chat = emptyList(), unreadChat = 0) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val saved = localPlayer.update { data ->
@@ -148,7 +199,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val saved = localPlayer.current()
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
-            resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace) }
+            resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
 
@@ -182,13 +233,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         stopSoloClock()
         val current = closeRoom(); val name = cleanName(_state.value.name, "Player")
         val store = if (versus) raceStore else hostStore
+        val selectedStyle = _state.value.appearance
         _state.update { it.copy(page = Page.PLAY, role = HOST, snapshot = null, busy = true, pendingId = null, selected = -1, partnerCell = -1, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val session = if (resume) {
                     val saved = when (val loaded = store.load()) { is LoadResult.Loaded -> loaded.data; is LoadResult.Recovered -> loaded.data; else -> error("The saved puzzle is unavailable. It has not been replaced.") }
-                    GameSession(saved, store::save)
-                } else GameSession.create(Sudoku.generate(nextSeed()), name, store::save, if (versus) VERSUS else COOP)
+                    GameSession(saved, store::save).also { it.setAppearance(HOST, selectedStyle) }
+                } else GameSession.create(Sudoku.generate(nextSeed()), name, store::save, if (versus) VERSUS else COOP, selectedStyle)
                 if (generation.get() != current) return@launch
                 val hosted = HostServer(session) { event -> if (generation.get() == current) {
                     recordMultiplayer(event.snapshot, HOST)
@@ -198,7 +250,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             partnerCell = event.partnerCell, selected = if (changed) -1 else previous.selected,
                             pendingId = if (changed || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
                             message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message,
-                            resumeRace = if (versus) true else previous.resumeRace)
+                            resumeRace = if (versus) true else previous.resumeRace,
+                            chat = if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
+                            unreadChat = previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0)
                     }
                 } }
                 server = hosted; val port = hosted.start(); hosted.setForeground(visible)
@@ -222,7 +276,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val identity = if (resume) guestResume?.guest else null
         val expectedSession = if (resume) guestResume?.snapshot?.sessionId else null
         val current = closeRoom(); val name = cleanName(_state.value.name, "Partner")
-        _state.update { it.copy(busy = true, role = GUEST, connected = false, pendingId = null, message = null, selected = -1, partnerCell = -1) }
+        _state.update { it.copy(busy = true, role = GUEST, connected = false, pendingId = null, message = null, selected = -1, partnerCell = -1, chat = emptyList(), unreadChat = 0) }
         viewModelScope.launch(Dispatchers.IO) {
             var savedToken = identity?.token
             val client = GuestClient(socketFactory = discovery::newWifiSocket) { event ->
@@ -249,12 +303,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             selected = if (changed) -1 else previous.selected,
                             partnerCell = if (changed || event.disconnected) -1 else event.selected ?: previous.partnerCell,
                             pendingId = if (changed || event.disconnected || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
-                            message = when { saveMessage != null -> saveMessage; event.message != null -> event.message; event.outcome != null -> event.outcome?.let { if (it.accepted) null else explain(it.code) }; changed -> null; else -> previous.message })
+                            message = when { saveMessage != null -> saveMessage; event.message != null -> event.message; event.outcome != null -> event.outcome?.let { if (it.accepted) null else explain(it.code) }; changed -> null; else -> previous.message },
+                            chat = event.history ?: if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
+                            unreadChat = if (event.history != null) 0 else previous.unreadChat + if (event.chat?.player == HOST) 1 else 0)
                     }
                 }
             }
             try {
-                guest = client; client.connect(endpoint.host, endpoint.port, code, name, identity?.token)
+                guest = client; client.connect(endpoint.host, endpoint.port, code, name, identity?.token, _state.value.appearance)
                 if (generation.get() != current) { client.close(); return@launch }
                 client.setForeground(visible)
                 val formatted = if (endpoint.host.contains(':')) "[${endpoint.host}]:${endpoint.port}" else "${endpoint.host}:${endpoint.port}"

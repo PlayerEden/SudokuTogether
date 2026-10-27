@@ -53,10 +53,11 @@ fun validateSnapshot(s: Snapshot) {
     require(s.cells.size == 81 && s.revision >= 0)
     require(s.hostName.length in 1..24 && (s.guestName == null || s.guestName.length in 1..24))
     s.cells.forEachIndexed { i, c ->
-        require(c.value in 0..9 && c.notes in 0..511 && c.revision in 0..s.revision)
+        require(c.value in 0..9 && c.notes in 0..511 && c.revision in 0..s.revision && (c.owner == null || c.owner == HOST || c.owner == GUEST))
         require(c.value == 0 || c.notes == 0)
         if (s.puzzle.clues[i] != 0) require(c.value == s.puzzle.clues[i] && c.notes == 0)
     }
+    require(Cosmetics.valid(s.hostAppearance) && Cosmetics.valid(s.guestAppearance))
     require(s.mode == COOP || s.mode == VERSUS)
     if (s.mode == COOP) {
         require(s.guestCells.isEmpty() && s.winner == null)
@@ -64,7 +65,7 @@ fun validateSnapshot(s: Snapshot) {
     } else {
         require(s.guestCells.isEmpty() || s.guestCells.size == 81)
         s.guestCells.forEachIndexed { i, c ->
-            require(c.value in 0..9 && c.notes in 0..511 && c.revision in 0..s.revision)
+            require(c.value in 0..9 && c.notes in 0..511 && c.revision in 0..s.revision && (c.owner == null || c.owner == HOST || c.owner == GUEST))
             require(c.value == 0 || c.notes == 0)
             if (s.puzzle.clues[i] != 0) require(c.value == s.puzzle.clues[i])
         }

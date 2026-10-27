@@ -57,12 +57,12 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
         val revision = s.revision + 1
         var history = state.history
         val after = when (operation.kind) {
-            Kind.VALUE -> Cell(operation.number, 0, revision)
+            Kind.VALUE -> Cell(operation.number, 0, revision, player)
             Kind.CLEAR -> Cell(revision = revision)
             Kind.NOTE -> {
                 if (before.value != 0) return result(false, ResultCode.INVALID)
                 val bit = 1 shl (operation.number - 1)
-                before.copy(notes = if (operation.enabled) before.notes or bit else before.notes and bit.inv(), revision = revision)
+                before.copy(notes = if (operation.enabled) before.notes or bit else before.notes and bit.inv(), revision = revision, owner = player)
             }
             Kind.UNDO -> {
                 val record = eligible(state, player) ?: return result(false, ResultCode.NO_UNDO)
@@ -92,29 +92,39 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
         try { commit(next) } catch (_: Exception) { return result(false, ResultCode.SAVE_FAILED) }
         return result(true, ResultCode.ACCEPTED)
     }
-    @Synchronized fun admitGuest(name: String, token: String? = null): GuestIdentity {
+    @Synchronized fun admitGuest(name: String, token: String? = null, appearance: Appearance = Appearance()): GuestIdentity {
+        require(Cosmetics.valid(appearance))
         val current = state.guest
         if (current != null) {
             require(token != null && MessageDigest.isEqual(current.token.toByteArray(), token.toByteArray())) { "This game already has a partner. Use the same phone to rejoin, or ask the host to replace the partner." }
+            if (state.snapshot.guestAppearance != appearance) setAppearance(GUEST, appearance)
             return current
         }
         require(token == null) { "That saved invitation is no longer valid. Join again with the room code." }
         val identity = GuestIdentity(cleanName(name, "Partner"), UUID.randomUUID().toString() + UUID.randomUUID().toString())
-        commit(state.copy(guest = identity, snapshot = state.snapshot.copy(guestName = identity.name,
+        commit(state.copy(guest = identity, snapshot = state.snapshot.copy(guestName = identity.name, guestAppearance = appearance,
             raceStartedAtMs = if (state.snapshot.mode == VERSUS) System.currentTimeMillis() else null)))
         return identity
+    }
+    @Synchronized fun setAppearance(player: String, appearance: Appearance) {
+        require(Cosmetics.valid(appearance))
+        require(player == HOST || (player == GUEST && state.guest != null))
+        val current = state.snapshot
+        val next = if (player == HOST) current.copy(hostAppearance = appearance)
+                   else current.copy(guestAppearance = appearance)
+        if (next != current) commit(state.copy(snapshot = next))
     }
     @Synchronized fun replaceGuest() {
         val previous = state.snapshot
         if (previous.mode == VERSUS) {
             val fresh = previous.puzzle.clues.map { Cell(it) }
-            commit(state.copy(guest = null, snapshot = previous.copy(guestName = null,
+            commit(state.copy(guest = null, snapshot = previous.copy(guestName = null, guestAppearance = Appearance(),
                 epoch = UUID.randomUUID().toString(), cells = fresh, guestCells = fresh,
                 winner = null, completed = false, raceStartedAtMs = null,
                 revision = 0, hostProgress = 0, guestProgress = 0),
                 history = emptyList(), recent = emptyList()))
         } else {
-            commit(state.copy(guest = null, snapshot = previous.copy(guestName = null),
+            commit(state.copy(guest = null, snapshot = previous.copy(guestName = null, guestAppearance = Appearance()),
                 history = state.history.filter { it.player != GUEST },
                 recent = state.recent.filter { it.player != GUEST }))
         }
@@ -128,11 +138,12 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
             hostProgress = 0, guestProgress = 0, revision = 0, completed = false), history = emptyList(), recent = emptyList()))
     }
     companion object {
-        fun create(puzzle: Puzzle, hostName: String = "Host", persist: (SavedSession) -> Unit = {}, mode: String = COOP): GameSession {
+        fun create(puzzle: Puzzle, hostName: String = "Host", persist: (SavedSession) -> Unit = {}, mode: String = COOP, hostAppearance: Appearance = Appearance()): GameSession {
+            require(Cosmetics.valid(hostAppearance))
             require(Sudoku.solutionCount(puzzle.clues) == 1) { "Puzzle must have exactly one solution." }
             require(mode == COOP || mode == VERSUS)
             val initial = SavedSession(snapshot = Snapshot(UUID.randomUUID().toString(), UUID.randomUUID().toString(), puzzle,
-                puzzle.clues.map { Cell(it) }, hostName = cleanName(hostName, "Host"), mode = mode,
+                puzzle.clues.map { Cell(it) }, hostName = cleanName(hostName, "Host"), hostAppearance = hostAppearance, mode = mode,
                 guestCells = if (mode == VERSUS) puzzle.clues.map { Cell(it) } else emptyList()))
             val session = GameSession(initial, persist)
             persist(session.saved()); return session
