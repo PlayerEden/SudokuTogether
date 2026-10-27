@@ -1,9 +1,14 @@
 name: Sudoku Together — on-demand QA APK
 
-# Intentionally manual only: no push/PR triggers and no Actions minutes
-# consumed until the maintainer explicitly starts this workflow.
+# One-time build trigger, limited to changes of this exact workflow file.
+# After this run, restore the workflow to manual-only.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - fix/v0.4-build-readiness
+    paths:
+      - .github/workflows/qa-debug.yml
 
 permissions:
   contents: read
