@@ -242,9 +242,14 @@ data class GameActions(
     val haptics = LocalHapticFeedback.current
     fun tick() { if (state.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val boardSize = minOf((maxWidth - 32.dp).coerceAtLeast(180.dp), (maxHeight - 300.dp).coerceAtLeast(220.dp), 440.dp)
-        val keypadHeight = maxOf(48.dp, (40 * LocalDensity.current.fontScale).dp)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // The board is width-first. When vertical room runs short, only the
+        // puzzle's content scrolls; the number dock stays thumb-reachable.
+        val boardSize = minOf((maxWidth - 24.dp).coerceAtLeast(180.dp), (maxHeight - 274.dp).coerceAtLeast(200.dp), 440.dp)
+        Column(Modifier.fillMaxSize()) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(if (state.role == SOLO) "Solo" else if (snapshotMode(state) == VERSUS) "Versus" else "Co-op", fontFamily = FontFamily.Serif, fontSize = 22.sp, color = Forest, fontWeight = FontWeight.SemiBold)
@@ -364,50 +369,6 @@ data class GameActions(
                             }
                         }
                     }
-                } else {
-                    val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
-                    Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { tick(); actions.toggleNotes() }, enabled = state.canEdit,
-                            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper),
-                            border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule),
-                            shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) {
-                            Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp)
-                        }
-                        OutlinedButton(onClick = { tick(); actions.erase() }, enabled = state.canEdit && editableCell,
-                            modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
-                        OutlinedButton(onClick = { tick(); actions.undo() }, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role),
-                            modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
-                    }
-                    for (row in listOf((1..5).toList(), (6..9).toList())) {
-                        Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            for (number in row) {
-                                val remaining = (9 - snapshot.cells.count { it.value == number }).coerceAtLeast(0)
-                                val highlighted = number == snapshot.cells.getOrNull(state.selected)?.value
-                                OutlinedButton(onClick = { tick(); actions.number(number) },
-                                    enabled = state.canEdit && editableCell,
-                                    modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number")
-                                        .semantics { contentDescription = "Number $number, $remaining remaining" },
-                                    shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp),
-                                    border = BorderStroke(if (highlighted) 2.dp else 1.dp, if (highlighted) Forest else Rule),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (highlighted) TealLight else Paper)) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center) {
-                                        Text(number.toString(), fontSize = 21.sp, lineHeight = 22.sp,
-                                            fontWeight = FontWeight.Medium)
-                                        Text(remaining.toString(), fontSize = 10.sp, lineHeight = 11.sp,
-                                            color = Muted)
-                                    }
-                                }
-                            }
-                            if (row.size == 4) Box(Modifier.weight(1f).height(keypadHeight), contentAlignment = Alignment.Center) {
-                                Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
-                            }
-                        }
-                    }
                 }
                 state.message?.let { Notice(it) }
                 if (state.role == SOLO) {
@@ -431,10 +392,70 @@ data class GameActions(
                 } else Text(if (snapshot.mode == VERSUS) "Your answers are private. Your opponent sees progress only." else "Every number and pencil mark is shared.", color = Muted, fontSize = 11.sp, modifier = Modifier.padding(8.dp))
             }
         }
+        state.snapshot?.takeUnless { it.completed }?.let { puzzle ->
+            SudokuInputDock(puzzle, state, actions, ::tick)
+        }
+        }
     }
     if (chatOpen && state.role != SOLO) RoomChatSheet(state, actions) {
         chatOpen = false
         actions.chatVisible(false)
+    }
+}
+
+@Composable private fun SudokuInputDock(snapshot: Snapshot, state: GameUiState, actions: GameActions, tick: () -> Unit) {
+    val keypadHeight = maxOf(48.dp, (40 * LocalDensity.current.fontScale).dp)
+    val editable = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
+    val chosenValue = snapshot.cells.getOrNull(state.selected)?.value
+    Column(Modifier.fillMaxWidth().background(Paper)
+        .border(BorderStroke(1.dp, Rule))
+        .testTag("input_dock")
+        .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { tick(); actions.toggleNotes() }, enabled = state.canEdit,
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper),
+                border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule),
+                shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) {
+                Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp)
+            }
+            OutlinedButton(onClick = { tick(); actions.erase() }, enabled = state.canEdit && editable,
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
+            OutlinedButton(onClick = { tick(); actions.undo() },
+                enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role),
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
+        }
+        for (numbers in listOf((1..5).toList(), (6..9).toList())) {
+            Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (number in numbers) {
+                    val remaining = (9 - snapshot.cells.count { it.value == number }).coerceAtLeast(0)
+                    val highlighted = number == chosenValue
+                    OutlinedButton(onClick = { tick(); actions.number(number) },
+                        enabled = state.canEdit && editable,
+                        modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number")
+                            .semantics { contentDescription = "Number $number, $remaining remaining" },
+                        shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp),
+                        border = BorderStroke(if (highlighted) 2.dp else 1.dp, if (highlighted) Forest else Rule),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (highlighted) TealLight else Paper)) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center) {
+                            Text(number.toString(), fontSize = 21.sp, lineHeight = 22.sp,
+                                fontWeight = FontWeight.Medium)
+                            Text(remaining.toString(), fontSize = 10.sp, lineHeight = 11.sp, color = Muted)
+                        }
+                    }
+                }
+                if (numbers.size == 4) Box(Modifier.weight(1f).height(keypadHeight),
+                    contentAlignment = Alignment.Center) {
+                    Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
+                }
+            }
+        }
     }
 }
 

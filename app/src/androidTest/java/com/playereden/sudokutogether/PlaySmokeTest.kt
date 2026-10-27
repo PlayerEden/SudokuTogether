@@ -47,6 +47,7 @@ class PlaySmokeTest {
         }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Copy code").assertExists()
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
         compose.onNodeWithText("Chat").performClick()
         compose.onNodeWithText("Room chat").assertExists()
         compose.onNodeWithText("Message your partner").assertExists()
@@ -55,7 +56,14 @@ class PlaySmokeTest {
 
     @Test fun soloPlayCanResumeAndOpenLocalProfile() {
         compose.onNodeWithText("New solo puzzle").performClick()
+        // Another smoke test can leave a partially solved local puzzle.
+        // Starting fresh asks for confirmation so we don't discard progress.
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Start new").performClick()
+        }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
+        compose.onNodeWithTag("number_9").assertIsDisplayed()
         compose.onNodeWithText("Solo").assertExists()
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()
