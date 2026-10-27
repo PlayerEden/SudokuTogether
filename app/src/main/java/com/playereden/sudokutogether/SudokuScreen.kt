@@ -467,7 +467,7 @@ data class GameActions(
                 Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner) Modifier.border(2.dp, boardEdge) else Modifier)
                     .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) {
                          contentDescription = content
-                         selected = i == selected
+                         this.selected = i == selected
                          stateDescription = when {
                              i == selected -> "Selected square"
                              i == partner -> "Partner's selected square"
