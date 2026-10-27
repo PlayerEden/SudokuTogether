@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.playereden.sudokutogether.core.*
@@ -38,11 +39,42 @@ fun boardFillFor(id: String): Color = when (id) {
     else -> Paper
 }
 
+fun emblemSymbol(id: String): String = when (id) {
+    "leaf" -> "✿"
+    "duo" -> "◈"
+    "flash" -> "ϟ"
+    "star" -> "★"
+    "laurel" -> "♛"
+    else -> "◆"
+}
+
+fun emblemName(id: String): String = Cosmetics.emblems.firstOrNull { it.id == id }?.name ?: "Gridkeeper"
+
 fun styleLabel(a: Appearance): String = listOf(
     Cosmetics.inks.firstOrNull { it.id == a.ink }?.name ?: "Forest",
     Cosmetics.boards.firstOrNull { it.id == a.board }?.name ?: "Classic",
     Cosmetics.fonts.firstOrNull { it.id == a.font }?.name ?: "Clear"
 ).joinToString(" · ")
+
+@Composable fun PlayerIdentity(appearance: Appearance, name: String, compact: Boolean = true) {
+    val color = inkFor(appearance.ink, false)
+    Row(Modifier.background(Paper, RoundedCornerShape(12.dp))
+        .border(1.dp, Rule, RoundedCornerShape(12.dp))
+        .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.size(if (compact) 30.dp else 44.dp)
+            .background(color.copy(alpha = .12f), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center) {
+            Text(emblemSymbol(appearance.emblem), fontSize = if (compact) 22.sp else 30.sp, color = color)
+        }
+        Column(Modifier.weight(1f, fill = false)) {
+            Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                color = Ink, fontWeight = FontWeight.SemiBold, fontSize = if (compact) 12.sp else 16.sp)
+            Text(emblemName(appearance.emblem), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                color = Muted, fontSize = 10.sp)
+        }
+    }
+}
 
 @Composable fun CosmeticSelector(title: String, group: String, options: List<Cosmetic>,
     chosen: String, state: GameUiState, actions: GameActions) {
@@ -52,6 +84,10 @@ fun styleLabel(a: Appearance): String = listOf(
             val unlocked = Cosmetics.allowed(item.id, state.profile.records)
             OutlinedButton(onClick = { actions.cosmetic(group, item.id) }, enabled = unlocked,
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = if (chosen == item.id) TealColor else Paper)) {
+                if (group == "emblem") {
+                    Text(emblemSymbol(item.id), fontSize = 17.sp, color = inkFor(state.appearance.ink, false))
+                    Spacer(Modifier.width(6.dp))
+                }
                 if (group == "ink" || group == "board") {
                     val swatch = if (group == "ink") inkFor(item.id, false) else boardFillFor(item.id)
                     Box(Modifier.size(14.dp).background(swatch, RoundedCornerShape(3.dp)))
