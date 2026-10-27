@@ -80,7 +80,7 @@ data class GameActions(
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Fill each row, column and 3×3 box with the numbers 1 through 9. Each number appears only once in each.", color = Ink)
-                Text("Tap an empty square, then tap a number. Notes lets you add small pencil marks instead of a final answer.", color = Ink)
+                Text("Tap a square, then a number. The small counter under each number shows how many of that digit are still missing. Notes lets you pencil in candidates.", color = Ink)
                 Text("Erase clears a square. Undo reverses your most recent safe move.", color = Ink)
                 Text("Co-op: both phones edit one board. Versus: race on separate private boards. Both modes use the same local Wi-Fi.", color = Ink)
             }
