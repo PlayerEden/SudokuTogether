@@ -26,7 +26,8 @@ data class GameUiState(
     val resumeGuest: Boolean = false, val resumingGuest: Boolean = false, val saveIssue: String? = null, val message: String? = null,
     val profile: LocalPlayerData = LocalPlayerData(), val resumeSolo: Boolean = false, val soloElapsedMs: Long = 0L,
     val resumeRace: Boolean = false, val appearance: Appearance = Appearance(),
-    val chat: List<ChatLine> = emptyList(), val unreadChat: Int = 0
+    val chat: List<ChatLine> = emptyList(), val unreadChat: Int = 0,
+    val chatVisible: Boolean = false
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -101,7 +102,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    fun chatRead() { _state.update { it.copy(unreadChat = 0) } }
+    fun chatVisible(open: Boolean) { _state.update { it.copy(chatVisible = open, unreadChat = if (open) 0 else it.unreadChat) } }
     fun sendChat(raw: String) {
         val content = ChatRules.clean(raw)
         val s = _state.value
@@ -164,7 +165,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.busy) return
         stopSoloClock()
         val current = closeRoom()
-        _state.update { it.copy(page = Page.PLAY, role = SOLO, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null, chat = emptyList(), unreadChat = 0) }
+        _state.update { it.copy(page = Page.PLAY, role = SOLO, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val saved = localPlayer.update { data ->
@@ -255,7 +256,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message,
                             resumeRace = if (versus) true else previous.resumeRace,
                             chat = if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
-                            unreadChat = previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0)
+                            unreadChat = if (previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0
                     }
                 } }
                 server = hosted; val port = hosted.start(); hosted.setForeground(visible)
@@ -279,7 +280,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val identity = if (resume) guestResume?.guest else null
         val expectedSession = if (resume) guestResume?.snapshot?.sessionId else null
         val current = closeRoom(); val name = cleanName(_state.value.name, "Partner")
-        _state.update { it.copy(busy = true, role = GUEST, connected = false, pendingId = null, message = null, selected = -1, partnerCell = -1, chat = emptyList(), unreadChat = 0) }
+        _state.update { it.copy(busy = true, role = GUEST, connected = false, pendingId = null, message = null, selected = -1, partnerCell = -1, chat = emptyList(), unreadChat = 0, chatVisible = false) }
         viewModelScope.launch(Dispatchers.IO) {
             var savedToken = identity?.token
             val client = GuestClient(socketFactory = discovery::newWifiSocket) { event ->
@@ -308,7 +309,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             pendingId = if (changed || event.disconnected || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
                             message = when { saveMessage != null -> saveMessage; event.message != null -> event.message; event.outcome != null -> event.outcome?.let { if (it.accepted) null else explain(it.code) }; changed -> null; else -> previous.message },
                             chat = event.history ?: if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
-                            unreadChat = if (event.history != null) 0 else previous.unreadChat + if (event.chat?.player == HOST) 1 else 0)
+                            unreadChat = if (event.history != null || previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == HOST) 1 else 0
                     }
                 }
             }
