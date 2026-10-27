@@ -18,12 +18,14 @@ import kotlinx.serialization.json.Json
     val paused: Boolean get() = !hostActive || (reserved && !guestActive)
 }
 @Serializable data class Message(
-    val type: String, val version: Int = 2, val code: String = "", val name: String = "", val token: String? = null,
+    val type: String, val version: Int = 3, val code: String = "", val name: String = "", val token: String? = null,
     val snapshot: Snapshot? = null, val status: RoomStatus? = null, val operation: Operation? = null,
-    val outcome: Outcome? = null, val cell: Int = -1, val active: Boolean = true, val text: String = ""
+    val outcome: Outcome? = null, val cell: Int = -1, val active: Boolean = true, val text: String = "",
+    val appearance: Appearance = Appearance(), val line: ChatLine? = null, val lines: List<ChatLine> = emptyList()
 )
-data class HostEvent(val snapshot: Snapshot, val status: RoomStatus, val partnerCell: Int = -1, val outcome: Outcome? = null, val error: String? = null)
-data class ClientEvent(val snapshot: Snapshot? = null, val status: RoomStatus? = null, val token: String? = null, val selected: Int? = null, val outcome: Outcome? = null, val disconnected: Boolean = false, val message: String? = null)
+data class HostEvent(val snapshot: Snapshot, val status: RoomStatus, val partnerCell: Int = -1, val outcome: Outcome? = null, val error: String? = null, val chat: ChatLine? = null)
+data class ClientEvent(val snapshot: Snapshot? = null, val status: RoomStatus? = null, val token: String? = null, val selected: Int? = null, val outcome: Outcome? = null, val disconnected: Boolean = false, val message: String? = null,
+    val chat: ChatLine? = null, val history: List<ChatLine>? = null)
 object Protocol {
     private val json = Json { encodeDefaults = true }
     fun read(input: InputStream): Message {
@@ -32,7 +34,10 @@ object Protocol {
             if (size !in 1..131072) throw IOException("Invalid message size")
             val bytes = ByteArray(size); data.readFully(bytes)
             return json.decodeFromString<Message>(bytes.toString(Charsets.UTF_8)).also {
-                if (it.type.length !in 1..24 || it.name.length > 100 || it.code.length > 32 || (it.token?.length ?: 0) > 128) throw IOException("Invalid message")
+                if (it.type.length !in 1..24 || it.name.length > 100 || it.code.length > 32 || (it.token?.length ?: 0) > 128 || it.text.length > 1024 ||
+                    it.lines.size > ChatRules.HISTORY_LIMIT || !Cosmetics.valid(it.appearance) ||
+                    (it.line != null && (it.line.text.length > ChatRules.MAX_LENGTH || it.line.player !in listOf(HOST, GUEST)))
+                ) throw IOException("Invalid message")
             }
         } catch (e: IOException) { throw e } catch (e: Exception) { throw IOException("Unreadable game message", e) }
     }
