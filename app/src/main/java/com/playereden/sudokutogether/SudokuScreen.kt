@@ -50,7 +50,8 @@ data class GameActions(
     val undo: () -> Unit, val replacePartner: () -> Unit, val newPuzzle: () -> Unit,
     val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
     val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit,
-    val uniformNumbers: (Boolean) -> Unit
+    val uniformNumbers: (Boolean) -> Unit,
+    val touchFeedback: (Boolean) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
