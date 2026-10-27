@@ -9,7 +9,8 @@ import kotlinx.serialization.Serializable
 @Serializable data class Appearance(
     val ink: String = "forest",
     val board: String = "classic",
-    val font: String = "clear"
+    val font: String = "clear",
+    val emblem: String = "tile"
 )
 
 data class Cosmetic(val id: String, val name: String, val requirement: String)
@@ -33,15 +34,29 @@ object Cosmetics {
         Cosmetic("serif", "Bookish", "Solve 1 solo puzzle"),
         Cosmetic("mono", "Terminal", "Complete 2 co-op puzzles")
     )
+    val emblems = listOf(
+        Cosmetic("tile", "Gridkeeper", "Starter"),
+        Cosmetic("leaf", "First Sprout", "Solve 1 solo puzzle"),
+        Cosmetic("duo", "Two Minds", "Complete 1 co-op puzzle"),
+        Cosmetic("flash", "Challenger", "Win 1 versus race"),
+        Cosmetic("star", "Star Solver", "Solve 5 solo puzzles"),
+        Cosmetic("laurel", "Champion", "Win 3 versus races")
+    )
     fun valid(a: Appearance): Boolean = inks.any { it.id == a.ink } &&
-        boards.any { it.id == a.board } && fonts.any { it.id == a.font }
+        boards.any { it.id == a.board } && fonts.any { it.id == a.font } &&
+        emblems.any { it.id == a.emblem }
     fun allowed(id: String, records: List<GameRecord>): Boolean {
-        val solo = records.count { it.mode == SOLO && it.result == "SOLVED" }
-        val wins = records.count { it.mode == VERSUS && it.result == "WIN" }
-        val coop = records.count { it.mode == COOP && it.result == "SOLVED" }
+        val unique = records.distinctBy { it.id }
+        val solo = unique.count { it.mode == SOLO && it.result == "SOLVED" }
+        val wins = unique.count { it.mode == VERSUS && it.result == "WIN" }
+        val coop = unique.count { it.mode == COOP && it.result == "SOLVED" }
         return when (id) {
-            "forest", "classic", "clear" -> true
-            "cobalt", "serif" -> solo >= 1
+            "forest", "classic", "clear", "tile" -> true
+            "cobalt", "serif", "leaf" -> solo >= 1
+            "duo" -> coop >= 1
+            "flash" -> wins >= 1
+            "star" -> solo >= 5
+            "laurel" -> wins >= 3
             "linen" -> solo >= 2
             "amber" -> solo >= 3
             "rose", "midnight" -> solo >= 5
@@ -54,7 +69,8 @@ object Cosmetics {
     fun accessible(a: Appearance, records: List<GameRecord>): Appearance = Appearance(
         ink = a.ink.takeIf { allowed(it, records) } ?: "forest",
         board = a.board.takeIf { allowed(it, records) } ?: "classic",
-        font = a.font.takeIf { allowed(it, records) } ?: "clear"
+        font = a.font.takeIf { allowed(it, records) } ?: "clear",
+        emblem = a.emblem.takeIf { allowed(it, records) } ?: "tile"
     )
 }
 
