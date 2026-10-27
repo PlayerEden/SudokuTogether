@@ -144,9 +144,15 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
         val previous = peer; peer = null; guestActive = false; partnerCell = -1
         previous?.close(); publish()
     }
-    fun newPuzzle(seed: Long) {
-        val puzzle = Sudoku.generate(seed)
-        synchronized(lock) { session.newPuzzle(puzzle); partnerCell = -1; peer?.send(Message("select", cell = -1)); publish() }
+    // Preserve the seed overload for older tests and deterministic fixtures.
+    fun newPuzzle(seed: Long) = newPuzzle(Sudoku.generate(seed))
+    fun newPuzzle(puzzle: Puzzle) {
+        synchronized(lock) {
+            session.newPuzzle(puzzle)
+            partnerCell = -1
+            peer?.send(Message("select", cell = -1))
+            publish()
+        }
     }
     override fun close() = synchronized(lock) {
         if (!closed) {
