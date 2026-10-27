@@ -1,6 +1,6 @@
 name: Sudoku Together — Build & QA APK
 
-# Second scoped QA check after fixing selected-cell accessibility compilation.
+# Scoped v0.6 puzzle-feel build; restore this workflow to manual-only afterward.
 on:
   workflow_dispatch:
   push:
@@ -22,7 +22,7 @@ jobs:
         with:
           # The default branch contains only docs and this workflow.
           # First public build uses the latest tested development branch.
-          ref: ${{ github.ref_name == 'main' && 'polish/v0.5-native-ux' || github.ref_name }}
+          ref: ${{ github.ref_name == 'main' && 'polish/v0.6-puzzle-feel' || github.ref_name }}
       - name: Report exact source commit
         run: |
           echo "Building $(git rev-parse --short HEAD) from $(git branch --show-current)"
