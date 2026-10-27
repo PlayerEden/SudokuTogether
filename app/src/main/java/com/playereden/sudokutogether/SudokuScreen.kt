@@ -324,25 +324,68 @@ data class GameActions(
                         }
                     }
                 }
-                val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
-                Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f).heightIn(min = 48.dp), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp) }
-                    OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell, modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
-                    OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role), modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
-                }
-                for (row in listOf((1..5).toList(), (6..9).toList())) {
-                    Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        for (number in row) OutlinedButton(onClick = { actions.number(number) }, enabled = state.canEdit && editableCell, modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number"), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp), colors = ButtonDefaults.outlinedButtonColors(containerColor = Paper)) { Text(number.toString(), fontSize = 23.sp, fontWeight = FontWeight.Medium) }
-                        if (row.size == 4) Box(Modifier.weight(1f).height(keypadHeight), contentAlignment = Alignment.Center) { Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted) }
+                if (snapshot.completed) {
+                    OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+                        colors = CardDefaults.outlinedCardColors(containerColor = TealLight)) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(when {
+                                state.role == SOLO -> "Puzzle completed"
+                                snapshot.mode == VERSUS && snapshot.winner == state.role -> "Victory!"
+                                snapshot.mode == VERSUS -> "Race finished"
+                                else -> "Solved together!"
+                            }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
+                                fontWeight = FontWeight.SemiBold)
+                            if (state.role == HOST || state.role == SOLO) {
+                                Button(onClick = new, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
+                                    Text(if (state.role == SOLO) "Play another solo puzzle"
+                                        else if (snapshot.mode == VERSUS) "Start another race"
+                                        else "Start another co-op puzzle")
+                                }
+                            } else Text("Your host can start the next puzzle.", color = Muted, fontSize = 12.sp)
+                            if (state.role == SOLO) TextButton(onClick = actions.profile) {
+                                Text("View personal records")
+                            }
+                        }
+                    }
+                } else {
+                    val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
+                    Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit,
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper),
+                            border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule),
+                            shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) {
+                            Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp)
+                        }
+                        OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell,
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
+                        OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role),
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
+                    }
+                    for (row in listOf((1..5).toList(), (6..9).toList())) {
+                        Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            for (number in row) OutlinedButton(onClick = { actions.number(number) },
+                                enabled = state.canEdit && editableCell,
+                                modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number"),
+                                shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Paper)) {
+                                Text(number.toString(), fontSize = 23.sp, fontWeight = FontWeight.Medium)
+                            }
+                            if (row.size == 4) Box(Modifier.weight(1f).height(keypadHeight), contentAlignment = Alignment.Center) {
+                                Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
+                            }
+                        }
                     }
                 }
                 state.message?.let { Notice(it) }
                 if (state.role == SOLO) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Saved on this device", Modifier.weight(1f), color = Muted, fontSize = 11.sp)
-                        TextButton(onClick = new) { Text("New solo puzzle", fontSize = 11.sp) }
+                        if (!snapshot.completed) TextButton(onClick = new) { Text("New solo puzzle", fontSize = 11.sp) }
                     }
-                    if (snapshot.completed) TextButton(onClick = actions.profile) { Text("View your personal records") }
                 } else if (state.role == HOST) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Saved on this phone", Modifier.weight(1f), color = Muted, fontSize = 11.sp)
