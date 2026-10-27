@@ -2,11 +2,6 @@ name: Sudoku Together — Visual UX QA
 # Scoped to the first creation of this workflow; switch to manual-only after launch.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/visual-qa.yml
 
 permissions:
   contents: read
