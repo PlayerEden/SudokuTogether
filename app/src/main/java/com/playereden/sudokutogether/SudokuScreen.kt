@@ -225,9 +225,13 @@ data class GameActions(
                     boardSize, actions.select, state.appearance, state.role == SOLO)
                 if (state.role != SOLO) {
                     val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
-                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("You: " + styleLabel(state.appearance), color = inkFor(state.appearance.ink, false), fontSize = 10.sp)
-                        Text("Rival: " + styleLabel(other), color = inkFor(other.ink, false), fontSize = 10.sp)
+                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("YOU · " + styleLabel(state.appearance), modifier = Modifier.weight(1f),
+                            color = inkFor(state.appearance.ink, false), fontSize = 10.sp, maxLines = 2,
+                            overflow = TextOverflow.Ellipsis)
+                        Text("RIVAL · " + styleLabel(other), modifier = Modifier.weight(1f),
+                            color = inkFor(other.ink, false), fontSize = 10.sp, maxLines = 2,
+                            overflow = TextOverflow.Ellipsis)
                     }
                 }
                 val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
