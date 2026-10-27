@@ -1,10 +1,15 @@
 name: Sudoku Together — Build & QA APK
 
-# One-time first build when visibility is changed to public, plus future manual builds.
-# No push/PR triggers: normal commits do not use Actions minutes.
+# One-time rebuild after the first public compilation repair.
+# This trigger is scoped to edits of this file only and will be removed.
 on:
   workflow_dispatch:
   public:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/qa-debug.yml
 
 permissions:
   contents: read
@@ -19,7 +24,7 @@ jobs:
         with:
           # The default branch contains only docs and this workflow.
           # First public build uses the latest tested development branch.
-          ref: ${{ github.event_name == 'public' && 'fix/v0.4-build-readiness' || github.ref_name }}
+          ref: ${{ (github.event_name == 'public' || github.event_name == 'push') && 'fix/v0.4-build-readiness' || github.ref_name }}
       - name: Report exact source commit
         run: |
           echo "Building $(git rev-parse --short HEAD) from $(git branch --show-current)"
