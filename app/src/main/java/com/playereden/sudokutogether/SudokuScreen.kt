@@ -234,6 +234,20 @@ data class GameActions(
                         Box(Modifier.weight(1f)) { PlayerIdentity(other, partnerName ?: "Partner", compact = true) }
                     }
                 }
+                if (snapshot.mode == COOP && snapshot.completed && snapshot.guestName != null) {
+                    val hostEntries = snapshot.cells.count { it.owner == HOST && it.value in 1..9 }
+                    val guestEntries = snapshot.cells.count { it.owner == GUEST && it.value in 1..9 }
+                    OutlinedCard(Modifier.width(boardSize), colors = CardDefaults.outlinedCardColors(containerColor = Paper)) {
+                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("A board solved together", color = Forest, fontWeight = FontWeight.SemiBold)
+                            Text("Final entries: " + snapshot.hostName + " " + hostEntries +
+                                "  ·  " + snapshot.guestName + " " + guestEntries,
+                                color = Muted, fontSize = 12.sp)
+                            Text("Original clues stay neutral; your shared finished grid keeps both players' styles.",
+                                color = Muted, fontSize = 11.sp)
+                        }
+                    }
+                }
                 val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
                 Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper), shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) { Text("Notes", fontSize = 13.sp) }
