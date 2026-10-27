@@ -48,7 +48,8 @@ data class GameActions(
     val number: (Int) -> Unit, val toggleNotes: () -> Unit, val erase: () -> Unit,
     val undo: () -> Unit, val replacePartner: () -> Unit, val newPuzzle: () -> Unit,
     val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
-    val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit
+    val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit,
+    val uniformNumbers: (Boolean) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -225,7 +226,7 @@ data class GameActions(
                     else Text("Time  " + formatElapsed(state.soloElapsedMs), color = Forest, fontSize = 10.sp)
                 }
                 SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
-                    boardSize, actions.select, state.appearance, state.role == SOLO)
+                    boardSize, actions.select, state.appearance, state.role == SOLO, state.uniformNumbers)
                 if (state.role != SOLO) {
                     val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
                     Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -275,7 +276,7 @@ data class GameActions(
     }
 }
 
-@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit, localStyle: Appearance, solo: Boolean) {
+@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -311,7 +312,7 @@ data class GameActions(
                 val i = row * 9 + col; val cell = snapshot.cells[i]; val given = snapshot.puzzle.clues[i] != 0
                 val noteNumbers = (1..9).filter { cell.notes and (1 shl (it - 1)) != 0 }
                 val content = "Row ${row + 1} column ${col + 1}, " + when { given -> "clue ${cell.value}"; cell.value != 0 -> "value ${cell.value}"; noteNumbers.isNotEmpty() -> "empty, notes ${noteNumbers.joinToString(" ")}"; else -> "empty" }
-                val authored = if (solo && !given) localStyle else when (cell.owner) {
+                val authored = if (uniformNumbers && !given) Appearance() else if (solo && !given) localStyle else when (cell.owner) {
                     HOST -> snapshot.hostAppearance
                     GUEST -> snapshot.guestAppearance
                     else -> Appearance()
@@ -388,6 +389,14 @@ private fun formatElapsed(milliseconds: Long): String {
         CosmeticSelector("Board styles", "board", Cosmetics.boards, state.appearance.board, state, actions)
         CosmeticSelector("Number fonts", "font", Cosmetics.fonts, state.appearance.font, state, actions)
         CosmeticSelector("Player emblems", "emblem", Cosmetics.emblems, state.appearance.emblem, state, actions)
+        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Classic number display", color = Forest, fontWeight = FontWeight.SemiBold)
+                Text("Show all player-entered numbers in one readable style on your own screen.",
+                    color = Muted, fontSize = 11.sp)
+            }
+            Switch(checked = state.uniformNumbers, onCheckedChange = actions.uniformNumbers)
+        }
         Text("ACHIEVEMENTS", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
         Achievements.progress(state.profile.records).forEach { progress ->
             OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper), modifier = Modifier.fillMaxWidth()) {
