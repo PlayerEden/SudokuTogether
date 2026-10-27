@@ -2,6 +2,11 @@ name: Sudoku Together — Visual UX QA
 # Scoped to the first creation of this workflow; switch to manual-only after launch.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/visual-qa.yml
 
 permissions:
   contents: read
@@ -14,7 +19,7 @@ jobs:
       - name: Checkout v0.5 game
         uses: actions/checkout@v4
         with:
-          ref: polish/v0.5-native-ux
+          ref: polish/v0.6-puzzle-feel
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
@@ -43,7 +48,11 @@ jobs:
           script: |
             adb install app/build/outputs/apk/debug/app-debug.apk
             python3 scripts/emulator_capture.py
+            set +e
             ./gradlew :app:connectedDebugAndroidTest --console=plain
+            exit_code=$?
+            adb pull /sdcard/Android/data/com.playereden.sudokutogether.qa/files/screenshots screenshots-compose || true
+            exit "$exit_code"
       - name: Upload screenshots and Android test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,6 +60,7 @@ jobs:
           name: SudokuTogether-v05-visual-review
           path: |
             screenshots/**
+            screenshots-compose/**
             app/build/outputs/apk/debug/app-debug.apk
             app/build/reports/androidTests/**
             app/build/outputs/androidTest-results/**
