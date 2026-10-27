@@ -18,7 +18,11 @@ class PlaySmokeTest {
         compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Board styles").assertExists()
         compose.onNodeWithText("Number fonts").assertExists()
-        compose.onNodeWithText("Forest", substring = true).assertExists()
+        compose.onNodeWithText("Player emblems").assertExists()
+        compose.onNodeWithText("ACHIEVEMENTS").assertExists()
+        compose.onNodeWithText("Classic number display").assertExists()
+        compose.onNodeWithText("First Grid").assertExists()
+        assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
     @Test fun hostedRoomHasCompactChatSheet() {
