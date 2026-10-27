@@ -230,7 +230,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     val record = GameRecord(id, snapshot.mode,
                         if (snapshot.mode == COOP) "SOLVED" else if (snapshot.winner == role) "WIN" else "LOSS",
                         snapshot.puzzle.id, elapsed, 0, now)
-                    data.copy(records = (data.records + record).takeLast(500))
+                    data.copy(records = (data.records + record).takeLast(MAX_RECORDS))
                 }
             }
             _state.update { it.copy(profile = saved) }
