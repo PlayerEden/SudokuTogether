@@ -7,7 +7,7 @@ const val HOST = "host"
 const val GUEST = "guest"
 const val COOP = "coop"
 const val VERSUS = "versus"
-@Serializable data class Puzzle(val id: String, val clues: List<Int>)
+@Serializable data class Puzzle(val id: String, val clues: List<Int>, val difficulty: String? = null)
 @Serializable data class Cell(val value: Int = 0, val notes: Int = 0, val revision: Long = 0, val owner: String? = null)
 @Serializable data class Snapshot(
     val sessionId: String, val epoch: String, val puzzle: Puzzle, val cells: List<Cell>,
