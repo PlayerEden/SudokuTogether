@@ -106,7 +106,8 @@ data class GameActions(
         Text("Solve solo. Team up. Race a friend.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
         Column(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedTextField(value = state.name, onValueChange = actions.name, label = { Text("Your name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
-            Text("EQUIPPED STYLE  ·  " + styleLabel(state.appearance), fontSize = 11.sp,
+            PlayerIdentity(state.appearance, state.name, compact = true)
+            Text("Equipped · " + styleLabel(state.appearance), fontSize = 11.sp,
                 color = inkFor(state.appearance.ink, false), maxLines = 2)
             Spacer(Modifier.height(2.dp))
             Text("PLAY ON YOUR OWN", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
@@ -227,13 +228,9 @@ data class GameActions(
                     boardSize, actions.select, state.appearance, state.role == SOLO)
                 if (state.role != SOLO) {
                     val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
-                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("YOU · " + styleLabel(state.appearance), modifier = Modifier.weight(1f),
-                            color = inkFor(state.appearance.ink, false), fontSize = 10.sp, maxLines = 2,
-                            overflow = TextOverflow.Ellipsis)
-                        Text("RIVAL · " + styleLabel(other), modifier = Modifier.weight(1f),
-                            color = inkFor(other.ink, false), fontSize = 10.sp, maxLines = 2,
-                            overflow = TextOverflow.Ellipsis)
+                    Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(Modifier.weight(1f)) { PlayerIdentity(state.appearance, state.name, compact = true) }
+                        Box(Modifier.weight(1f)) { PlayerIdentity(other, partnerName ?: "Partner", compact = true) }
                     }
                 }
                 val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
@@ -363,7 +360,9 @@ private fun formatElapsed(milliseconds: Long): String {
         verticalArrangement = Arrangement.spacedBy(14.dp)) {
         TextButton(onClick = actions.home, contentPadding = PaddingValues(0.dp)) { Text("Back home") }
         Text("Your records", fontSize = 32.sp, fontFamily = FontFamily.Serif, color = Forest)
-        Text(state.name, fontWeight = FontWeight.SemiBold, color = Ink, fontSize = 18.sp)
+        PlayerIdentity(state.appearance, state.name, compact = false)
+        Text("Earned milestones " + Achievements.earnedCount(state.profile.records) + " of " +
+            Achievements.progress(state.profile.records).size, fontSize = 13.sp, color = Muted)
         Text("Offline profile · saved only on this device", color = Muted, fontSize = 12.sp)
         OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -388,6 +387,26 @@ private fun formatElapsed(milliseconds: Long): String {
         CosmeticSelector("Number colors", "ink", Cosmetics.inks, state.appearance.ink, state, actions)
         CosmeticSelector("Board styles", "board", Cosmetics.boards, state.appearance.board, state, actions)
         CosmeticSelector("Number fonts", "font", Cosmetics.fonts, state.appearance.font, state, actions)
+        CosmeticSelector("Player emblems", "emblem", Cosmetics.emblems, state.appearance.emblem, state, actions)
+        Text("ACHIEVEMENTS", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
+        Achievements.progress(state.profile.records).forEach { progress ->
+            OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper), modifier = Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (progress.unlocked) "★ " else "◇ ", color = if (progress.unlocked) Gold else Muted)
+                        Column(Modifier.weight(1f)) {
+                            Text(progress.title, color = Ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                            Text(progress.description, color = Muted, fontSize = 11.sp)
+                        }
+                        Text(if (progress.unlocked) "Earned" else
+                            "${progress.current.coerceAtMost(progress.target)}/${progress.target}",
+                            color = if (progress.unlocked) Forest else Muted, fontSize = 11.sp)
+                    }
+                    LinearProgressIndicator(progress = { (progress.current.toFloat() / progress.target).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth(), color = Forest, trackColor = Rule)
+                }
+            }
+        }
         Text("RECENT FINISHES", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
         val recent = state.profile.records.takeLast(15).reversed()
         if (recent.isEmpty()) Text("Finish a solo puzzle to save your first record.", fontSize = 14.sp, color = Muted)
