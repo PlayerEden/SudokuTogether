@@ -37,7 +37,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         Appearance(
             preferences.getString("cosmeticInk", "forest") ?: "forest",
             preferences.getString("cosmeticBoard", "classic") ?: "classic",
-            preferences.getString("cosmeticFont", "clear") ?: "clear"
+            preferences.getString("cosmeticFont", "clear") ?: "clear",
+            preferences.getString("cosmeticEmblem", "tile") ?: "tile"
         ), localPlayer.current().records
     )
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
@@ -80,11 +81,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             "ink" -> state.appearance.copy(ink = id)
             "board" -> state.appearance.copy(board = id)
             "font" -> state.appearance.copy(font = id)
+            "emblem" -> state.appearance.copy(emblem = id)
             else -> return
         }
         if (!Cosmetics.valid(next)) return
         preferences.edit().putString("cosmeticInk", next.ink)
-            .putString("cosmeticBoard", next.board).putString("cosmeticFont", next.font).apply()
+            .putString("cosmeticBoard", next.board).putString("cosmeticFont", next.font)
+            .putString("cosmeticEmblem", next.emblem).apply()
         _state.update { it.copy(appearance = next) }
         val current = generation.get()
         viewModelScope.launch(Dispatchers.IO) {
