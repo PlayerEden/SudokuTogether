@@ -21,6 +21,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.TextStyle
@@ -50,7 +54,8 @@ data class GameActions(
     val undo: () -> Unit, val replacePartner: () -> Unit, val newPuzzle: () -> Unit,
     val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
     val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit,
-    val uniformNumbers: (Boolean) -> Unit
+    val uniformNumbers: (Boolean) -> Unit,
+    val touchFeedback: (Boolean) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -75,7 +80,7 @@ data class GameActions(
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Fill each row, column and 3×3 box with the numbers 1 through 9. Each number appears only once in each.", color = Ink)
-                Text("Tap an empty square, then tap a number. Notes lets you add small pencil marks instead of a final answer.", color = Ink)
+                Text("Tap a square, then a number. The small counter under each number shows how many of that digit are still missing. Notes lets you pencil in candidates.", color = Ink)
                 Text("Erase clears a square. Undo reverses your most recent safe move.", color = Ink)
                 Text("Co-op: both phones edit one board. Versus: race on separate private boards. Both modes use the same local Wi-Fi.", color = Ink)
             }
@@ -233,13 +238,16 @@ data class GameActions(
 @Composable private fun PlayScreen(state: GameUiState, actions: GameActions, leave: () -> Unit, new: () -> Unit, replace: () -> Unit, help: () -> Unit) {
     var details by remember { mutableStateOf(false) }
     var chatOpen by remember { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
+    val haptics = LocalHapticFeedback.current
+    fun tick() { if (state.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val boardSize = minOf((maxWidth - 32.dp).coerceAtLeast(180.dp), (maxHeight - 300.dp).coerceAtLeast(220.dp), 440.dp)
         val keypadHeight = maxOf(48.dp, (40 * LocalDensity.current.fontScale).dp)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(if (state.role == SOLO) "Solo Sudoku" else if (snapshotMode(state) == VERSUS) "Versus Sudoku" else "Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 23.sp, color = Forest)
+                    Text(if (state.role == SOLO) "Solo" else if (snapshotMode(state) == VERSUS) "Versus" else "Co-op", fontFamily = FontFamily.Serif, fontSize = 22.sp, color = Forest, fontWeight = FontWeight.SemiBold)
                     SelectionContainer { Text(when { state.role == SOLO -> "STANDARD  ·  PERSONAL PUZZLE"; state.role == HOST -> "Room code  ${state.roomCode}"; state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD  ·  PRIVATE GRIDS"; else -> "STANDARD  ·  ONE SHARED GRID" }, fontSize = if (state.role == HOST) 12.sp else 9.sp, letterSpacing = 1.sp, color = if (state.role == HOST) Forest else Muted) }
                 }
                 if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatVisible(true) },
@@ -274,6 +282,14 @@ data class GameActions(
                     Box(Modifier.size(7.dp).background(if (state.role != SOLO && state.status.paused) Gold else Forest, RoundedCornerShape(4.dp)))
                     Spacer(Modifier.width(8.dp))
                     Text(statusText, Modifier.weight(1f), fontSize = 12.sp, color = Forest, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (state.role == HOST && state.roomCode.isNotBlank()) TextButton(
+                        onClick = {
+                            clipboard.setText(AnnotatedString(state.roomCode))
+                            tick()
+                        },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)) {
+                        Text("Copy code", fontSize = 11.sp)
+                    }
                     if (state.role == GUEST && !state.connected) TextButton(onClick = { actions.showJoin(true) }, contentPadding = PaddingValues(horizontal = 4.dp)) { Text("Reconnect", fontSize = 11.sp) }
                 }
                 Row(Modifier.width(boardSize), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -289,7 +305,7 @@ data class GameActions(
                     else Text("Time  " + formatElapsed(state.soloElapsedMs), color = Forest, fontSize = 10.sp)
                 }
                 SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
-                    boardSize, actions.select, state.appearance, state.role == SOLO, state.uniformNumbers)
+                    boardSize, { cell -> tick(); actions.select(cell) }, state.appearance, state.role == SOLO, state.uniformNumbers)
                 if (state.selected == -1 && state.canEdit) {
                     Text("Tap a square, then choose a number.", fontSize = 11.sp, color = Muted)
                 }
@@ -351,28 +367,41 @@ data class GameActions(
                 } else {
                     val editableCell = state.selected in 0..80 && snapshot.puzzle.clues[state.selected] == 0
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = actions.toggleNotes, enabled = state.canEdit,
+                        OutlinedButton(onClick = { tick(); actions.toggleNotes() }, enabled = state.canEdit,
                             modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                             colors = ButtonDefaults.outlinedButtonColors(containerColor = if (state.notes) AmberLight else Paper),
                             border = BorderStroke(if (state.notes) 2.dp else 1.dp, if (state.notes) Gold else Rule),
                             shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(6.dp)) {
                             Text(if (state.notes) "Notes ON" else "Notes", fontSize = 13.sp)
                         }
-                        OutlinedButton(onClick = actions.erase, enabled = state.canEdit && editableCell,
+                        OutlinedButton(onClick = { tick(); actions.erase() }, enabled = state.canEdit && editableCell,
                             modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(6.dp)) { Text("Erase", fontSize = 13.sp) }
-                        OutlinedButton(onClick = actions.undo, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role),
+                        OutlinedButton(onClick = { tick(); actions.undo() }, enabled = state.canEdit && snapshot.undoTargets.containsKey(state.role),
                             modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(6.dp)) { Text("Undo", fontSize = 13.sp) }
                     }
                     for (row in listOf((1..5).toList(), (6..9).toList())) {
                         Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            for (number in row) OutlinedButton(onClick = { actions.number(number) },
-                                enabled = state.canEdit && editableCell,
-                                modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number"),
-                                shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Paper)) {
-                                Text(number.toString(), fontSize = 23.sp, fontWeight = FontWeight.Medium)
+                            for (number in row) {
+                                val remaining = (9 - snapshot.cells.count { it.value == number }).coerceAtLeast(0)
+                                val highlighted = number == snapshot.cells.getOrNull(state.selected)?.value
+                                OutlinedButton(onClick = { tick(); actions.number(number) },
+                                    enabled = state.canEdit && editableCell,
+                                    modifier = Modifier.weight(1f).height(keypadHeight).testTag("number_$number")
+                                        .semantics { contentDescription = "Number $number, $remaining remaining" },
+                                    shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(0.dp),
+                                    border = BorderStroke(if (highlighted) 2.dp else 1.dp, if (highlighted) Forest else Rule),
+                                    colors = ButtonDefaults.outlinedButtonColors(
+                                        containerColor = if (highlighted) TealLight else Paper)) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center) {
+                                        Text(number.toString(), fontSize = 21.sp, lineHeight = 22.sp,
+                                            fontWeight = FontWeight.Medium)
+                                        Text(remaining.toString(), fontSize = 10.sp, lineHeight = 11.sp,
+                                            color = Muted)
+                                    }
+                                }
                             }
                             if (row.size == 4) Box(Modifier.weight(1f).height(keypadHeight), contentAlignment = Alignment.Center) {
                                 Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
@@ -543,6 +572,14 @@ private fun formatElapsed(milliseconds: Long): String {
                     color = Muted, fontSize = 11.sp)
             }
             Switch(checked = state.uniformNumbers, onCheckedChange = actions.uniformNumbers)
+        }
+        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Touch feedback", color = Forest, fontWeight = FontWeight.SemiBold)
+                Text("Use your phone's normal haptics for board and number taps.",
+                    color = Muted, fontSize = 11.sp)
+            }
+            Switch(checked = state.touchFeedback, onCheckedChange = actions.touchFeedback)
         }
         Text("ACHIEVEMENTS", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
         Achievements.progress(state.profile.records).forEach { progress ->
