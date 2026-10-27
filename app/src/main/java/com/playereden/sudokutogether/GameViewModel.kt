@@ -220,6 +220,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (!snapshot.completed) return
         if (snapshot.mode == VERSUS && snapshot.winner == null) return
         val id = snapshot.sessionId + ":" + snapshot.epoch + ":" + role
+        // Presence changes and chat also emit room events. A finished match
+        // should not rewrite the same durable record for every such event.
+        if (localPlayer.current().records.any { it.id == id }) return
         try {
             val saved = localPlayer.update { data ->
                 if (data.records.any { it.id == id }) data
