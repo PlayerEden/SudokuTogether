@@ -263,7 +263,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message,
                             resumeRace = if (versus) true else previous.resumeRace,
                             chat = if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
-                            unreadChat = if (previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0
+                            unreadChat = if (previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0)
                     }
                 } }
                 server = hosted; val port = hosted.start(); hosted.setForeground(visible)
@@ -316,7 +316,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             pendingId = if (changed || event.disconnected || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
                             message = when { saveMessage != null -> saveMessage; event.message != null -> event.message; event.outcome != null -> event.outcome?.let { if (it.accepted) null else explain(it.code) }; changed -> null; else -> previous.message },
                             chat = event.history ?: if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
-                            unreadChat = if (event.history != null || previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == HOST) 1 else 0
+                            unreadChat = if (event.history != null || previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == HOST) 1 else 0)
                     }
                 }
             }
