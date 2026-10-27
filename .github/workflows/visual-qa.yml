@@ -1,0 +1,62 @@
+name: Sudoku Together — Visual UX QA
+# Scoped to the first creation of this workflow; switch to manual-only after launch.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/visual-qa.yml
+
+permissions:
+  contents: read
+
+jobs:
+  visual-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout v0.5 game
+        uses: actions/checkout@v4
+        with:
+          ref: polish/v0.5-native-ux
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build app and UI instrumentation package
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest --console=plain
+      - name: Enable hardware-accelerated Android emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Launch emulator, capture UI and run device tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_5
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none -camera-front none
+          disable-animations: true
+          script: |
+            adb install app/build/outputs/apk/debug/app-debug.apk
+            python3 scripts/emulator_capture.py
+            ./gradlew :app:connectedDebugAndroidTest --console=plain
+      - name: Upload screenshots and Android test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SudokuTogether-v05-visual-review
+          path: |
+            screenshots/**
+            app/build/reports/androidTests/**
+            app/build/outputs/androidTest-results/**
+          if-no-files-found: warn
+          retention-days: 14
