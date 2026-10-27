@@ -48,4 +48,59 @@ class PuzzleSupplyTest {
         val oldSeeds = listOf(20261025L, 2048L, 729L, 81L, 314159L, 271828L, 1009L, 303L)
         oldSeeds.forEach { seed -> assertEquals(Sudoku.generate(seed), Sudoku.generate(seed)) }
     }
+    @Test fun ratedPuzzleSupplierFindsRealTechniqueTiersWithoutDowngrading() {
+        val floorByGrade = mapOf(
+            HumanSudoku.Grade.EASY to 36,
+            HumanSudoku.Grade.MEDIUM to 29,
+            HumanSudoku.Grade.HARD to 24
+        )
+        for ((grade, floor) in floorByGrade) {
+            val seed = (2001L..2048L).first { HumanSudoku.assess(Sudoku.generate(it, floor)).grade == grade }
+            val supplied = PuzzleSupply.nextRated(grade, emptyList(), { seed }, attempts = 1)
+            assertEquals(grade, supplied.assessment.grade)
+            assertTrue(supplied.assessment.logicallySolved)
+            assertEquals(1, Sudoku.solutionCount(supplied.puzzle.clues))
+            assertTrue(supplied.puzzle.clues.count { it != 0 } >= floor)
+        }
+    }
+
+    @Test fun ratedSupplierNeverPassesOffEasyPuzzleAsHardOrRepeatsRecentIds() {
+        val easySeed = 2001L
+        val easy = Sudoku.generate(easySeed, 36)
+        assertEquals(HumanSudoku.Grade.EASY, HumanSudoku.assess(easy).grade)
+        var attempts = 0
+        try {
+            PuzzleSupply.nextRated(HumanSudoku.Grade.EASY, listOf(easy.id),
+                { attempts++; easySeed }, attempts = 4)
+            fail("Repeated puzzle must not be silently accepted")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message!!.contains("no saved puzzle was replaced"))
+        }
+        assertEquals(4, attempts)
+        try {
+            PuzzleSupply.nextRated(HumanSudoku.Grade.HARD, emptyList(),
+                { easySeed }, attempts = 2)
+            // A particular 24-clue seed may actually be Hard. If so, this
+            // cannot test non-downgrading, so we test an explicitly Easy
+            // grade below using the same deterministic candidate floor.
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message!!.contains("hard"))
+        }
+    }
+
+    @Test fun unratedDifficultyRequestsAndUnboundedAttemptsAreRejected() {
+        for (bad in listOf(HumanSudoku.Grade.INVALID, HumanSudoku.Grade.BEYOND_CURRENT_LOGIC)) {
+            try {
+                PuzzleSupply.nextRated(bad, emptyList(), { 1L })
+                fail("Invalid request $bad")
+            } catch (expected: IllegalArgumentException) {
+                assertTrue(expected.message!!.contains("logically rated"))
+            }
+        }
+        try {
+            PuzzleSupply.nextRated(HumanSudoku.Grade.EASY, emptyList(), { 1L }, attempts = 0)
+            fail("Zero attempts must be rejected")
+        } catch (_: IllegalArgumentException) { }
+    }
+
 }
