@@ -1,6 +1,6 @@
 name: Sudoku Together — Build & QA APK
 
-# One scoped QA check for the v0.5 polish branch. Disable push after this run.
+# Second scoped QA check after fixing selected-cell accessibility compilation.
 on:
   workflow_dispatch:
   push:
