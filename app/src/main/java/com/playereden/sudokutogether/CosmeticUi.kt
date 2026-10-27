@@ -31,6 +31,13 @@ fun inkFor(id: String, darkBoard: Boolean): Color = when (id) {
     else -> if (darkBoard) Color(0xFF8DE8BB) else Forest
 }
 
+fun boardFillFor(id: String): Color = when (id) {
+    "linen" -> Color(0xFFFFF6DF)
+    "midnight" -> Color(0xFF152A36)
+    "circuit" -> Color(0xFF102A2B)
+    else -> Paper
+}
+
 fun styleLabel(a: Appearance): String = listOf(
     Cosmetics.inks.firstOrNull { it.id == a.ink }?.name ?: "Forest",
     Cosmetics.boards.firstOrNull { it.id == a.board }?.name ?: "Classic",
@@ -45,7 +52,13 @@ fun styleLabel(a: Appearance): String = listOf(
             val unlocked = Cosmetics.allowed(item.id, state.profile.records)
             OutlinedButton(onClick = { actions.cosmetic(group, item.id) }, enabled = unlocked,
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = if (chosen == item.id) TealColor else Paper)) {
-                Text((if (chosen == item.id) "✓ " else "") + item.name, fontSize = 12.sp)
+                if (group == "ink" || group == "board") {
+                    val swatch = if (group == "ink") inkFor(item.id, false) else boardFillFor(item.id)
+                    Box(Modifier.size(14.dp).background(swatch, RoundedCornerShape(3.dp)))
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text((if (chosen == item.id) "✓ " else "") + item.name, fontSize = 12.sp,
+                    fontFamily = if (group == "font") fontFor(item.id) else FontFamily.SansSerif)
             }
         }
     }
