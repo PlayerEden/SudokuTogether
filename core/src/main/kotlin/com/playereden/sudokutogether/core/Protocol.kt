@@ -34,9 +34,15 @@ object Protocol {
             if (size !in 1..131072) throw IOException("Invalid message size")
             val bytes = ByteArray(size); data.readFully(bytes)
             return json.decodeFromString<Message>(bytes.toString(Charsets.UTF_8)).also {
-                if (it.type.length !in 1..24 || it.name.length > 100 || it.code.length > 32 || (it.token?.length ?: 0) > 128 || it.text.length > 1024 ||
+                fun validLine(line: ChatLine): Boolean =
+                    line.id.length in 1..128 && line.player in listOf(HOST, GUEST) &&
+                        line.atMs > 0 && line.text.isNotBlank() &&
+                        line.text.length <= ChatRules.MAX_LENGTH &&
+                        line.text == ChatRules.clean(line.text)
+                if (it.type.length !in 1..24 || it.name.length > 100 || it.code.length > 32 ||
+                    (it.token?.length ?: 0) > 128 || it.text.length > 1024 ||
                     it.lines.size > ChatRules.HISTORY_LIMIT || !Cosmetics.valid(it.appearance) ||
-                    (it.line != null && (it.line.text.length > ChatRules.MAX_LENGTH || it.line.player !in listOf(HOST, GUEST)))
+                    (it.line != null && !validLine(it.line)) || it.lines.any { line -> !validLine(line) }
                 ) throw IOException("Invalid message")
             }
         } catch (e: IOException) { throw e } catch (e: Exception) { throw IOException("Unreadable game message", e) }
