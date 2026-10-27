@@ -3,11 +3,6 @@ name: Sudoku Together — Build & QA APK
 # Second scoped QA check after fixing selected-cell accessibility compilation.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/qa-debug.yml
 
 permissions:
   contents: read
