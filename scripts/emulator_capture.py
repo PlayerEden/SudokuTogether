@@ -24,7 +24,7 @@ def tap_text(wanted):
     for node in root.iter("node"):
         text = node.attrib.get("text", "")
         desc = node.attrib.get("content-desc", "")
-        if wanted in (text, desc) or wanted.lower() in text.lower():
+        if wanted in (text, desc) or wanted.lower() in text.lower() or wanted.lower() in desc.lower():
             bounds = re.findall(r"\d+", node.attrib.get("bounds", ""))
             if len(bounds) == 4:
                 x1, y1, x2, y2 = (int(v) for v in bounds)
