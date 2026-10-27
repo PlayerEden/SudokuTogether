@@ -48,12 +48,12 @@ class CosmeticsChatTest {
                     appearance = Appearance(ink = "cobalt"))
                 await(guestEvents) { it.token != null }
                 assertTrue(host.chat("  Good game!  "))
+                assertFalse("Immediate repeat should be rate-limited", host.chat("Another message too soon"))
                 assertEquals("Good game!", await(guestEvents) { it.chat?.player == HOST }.chat!!.text)
                 guest.sendChat("Nice move!")
                 val received = await(hostEvents) { it.chat?.player == GUEST }.chat!!
                 assertEquals("Nice move!", received.text)
                 assertEquals(GUEST, await(guestEvents) { it.chat?.player == GUEST }.chat!!.player)
-                assertFalse(host.chat("Another message too soon"))
             }
         }
     }
