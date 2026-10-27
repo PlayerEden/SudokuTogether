@@ -8,7 +8,7 @@ android {
     compileSdk = 35
     defaultConfig {
         applicationId = "com.playereden.sudokutogether"
-        minSdk = 26; targetSdk = 35; versionCode = 6; versionName = "0.6.0-dev"
+        minSdk = 26; targetSdk = 35; versionCode = 7; versionName = "0.7.0-dev"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     if (privateSigning.isNotEmpty()) signingConfigs.create("privateKey") {
