@@ -220,6 +220,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (!snapshot.completed) return
         if (snapshot.mode == VERSUS && snapshot.winner == null) return
         val id = snapshot.sessionId + ":" + snapshot.epoch + ":" + role
+        // Presence changes and chat also emit room events. A finished match
+        // should not rewrite the same durable record for every such event.
+        if (localPlayer.current().records.any { it.id == id }) return
         try {
             val saved = localPlayer.update { data ->
                 if (data.records.any { it.id == id }) data
@@ -262,7 +265,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             pendingId = if (changed || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
                             message = if (event.outcome != null) event.outcome?.let { if (it.accepted) null else explain(it.code) } else if (changed) null else previous.message,
                             resumeRace = if (versus) true else previous.resumeRace,
-                            chat = if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
+                            chat = if (event.chat != null) (previous.chat + listOfNotNull(event.chat)).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
                             unreadChat = if (previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0)
                     }
                 } }
@@ -315,7 +318,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                             partnerCell = if (changed || event.disconnected) -1 else event.selected ?: previous.partnerCell,
                             pendingId = if (changed || event.disconnected || event.outcome?.operationId == previous.pendingId) null else previous.pendingId,
                             message = when { saveMessage != null -> saveMessage; event.message != null -> event.message; event.outcome != null -> event.outcome?.let { if (it.accepted) null else explain(it.code) }; changed -> null; else -> previous.message },
-                            chat = event.history ?: if (event.chat != null) (previous.chat + event.chat).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
+                            chat = event.history ?: if (event.chat != null) (previous.chat + listOfNotNull(event.chat)).takeLast(ChatRules.HISTORY_LIMIT) else previous.chat,
                             unreadChat = if (event.history != null || previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == HOST) 1 else 0)
                     }
                 }

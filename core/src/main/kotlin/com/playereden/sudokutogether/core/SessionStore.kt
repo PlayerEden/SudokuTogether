@@ -72,10 +72,23 @@ fun validateSnapshot(s: Snapshot) {
         require(s.winner == null || s.winner == HOST || s.winner == GUEST)
         require(s.completed == (s.winner != null))
         require(s.raceStartedAtMs == null || s.raceStartedAtMs > 0)
-        if (s.winner == HOST && s.guestCells.isNotEmpty())
-            require(Sudoku.complete(s.puzzle, s.cells.map { it.value }))
-        if (s.winner == GUEST && s.guestCells.isNotEmpty())
-            require(Sudoku.complete(s.puzzle, s.guestCells.map { it.value }))
+        if (s.guestCells.isNotEmpty()) {
+            // The authoritative host owns both independently editable race boards.
+            // A competitor cannot author the opposing player's squares.
+            require(s.cells.all { it.owner == null || it.owner == HOST })
+            require(s.guestCells.all { it.owner == null || it.owner == GUEST })
+            require(s.hostProgress == s.cells.count { it.value != 0 })
+            require(s.guestProgress == s.guestCells.count { it.value != 0 })
+            if (s.winner == HOST) require(Sudoku.complete(s.puzzle, s.cells.map { it.value }))
+            if (s.winner == GUEST) require(Sudoku.complete(s.puzzle, s.guestCells.map { it.value }))
+        } else {
+            // A guest receives only their OWN board. We cannot verify the
+            // remote host's solution here, but can check the local board and
+            // claim of a guest victory without seeing host answers.
+            require(s.cells.all { it.owner == null || it.owner == GUEST })
+            require(s.guestProgress == s.cells.count { it.value != 0 })
+            if (s.winner == GUEST) require(Sudoku.complete(s.puzzle, s.cells.map { it.value }))
+        }
     }
     require(s.hostProgress in 0..81 && s.guestProgress in 0..81)
     require(s.undoTargets.all { (p, i) -> p in listOf(HOST, GUEST) && i in 0..80 })

@@ -19,7 +19,7 @@ class GuestClient(private val socketFactory: () -> Socket = { Socket() }, privat
             Protocol.write(socket.getOutputStream(), Message("hello", code = code, name = cleanName(name, "Partner"), token = resumeToken, appearance = appearance))
             val welcome = Protocol.read(socket.getInputStream())
             if (welcome.type == "error") throw IOException(welcome.text.take(300))
-            if (welcome.type != "welcome" || welcome.version != 4 || welcome.snapshot == null || welcome.status == null || welcome.token == null) throw IOException("The host is running an incompatible app version.")
+            if (welcome.type != "welcome" || welcome.version != WIRE_PROTOCOL_VERSION || welcome.snapshot == null || welcome.status == null || welcome.token == null) throw IOException("The host is running an incompatible app version.")
             validateSnapshot(welcome.snapshot)
             if (welcome.token.length !in 32..128) throw IOException("Invalid rejoin credential")
             socket.soTimeout = 10_000
@@ -30,7 +30,7 @@ class GuestClient(private val socketFactory: () -> Socket = { Socket() }, privat
                 try {
                     while (!socket.isClosed) {
                         val message = Protocol.read(socket.getInputStream()); current.lastRead = System.nanoTime()
-                        if (message.version != 4) throw IOException("Install the same app version on both phones.")
+                        if (message.version != WIRE_PROTOCOL_VERSION) throw IOException("Install the same app version on both phones.")
                         when (message.type) {
                             "state" -> {
                                 val snapshot = message.snapshot ?: throw IOException("Missing puzzle")

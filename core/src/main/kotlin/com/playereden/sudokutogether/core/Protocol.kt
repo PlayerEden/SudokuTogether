@@ -14,11 +14,13 @@ import java.util.concurrent.ThreadFactory
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+const val WIRE_PROTOCOL_VERSION = 4
+
 @Serializable data class RoomStatus(val hostActive: Boolean = true, val guestActive: Boolean = false, val reserved: Boolean = false) {
     val paused: Boolean get() = !hostActive || (reserved && !guestActive)
 }
 @Serializable data class Message(
-    val type: String, val version: Int = 4, val code: String = "", val name: String = "", val token: String? = null,
+    val type: String, val version: Int = WIRE_PROTOCOL_VERSION, val code: String = "", val name: String = "", val token: String? = null,
     val snapshot: Snapshot? = null, val status: RoomStatus? = null, val operation: Operation? = null,
     val outcome: Outcome? = null, val cell: Int = -1, val active: Boolean = true, val text: String = "",
     val appearance: Appearance = Appearance(), val line: ChatLine? = null, val lines: List<ChatLine> = emptyList()
@@ -34,9 +36,15 @@ object Protocol {
             if (size !in 1..131072) throw IOException("Invalid message size")
             val bytes = ByteArray(size); data.readFully(bytes)
             return json.decodeFromString<Message>(bytes.toString(Charsets.UTF_8)).also {
-                if (it.type.length !in 1..24 || it.name.length > 100 || it.code.length > 32 || (it.token?.length ?: 0) > 128 || it.text.length > 1024 ||
+                fun validLine(line: ChatLine): Boolean =
+                    line.id.length in 1..128 && line.player in listOf(HOST, GUEST) &&
+                        line.atMs > 0 && line.text.isNotBlank() &&
+                        line.text.length <= ChatRules.MAX_LENGTH &&
+                        line.text == ChatRules.clean(line.text)
+                if (it.type.length !in 1..24 || it.name.length > 100 || it.code.length > 32 ||
+                    (it.token?.length ?: 0) > 128 || it.text.length > 1024 ||
                     it.lines.size > ChatRules.HISTORY_LIMIT || !Cosmetics.valid(it.appearance) ||
-                    (it.line != null && (it.line.text.length > ChatRules.MAX_LENGTH || it.line.player !in listOf(HOST, GUEST)))
+                    (it.line != null && !validLine(it.line)) || it.lines.any { line -> !validLine(line) }
                 ) throw IOException("Invalid message")
             }
         } catch (e: IOException) { throw e } catch (e: Exception) { throw IOException("Unreadable game message", e) }

@@ -18,6 +18,12 @@ android {
         keyPassword = privateSigning.getProperty("keyPassword")
     }
     buildTypes {
+        debug {
+            // QA uses a separate install so updating a test APK never
+            // threatens the existing signed app's offline records.
+            applicationIdSuffix = ".qa"
+            versionNameSuffix = "-qa"
+        }
         release {
             isMinifyEnabled = false
             if (privateSigning.isNotEmpty()) signingConfig = signingConfigs.getByName("privateKey")

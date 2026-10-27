@@ -1,5 +1,6 @@
 package com.playereden.sudokutogether
 
+import com.playereden.sudokutogether.core.WIRE_PROTOCOL_VERSION
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -43,7 +44,7 @@ class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
             registration = listener
             manager.registerService(NsdServiceInfo().apply {
                 serviceName = "${name.take(20)}'s puzzle"; serviceType = type; setPort(port)
-                setAttribute("v", "1"); setAttribute("session", sessionId)
+                setAttribute("v", WIRE_PROTOCOL_VERSION.toString()); setAttribute("session", sessionId)
             }, NsdManager.PROTOCOL_DNS_SD, listener)
         } catch (_: Exception) { onError("Nearby discovery is unavailable. Your partner can use the manual address.") }
     }
@@ -82,7 +83,7 @@ class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
                     if (current == generation) {
                         val host = serviceInfo.host?.hostAddress
                         val version = serviceInfo.attributes["v"]?.toString(Charsets.UTF_8)
-                        if (host != null && serviceInfo.port in 1..65535 && version == "1") {
+                        if (host != null && serviceInfo.port in 1..65535 && version == WIRE_PROTOCOL_VERSION.toString()) {
                             rooms[serviceInfo.serviceName] = NearbyRoom(serviceInfo.serviceName, host, serviceInfo.port, serviceInfo.attributes["session"]?.toString(Charsets.UTF_8) ?: "")
                             callback?.invoke(rooms.values.toList())
                         }
