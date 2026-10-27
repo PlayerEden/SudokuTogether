@@ -12,6 +12,24 @@ import org.junit.Assert.assertTrue
 @RunWith(AndroidJUnit4::class)
 class PlaySmokeTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @Test fun profileCollectionDisplaysUnlockChoices() {
+        compose.onNodeWithText("My profile & records").performClick()
+        compose.onNodeWithText("YOUR COLLECTION").assertExists()
+        compose.onNodeWithText("Number colors").assertExists()
+        compose.onNodeWithText("Board styles").assertExists()
+        compose.onNodeWithText("Number fonts").assertExists()
+        compose.onNodeWithText("Forest", substring = true).assertExists()
+    }
+
+    @Test fun hostedRoomHasCompactChatSheet() {
+        compose.onNodeWithText("Host a puzzle").performClick()
+        compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Chat").performClick()
+        compose.onNodeWithText("Room chat").assertExists()
+        compose.onNodeWithText("Message your partner").assertExists()
+        compose.onNodeWithText("Send").assertExists()
+    }
+
     @Test fun soloPlayCanResumeAndOpenLocalProfile() {
         compose.onNodeWithText("New solo puzzle").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
