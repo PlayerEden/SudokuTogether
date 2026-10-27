@@ -26,7 +26,7 @@ class PlaySmokeTest {
     }
 
     @Test fun homePresentsThreeDistinctModesAndNativeRuleSheet() {
-        compose.onNodeWithText("How to play").performClick()
+        compose.onNodeWithText("Help").performClick()
         compose.onNodeWithText("How to play Sudoku").assertExists()
         compose.onNodeWithText("Fill each row", substring = true).assertExists()
         compose.onNodeWithText("Got it").performClick()
@@ -41,6 +41,9 @@ class PlaySmokeTest {
     @Test fun hostedRoomHasCompactChatSheet() {
         compose.onNodeWithText("Co-op").performClick()
         compose.onNodeWithText("Host a puzzle").performClick()
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Start new").performClick()
+        }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Chat").performClick()
         compose.onNodeWithText("Room chat").assertExists()
@@ -72,6 +75,11 @@ class PlaySmokeTest {
     @Test fun hostCanEnterUndoAndSharePencilMarksWithoutInternet() {
         compose.onNodeWithText("Co-op").performClick()
         compose.onNodeWithText("Host a puzzle").assertExists().performClick()
+        // A prior emulator test may leave a saved host room on this device.
+        // The expected confirmation is part of the real user flow.
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Start new").performClick()
+        }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         val empty = compose.onAllNodes(hasContentDescription("empty", substring = true)).fetchSemanticsNodes().first()
         val tag = empty.config[androidx.compose.ui.semantics.SemanticsProperties.TestTag]
