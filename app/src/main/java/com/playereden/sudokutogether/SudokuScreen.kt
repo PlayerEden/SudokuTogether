@@ -103,9 +103,11 @@ data class GameActions(
         }
         Spacer(Modifier.height(20.dp))
         Text("Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 34.sp, color = Forest, textAlign = TextAlign.Center)
-        Text("One grid. Two minds.", color = Muted, fontSize = 16.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
+        Text("Solve solo. Team up. Race a friend.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp, bottom = 24.dp))
         Column(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedTextField(value = state.name, onValueChange = actions.name, label = { Text("Your name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp))
+            Text("EQUIPPED STYLE  ·  " + styleLabel(state.appearance), fontSize = 11.sp,
+                color = inkFor(state.appearance.ink, false), maxLines = 2)
             Spacer(Modifier.height(2.dp))
             Text("PLAY ON YOUR OWN", fontSize = 10.sp, letterSpacing = 1.3.sp, color = Muted)
             if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
