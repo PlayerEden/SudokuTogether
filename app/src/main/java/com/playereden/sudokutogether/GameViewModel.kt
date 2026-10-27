@@ -28,7 +28,8 @@ data class GameUiState(
     val resumeRace: Boolean = false, val appearance: Appearance = Appearance(),
     val chat: List<ChatLine> = emptyList(), val unreadChat: Int = 0,
     val chatVisible: Boolean = false,
-    val uniformNumbers: Boolean = false
+    val uniformNumbers: Boolean = false,
+    val touchFeedback: Boolean = true
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -51,7 +52,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var soloElapsedAnchor: Long = 0L
     private var soloTick: Job? = null
     private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null, appearance = savedAppearance(),
-        uniformNumbers = preferences.getBoolean("uniformNumbers", false)))
+        uniformNumbers = preferences.getBoolean("uniformNumbers", false),
+        touchFeedback = preferences.getBoolean("touchFeedback", true)))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
     @Volatile private var server: HostServer? = null
@@ -103,6 +105,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 _state.update { it.copy(message = "Your style is saved for your next room.") }
             }
         }
+    }
+    fun setTouchFeedback(enabled: Boolean) {
+        preferences.edit().putBoolean("touchFeedback", enabled).apply()
+        _state.update { it.copy(touchFeedback = enabled) }
     }
     fun setUniformNumbers(enabled: Boolean) {
         preferences.edit().putBoolean("uniformNumbers", enabled).apply()
@@ -210,7 +216,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
-            uniformNumbers = it.uniformNumbers) }
+            uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
 
