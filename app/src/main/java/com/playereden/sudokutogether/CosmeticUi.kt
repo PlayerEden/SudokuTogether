@@ -31,7 +31,11 @@ fun inkFor(id: String, darkBoard: Boolean): Color = when (id) {
     else -> if (darkBoard) Color(0xFF8DE8BB) else Forest
 }
 
-fun styleLabel(a: Appearance): String = Cosmetics.inks.firstOrNull { it.id == a.ink }?.name ?: "Forest"
+fun styleLabel(a: Appearance): String = listOf(
+    Cosmetics.inks.firstOrNull { it.id == a.ink }?.name ?: "Forest",
+    Cosmetics.boards.firstOrNull { it.id == a.board }?.name ?: "Classic",
+    Cosmetics.fonts.firstOrNull { it.id == a.font }?.name ?: "Clear"
+).joinToString(" · ")
 
 @Composable fun CosmeticSelector(title: String, group: String, options: List<Cosmetic>,
     chosen: String, state: GameUiState, actions: GameActions) {
