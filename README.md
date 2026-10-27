@@ -4,6 +4,14 @@ A native Android Sudoku game built for **solo, local Wi-Fi co-op, and head-to-he
 
 The name is provisional. This project has its own implementation and original generated puzzles; an unrelated app already uses the same public title.
 
+## v0.4 experimental: player badges and earned milestones
+
+The stacked `feat/player-identity-v0.4` branch adds **six earned player emblems**, **nine achievements with progress**, compact opponent identity cards, and a post-game co-op summary showing each partner's *final filled entries*. Achievements derive from locally saved completed games; they are not verified by an online server. Player-selected emblems are now exchanged over protocol **v4** on matching Android `0.4.0-dev` APKs.
+
+Players can enable **Classic number display** to show all entries in a uniform, readable style only on their own device. The cosmetic identity still belongs to the author in the underlying game state. This pass also repairs unread-chat counts while the chat sheet is open and expands local record retention to 10,000 finished games.
+
+**Development status:** source and new test cases committed, with a static source pass that caught and fixed two missing Kotlin parentheses. The app has **not** been compiled, signed, or physically tested on two phones in this environment. [Detailed v0.4 handoff and QA](docs/V0.4_HANDOFF.md).
+
 ## v0.3 experimental: player identity and local chat
 
 The stacked `feat/chat-cosmetics-v0.3` branch introduces an optional collapsible room chat for co-op and versus, with quick phrases and a 30-line memory-only chat history. It also adds earned number colors, local board backgrounds and built-in font choices under **My profile & records**.
