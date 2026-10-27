@@ -1,13 +1,9 @@
 name: Sudoku Together — Build & QA APK
 
-# Scoped v0.6 puzzle-feel build; restore this workflow to manual-only afterward.
+# Manual-only: compile, test and package APKs when explicitly requested.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/qa-debug.yml
+
 
 permissions:
   contents: read
