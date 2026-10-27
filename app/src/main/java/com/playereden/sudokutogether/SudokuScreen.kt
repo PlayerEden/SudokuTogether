@@ -48,7 +48,7 @@ data class GameActions(
     val number: (Int) -> Unit, val toggleNotes: () -> Unit, val erase: () -> Unit,
     val undo: () -> Unit, val replacePartner: () -> Unit, val newPuzzle: () -> Unit,
     val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
-    val sendChat: (String) -> Unit, val chatRead: () -> Unit, val cosmetic: (String, String) -> Unit
+    val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -182,7 +182,7 @@ data class GameActions(
                     Text(if (state.role == SOLO) "Solo Sudoku" else if (snapshotMode(state) == VERSUS) "Versus Sudoku" else "Sudoku Together", fontFamily = FontFamily.Serif, fontSize = 23.sp, color = Forest)
                     SelectionContainer { Text(when { state.role == SOLO -> "STANDARD  ·  PERSONAL PUZZLE"; state.role == HOST -> "Room code  ${state.roomCode}"; state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD  ·  PRIVATE GRIDS"; else -> "STANDARD  ·  ONE SHARED GRID" }, fontSize = if (state.role == HOST) 12.sp else 9.sp, letterSpacing = 1.sp, color = if (state.role == HOST) Forest else Muted) }
                 }
-                if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatRead() }) {
+                if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatVisible(true) }) {
                     Text(if (state.unreadChat > 0) "Chat (" + state.unreadChat + ")" else "Chat")
                 }
                 TextButton(onClick = leave) { Text("Home") }
@@ -271,7 +271,7 @@ data class GameActions(
     }
     if (chatOpen && state.role != SOLO) RoomChatSheet(state, actions) {
         chatOpen = false
-        actions.chatRead()
+        actions.chatVisible(false)
     }
 }
 
