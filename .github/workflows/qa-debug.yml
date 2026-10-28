@@ -3,11 +3,7 @@ name: Sudoku Together — Build & QA APK
 # Manual-only: compile, test and package APKs when explicitly requested.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/qa-debug.yml
+
 
 
 
@@ -31,7 +27,7 @@ jobs:
           # The default branch contains docs and this workflow, not the full Android game.
           # From 'main', build the latest tested source on 'development'.
           # Choosing another branch in the manual dispatch builds that branch.
-          ref: ${{ github.ref_name == 'main' && 'feat/v0.8d-solo-assists' || github.ref_name }}
+          ref: ${{ github.ref_name == 'main' && 'development' || github.ref_name }}
       - name: Report exact source commit
         run: |
           echo "Building $(git rev-parse --short HEAD) from $(git branch --show-current)"
