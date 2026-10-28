@@ -39,6 +39,13 @@ class LocalPlayerStore(file: File) {
         saved.activeSolo?.let { solo ->
             require(solo.cells.size == 81 && solo.puzzle.clues.size == 81 && solo.elapsedMs >= 0)
             require(solo.history.size <= 128 && solo.cells.all { it.value in 0..9 && it.notes in 0..511 })
+            require(solo.hintsUsed in 0..9999)
+            require(solo.history.all { undo ->
+                undo.cell in 0..80 && undo.relatedBefore.size <= 20 &&
+                    undo.relatedBefore.all { (index, previous) ->
+                        index in 0..80 && previous.value in 0..9 && previous.notes in 0..511
+                    }
+            })
             require(solo.puzzle.clues.indices.all { index -> solo.puzzle.clues[index] == 0 || solo.cells[index].value == solo.puzzle.clues[index] })
             require(solo.completed == Sudoku.complete(solo.puzzle, solo.cells.map { it.value }))
         }
