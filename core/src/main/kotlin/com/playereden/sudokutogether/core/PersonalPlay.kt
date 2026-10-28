@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 const val SOLO = "solo"
+const val DAILY = "daily"
 const val MAX_RECORDS = 10_000
 
 @Serializable data class SoloUndo(val cell: Int, val before: Cell, val relatedBefore: Map<Int, Cell> = emptyMap())
@@ -28,6 +29,8 @@ const val MAX_RECORDS = 10_000
     )
 }
 
+@Serializable data class DailyProgress(val date: String, val solo: SoloProgress)
+
 @Serializable data class GameRecord(
     val id: String,
     val mode: String,
@@ -38,14 +41,16 @@ const val MAX_RECORDS = 10_000
     val finishedAtMs: Long,
     val difficulty: String? = null,
     val assisted: Boolean = false,
-    val hintsUsed: Int = 0
+    val hintsUsed: Int = 0,
+    val dailyDate: String? = null
 )
 
 @Serializable data class LocalPlayerData(
     val schema: Int = 1,
     val playerId: String = UUID.randomUUID().toString(),
     val activeSolo: SoloProgress? = null,
-    val records: List<GameRecord> = emptyList()
+    val records: List<GameRecord> = emptyList(),
+    val dailyProgress: List<DailyProgress> = emptyList()
 )
 
 data class PersonalStats(
