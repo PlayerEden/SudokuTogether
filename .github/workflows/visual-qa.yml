@@ -2,11 +2,7 @@ name: Sudoku Together — Visual UX QA
 # Manual-only: inspect Android-native visuals and run emulator smoke tests.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/visual-qa.yml
+
 
 
 
@@ -27,7 +23,7 @@ jobs:
         with:
           # The default branch contains docs and CI only.
           # A manual run from 'main' checks out the actual Android source.
-          ref: ${{ github.ref_name == 'main' && 'feat/v0.10a-offline-daily' || github.ref_name }}
+          ref: ${{ github.ref_name == 'main' && 'development' || github.ref_name }}
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
