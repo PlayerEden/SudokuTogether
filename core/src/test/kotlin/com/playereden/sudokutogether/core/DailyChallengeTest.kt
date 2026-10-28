@@ -51,16 +51,33 @@ class DailyChallengeTest {
         assertEquals(original, tomorrow.activeSolo)
     }
 
-    @Test fun dailyHistoryIsBoundedAndDoesNotChangeCompletedResult() {
+    @Test fun unfinishedDailyHistoryIsNeverSilentlyDeleted() {
         var data = LocalPlayerData()
         var date = java.time.LocalDate.of(2026, 10, 1)
         repeat(34) {
             data = DailyChallenge.open(data, date.toString(), it * 1000L)
             date = date.plusDays(1)
         }
-        assertEquals(DailyChallenge.MAX_SAVED_DAYS, data.dailyProgress.size)
-        assertNull(DailyChallenge.find(data, "2026-10-01"))
+        assertEquals(34, data.dailyProgress.size)
+        assertNotNull(DailyChallenge.find(data, "2026-10-01"))
         assertNotNull(DailyChallenge.find(data, "2026-11-03"))
+    }
+
+    @Test fun finishedDailyHistoryIsPrunedBeforeUnfinishedWork() {
+        val unfinished = PersonalPlay.newSolo(fixture(), 1L)
+        var data = LocalPlayerData(dailyProgress = listOf(DailyProgress("2026-09-01", unfinished)))
+        var date = java.time.LocalDate.of(2026, 10, 1)
+        repeat(34) {
+            val solved = PersonalPlay.newSolo(fixture(), 100L).copy(finishedAtMs = 200L)
+            data = data.copy(dailyProgress = data.dailyProgress +
+                DailyProgress(date.toString(), solved))
+            date = date.plusDays(1)
+        }
+        data = DailyChallenge.open(data, "2026-11-04", 300L)
+        assertNotNull(DailyChallenge.find(data, "2026-09-01"))
+        assertNull(DailyChallenge.find(data, "2026-10-01"))
+        assertNotNull(DailyChallenge.find(data, "2026-11-04"))
+        assertEquals(DailyChallenge.MAX_SAVED_DAYS, data.dailyProgress.size)
     }
 
     @Test fun dailyCompletionStoresSeparateIdempotentAssistedRecord() {
