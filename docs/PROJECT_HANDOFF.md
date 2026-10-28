@@ -10,12 +10,12 @@
 
 - Repository: https://github.com/PlayerEden/SudokuTogether
 - **Development/source branch:** [`development`](https://github.com/PlayerEden/SudokuTogether/tree/development) — full native Android source, game rules, tests, Gradle wrapper, previous docs. Use this as the starting point for the **next** development slice, and update it when a new slice is verified.
-- **Historical feature branch:** [`feat/v0.8c-difficulty-selection`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.8c-difficulty-selection) — v0.8C implementation and draft [PR #17](https://github.com/PlayerEden/SudokuTogether/pull/17).
-- **Known-green code checkpoint:** [`checkpoint/v0.8c-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8c-qa-green) at exact commit `fa08a6e4ad17fa082fc134d2c18332ecc5fba38f`. Preserve this branch unchanged as a rollback/reference point.
+- **Latest milestone feature branch:** [`feat/v0.8d-solo-assists`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.8d-solo-assists) — new optional Solo Hint and pencil-cleanup features, draft [PR #19](https://github.com/PlayerEden/SudokuTogether/pull/19). Previous v0.8C implementation: [PR #17](https://github.com/PlayerEden/SudokuTogether/pull/17).
+- **Latest known-green source checkpoint:** [`checkpoint/v0.8d-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8d-qa-green) at commit `89fdd86163ff4c414c96a03689b4246c21b396e2`. Previous v0.8C checkpoint: [`checkpoint/v0.8c-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8c-qa-green). Preserve both unchanged for rollback.
 - **IMPORTANT:** default [`main`](https://github.com/PlayerEden/SudokuTogether/tree/main) is still a **small documentation/workflow skeleton**, not the full working Android project. It links to this handoff. **Do not conclude the game is missing because you checked only `main`.**
-- GitHub PRs #1, #2, #3, #4, #5, #6, #7, #8, #9, #15 and #17 are a stacked *draft history*. Do not independently merge them out of order or delete their branches without first planning and verifying consolidation. The eventual `main` promotion is tracked in [repository issue #18](https://github.com/PlayerEden/SudokuTogether/issues/18); it must not delay the next playable feature.
+- GitHub PRs #1, #2, #3, #4, #5, #6, #7, #8, #9, #15, #17 and #19 are a stacked *draft history*. Do not independently merge them out of order or delete their branches without first planning and verifying consolidation. The eventual `main` promotion is tracked in [repository issue #18](https://github.com/PlayerEden/SudokuTogether/issues/18); it must not delay the next playable feature.
 
-## 2. Current playable product — v0.8C (development QA)
+## 2. Current playable product — v0.8D (development QA)
 
 **Native Android** (Kotlin / Jetpack Compose, not HTML/WebView), 9×9 classic Sudoku. Modes:
 - Solo/offline with local persistence, Undo, Notes, erase, completion and records.
@@ -25,35 +25,42 @@
 - Fresh generated uniquely solvable puzzles with 64 recent-puzzle ID avoidance.
 - **Easy, Medium, Hard** selection before a new game. Difficulty derives from a deduction-only technique grader (singles; locked candidates; naked pairs), not clue count alone. Tier selector refuses silent downgrades; generated puzzles must match the requested technique grade.
 - Difficulty travels inside the puzzle/host-authoritative snapshot and is retained for rematches; legacy records and old saves without grade load as **Legacy** instead of being falsely relabeled.
-- LAN wire protocol now **v5**, meaning **both phones must use a matching QA version**. Debug QA app uses application ID suffix `.qa`; version `0.8.0-dev3`, versionCode `10`.
+- **Optional Solo Hint:** opens a logical deduction based on the player's visible grid; shows a location, number and reasoning but never fills it. If user-entered numbers make the grid impossible, no speculative hint is given. Hint use is persisted before display.
+- **Optional Solo pencil-mark cleanup:** disabled by default, enabled in profile. A new placed digit removes that candidate from related empty cells; Undo restores both the number and automatically removed notes.
+- **Assisted result tracking:** saved Solo progress remembers hint usage and note-assist usage; completed Solo records display `Assisted`. Older saved games and history remain readable using defaults.
+- Assistance is **Solo-only** pending a fair, host-authoritative policy for competitive/co-op rooms.
+- LAN wire protocol remains **v5**, meaning **both phones must use a matching QA version**. Debug QA app uses application ID suffix `.qa`; version `0.8.0-dev4`, versionCode `11`.
 
-**Limits to avoid overstating:** difficulty labels are technique tiers, not professionally calibrated difficulty; a rare Hard candidate may require generation retries. There is no internet lobby, cross-device cloud save, global rankings, Split Clues, explainable hint UI, daily puzzle, final store identity or Google Play production release.
+**Limits to avoid overstating:** difficulty labels are technique tiers, not professionally calibrated difficulty; a rare Hard candidate may require generation retries. There is no internet lobby, cross-device cloud save, global rankings, Split Clues, co-op/versus hints, daily puzzle, final store identity or Google Play production release.
 
 ## 3. Verified QA evidence, not assumptions
 
-- Full build / core and Android JVM tests / lint / compile instrumentation tests / APK assembly: **PASS** [workflow run 40607157498](https://github.com/PlayerEden/SudokuTogether/actions/runs/40607157498).
-- Actual Android emulator instrumentation: **PASS, 8 of 8 cases** [workflow run 40607235385](https://github.com/PlayerEden/SudokuTogether/actions/runs/40607235385). Includes new difficulty picker, game mode selection, solo resume, hosting/chat, race waiting, pencil marks, erase, Undo.
-- **Working code checkpoint:** `fa08a6e4ad17fa082fc134d2c18332ecc5fba38f` as above. Later changes on development as of this handoff are documentation only.
-- APK artifact: `SudokuTogether-QA-40607157498` under the build's **Artifacts**; GitHub Actions artifacts expire after **14 days**. Do not treat temporary artifacts or chat sandbox links as durable backup. **Source, tests, docs, workflow config and immutable commit history are the durable backups.**
-- Prior calibration: [v0.8B report](V0.8B_HUMAN_DIFFICULTY_CALIBRATION.md), including 48 puzzles × five clue floors. At floor 36, 48/48 sampled puzzles graded Easy. At floor 24, sampled 30 Easy, 3 Medium, 3 Hard, 12 beyond current logical solver. The sampler uses an exact unique-solution check and a separate human-technique trace.
-- No two-physical-phone multiplayer test evidence yet. Do not claim LAN reliability is real-device-certified solely because emulator automation passed.
-- One small known UX issue: Solo gameplay displays timer twice. Fix during a polish pass.
+- **v0.8D QA build:** green [run 40610640428](https://github.com/PlayerEden/SudokuTogether/actions/runs/40610640428): core tests, Android unit tests, lint, instrumentation Kotlin compilation and APK assembly.
+- **v0.8D Android emulator:** green [run 40610910679](https://github.com/PlayerEden/SudokuTogether/actions/runs/40610910679): **9 of 9 instrumented tests passed**, no failures, errors or skips. The Solo Hint dialog was exercised in an actual Android emulator.
+- **Exact verified source commit:** `89fdd86163ff4c414c96a03689b4246c21b396e2`, held in `checkpoint/v0.8d-qa-green`. The later commits add audit/handoff documentation, not untested game code.
+- **APK artifact:** `SudokuTogether-QA-40610640428` on GitHub Actions, checksum `c1ef3be6c12b3e39774f1055be6ebf2db13e30b59454c3e98894a2d17bf12a4a`. GitHub test artifacts expire in 14 days. The source commit, Gradle project, tests, docs and checkpoint are the durable backups.
+- Previous v0.8C build and emulator were green: [40607157498](https://github.com/PlayerEden/SudokuTogether/actions/runs/40607157498), [40607235385](https://github.com/PlayerEden/SudokuTogether/actions/runs/40607235385) (8/8).
+- Difficulty calibration report [v0.8B](V0.8B_HUMAN_DIFFICULTY_CALIBRATION.md) remains the source for human-technique grading constraints.
+- **Outstanding real-device work:** a Solo Hint and optional cleanup playthrough, upgrade/save compatibility with the user's actual Android APK, accessibility/small-screen layout, and especially the **two-physical-phone** Wi-Fi co-op/versus reliability gate. Do not claim these were physically approved because emulator tests passed.
+- **Known UI gaps:** Solo time shown in two places; assisted and classic best-time leaderboards may benefit from clearer separation; selected-cell screenshot capture is not as reliable as instrumentation interaction evidence.
 
 ## 4. Exact next task
 
-**v0.8D — Optional, explainable Sudoku assistance**, no major refactoring:
-1. Plan hint semantics that reveal **one valid human deduction** using current *visible* state; never fill the entire solution or reveal remote private information.
-2. Distinguish hint explanation from auto-play. Player can opt in or decline; Classic play continues without hints.
-3. Optional note clean-up after placement, configurable conflict/mistake visibility. Preserve undo, completion and accessibility.
-4. Track whether any assistance was used for records/achievements so assisted runs aren't misrepresented as fully unassisted.
-5. Add core regression tests + Android UI tests; build a verified QA APK; capture before/after screenshots and record the exact commit/run.
-6. **After v0.8D:** prioritize v0.9A physical two-phone LAN acceptance *before* Split Clues.
+**v0.8E — focused final Sudoku UI/fairness polish**, then **v0.9A two-real-phone Wi-Fi acceptance**:
 
-Open planned work: [v0.8C/D issue #11](https://github.com/PlayerEden/SudokuTogether/issues/11); [v0.9 issue #12](https://github.com/PlayerEden/SudokuTogether/issues/12); [v0.10 issue #13](https://github.com/PlayerEden/SudokuTogether/issues/13); [v0.11 issue #14](https://github.com/PlayerEden/SudokuTogether/issues/14). Verify issue titles/numbers if modifying them.
+1. On a phone, confirm Solo Hint is accessible, really leaves the grid unchanged, and selects a useful square; optional pencil cleanup/Undo behaves reliably after restart.
+2. Improve first-time help for the optional assists; remove duplicate Solo timer and check 200% system font, narrow/landscape layouts, TalkBack and touch targets.
+3. Distinguish assisted vs unassisted best times accurately, preserve historical records and define fair achievements without retroactive score rewrites.
+4. Do not add co-op/versus hints until the rules are symmetric, host-validated and cannot leak private information.
+5. Verify new APK with core and Android tests, capture screenshots if meaningful, and record exact SHA/run.
+6. **Next blocking gate:** two physical phones on the same Wi-Fi for hosting, discovering, joining, notes, conflicts, chat, completion, background/force-stop, reconnect and versus. No Split Clues until this passes.
+
+Planning issues: [v0.8 assist #11](https://github.com/PlayerEden/SudokuTogether/issues/11), [v0.9 LAN #12](https://github.com/PlayerEden/SudokuTogether/issues/12), [v0.10 #13](https://github.com/PlayerEden/SudokuTogether/issues/13), [v0.11 #14](https://github.com/PlayerEden/SudokuTogether/issues/14).
+Latest audit: [`V0.8D_SOLO_ASSISTS_AUDIT.md`](V0.8D_SOLO_ASSISTS_AUDIT.md).
 
 ## 5. Remaining release roadmap
 
-- **v0.8D/E:** explainable hints, optional notes assistance, conflict readability, no skill-spoiling/competitive leakage, first-play instruction and device UI polish.
+- **v0.8E:** assist-result fairness, duplicate-timer cleanup, native accessibility/font sizing, real-phone Solo assist check; v0.8D Solo hints and note assistance are implemented.
 - **v0.9A/B:** same-Wi-Fi two-phone host/discovery/manual join, rejoin after app background/kill, saved state, chat, racing, edit conflicts, error feedback, QR invitation. Log physical device evidence.
 - **v0.9C:** **Split Clues** optional collaborative mode. Each phone sees a different subset of givens; cannot leak through guest network state, notes, hints, previews, screen-reader semantics, or saved mirror. This depends on v0.9A.
 - **v0.10:** daily puzzle with offline-date handling, fair records and achievement progression, more replayability, useful end-of-match stats.
@@ -61,7 +68,7 @@ Open planned work: [v0.8C/D issue #11](https://github.com/PlayerEden/SudokuToget
 - **Later only:** reusable native Android puzzle-game template so future crossword/Minesweeper-type games can reuse infrastructure. Concept preserved in [`REUSABLE_ANDROID_PUZZLE_FOUNDATION.md`](REUSABLE_ANDROID_PUZZLE_FOUNDATION.md) and [issue #16](https://github.com/PlayerEden/SudokuTogether/issues/16). **Paused at user request.** Do not begin extracting it while Sudoku unfinished.
 
 Full acceptance matrix: [`ROADMAP_V08_TO_LAUNCH.md`](ROADMAP_V08_TO_LAUNCH.md).
-Previous feature QA: [`V0.8C_DIFFICULTY_SELECTION_HANDOFF.md`](V0.8C_DIFFICULTY_SELECTION_HANDOFF.md).
+Milestone QA: [`V0.8D_SOLO_ASSISTS_AUDIT.md`](V0.8D_SOLO_ASSISTS_AUDIT.md), [`V0.8C_DIFFICULTY_SELECTION_HANDOFF.md`](V0.8C_DIFFICULTY_SELECTION_HANDOFF.md).
 Game specs: [original design](superpowers/specs/2026-10-25-sudoku-together-design.md) and [co-op extras](superpowers/specs/2026-10-25-co-op-extras-design.md).
 Device checklist: [`TESTING.md`](TESTING.md).
 
