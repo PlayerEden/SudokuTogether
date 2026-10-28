@@ -39,6 +39,20 @@ class PlaySmokeTest {
         compose.onNodeWithText("New solo puzzle").assertExists()
     }
 
+    @Test fun selectedDifficultyAppearsOnTheActualPuzzle() {
+        compose.onNodeWithTag("difficulty_MEDIUM").assertExists().performClick()
+        compose.onNodeWithTag("difficulty_MEDIUM").assertIsSelected()
+        compose.onNodeWithText("New solo puzzle").performClick()
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Start new").performClick()
+        }
+        compose.waitUntil(20000) {
+            compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Medium", substring = true).assertExists()
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
+    }
+
     @Test fun hostedRoomHasCompactChatSheet() {
         compose.onNodeWithText("Co-op").performClick()
         compose.onNodeWithText("Host a puzzle").performClick()

@@ -33,7 +33,8 @@ const val MAX_RECORDS = 10_000
     val puzzleId: String,
     val elapsedMs: Long,
     val moves: Int,
-    val finishedAtMs: Long
+    val finishedAtMs: Long,
+    val difficulty: String? = null
 )
 
 @Serializable data class LocalPlayerData(
@@ -98,7 +99,7 @@ object PersonalPlay {
         require(finished.completed && Sudoku.complete(finished.puzzle, finished.cells.map { it.value }))
         if (data.records.any { it.id == finished.id }) return data.copy(activeSolo = finished)
         val record = GameRecord(finished.id, SOLO, "SOLVED", finished.puzzle.id,
-            finished.elapsedMs, finished.moves, finished.finishedAtMs!!)
+            finished.elapsedMs, finished.moves, finished.finishedAtMs!!, finished.puzzle.difficulty)
         return data.copy(activeSolo = finished, records = (data.records + record).takeLast(MAX_RECORDS))
     }
 

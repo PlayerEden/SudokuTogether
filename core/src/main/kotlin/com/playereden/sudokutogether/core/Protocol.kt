@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadFactory
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-const val WIRE_PROTOCOL_VERSION = 4
+const val WIRE_PROTOCOL_VERSION = 5
 
 @Serializable data class RoomStatus(val hostActive: Boolean = true, val guestActive: Boolean = false, val reserved: Boolean = false) {
     val paused: Boolean get() = !hostActive || (reserved && !guestActive)

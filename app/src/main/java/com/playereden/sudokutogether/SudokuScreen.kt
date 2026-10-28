@@ -55,7 +55,8 @@ data class GameActions(
     val solo: (Boolean) -> Unit, val profile: () -> Unit, val hostRace: (Boolean) -> Unit,
     val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit,
     val uniformNumbers: (Boolean) -> Unit,
-    val touchFeedback: (Boolean) -> Unit
+    val touchFeedback: (Boolean) -> Unit,
+    val difficulty: (String) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -103,6 +104,13 @@ data class GameActions(
             }) { Text(if (kind == "leave") "Leave room" else if (kind == "partner") "Replace partner" else "Start new") } },
             dismissButton = { TextButton(onClick = { confirmation = null }) { Text("Keep playing") } })
     }
+}
+
+private fun difficultyName(level: String?): String = when (level) {
+    "EASY" -> "Easy"
+    "MEDIUM" -> "Medium"
+    "HARD" -> "Hard"
+    else -> "Legacy"
 }
 
 @Composable private fun HomeScreen(
@@ -156,6 +164,25 @@ data class GameActions(
                     "versus" -> "Same starting puzzle, separate private boards. First valid finish wins."
                     else -> "A quiet puzzle with your own timer, pencil marks and saved progress."
                 }, color = Muted, fontSize = 13.sp, lineHeight = 19.sp)
+                Text("PUZZLE DIFFICULTY", color = Muted, fontSize = 10.sp, letterSpacing = 1.2.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("EASY" to "Easy", "MEDIUM" to "Medium", "HARD" to "Hard").forEach { (id, label) ->
+                        val active = state.selectedDifficulty == id
+                        OutlinedButton(
+                            onClick = { actions.difficulty(id) }, enabled = !state.busy,
+                            modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("difficulty_$id")
+                                .semantics { selected = active },
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 2.dp),
+                            border = BorderStroke(if (active) 2.dp else 1.dp, if (active) Forest else Rule),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = if (active) TealLight else Paper)
+                        ) {
+                            Text(label, fontSize = 13.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                        }
+                    }
+                }
+                Text("For new games only. Resuming keeps the saved puzzle and difficulty.",
+                    color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
                 when (mode) {
                     "solo" -> {
                         if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
@@ -253,7 +280,17 @@ data class GameActions(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(if (state.role == SOLO) "Solo" else if (snapshotMode(state) == VERSUS) "Versus" else "Co-op", fontFamily = FontFamily.Serif, fontSize = 22.sp, color = Forest, fontWeight = FontWeight.SemiBold)
-                    SelectionContainer { Text(when { state.role == SOLO -> "STANDARD  ·  PERSONAL PUZZLE"; state.role == HOST -> "Room code  ${state.roomCode}"; state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD  ·  PRIVATE GRIDS"; else -> "STANDARD  ·  ONE SHARED GRID" }, fontSize = if (state.role == HOST) 12.sp else 9.sp, letterSpacing = 1.sp, color = if (state.role == HOST) Forest else Muted) }
+                    SelectionContainer { Text(
+                        difficultyName(state.snapshot?.puzzle?.difficulty) + "  ·  " +
+                            when {
+                                state.role == SOLO -> "PERSONAL PUZZLE"
+                                state.role == HOST -> "Room code ${state.roomCode}"
+                                state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD"
+                                else -> "SHARED GRID"
+                            },
+                        fontSize = if (state.role == HOST) 12.sp else 10.sp,
+                        letterSpacing = 0.5.sp, color = if (state.role == HOST) Forest else Muted
+                    ) }
                 }
                 if (state.role != SOLO) TextButton(onClick = { chatOpen = true; actions.chatVisible(true) },
                     contentPadding = PaddingValues(horizontal = 7.dp)) {
@@ -566,6 +603,14 @@ private fun formatElapsed(milliseconds: Long): String {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("SOLO SUDOKU", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Forest)
                 Text("Puzzles solved: " + stats.soloWins, color = Ink)
+                for (tier in listOf("EASY", "MEDIUM", "HARD")) {
+                    val tierResults = state.profile.records.filter {
+                        it.mode == SOLO && it.result == "SOLVED" && it.difficulty == tier
+                    }
+                    Text(difficultyName(tier) + " · " + tierResults.size + " solved · Best " +
+                        (tierResults.minOfOrNull { it.elapsedMs }?.let(::formatElapsed) ?: "Not yet"),
+                        color = Muted, fontSize = 12.sp)
+                }
                 Text("Best time: " + (stats.soloBestMs?.let(::formatElapsed) ?: "Not yet"), color = Ink)
                 Text("Total solving time: " + formatElapsed(stats.soloTotalMs), color = Ink)
             }
@@ -626,7 +671,7 @@ private fun formatElapsed(milliseconds: Long): String {
         if (recent.isEmpty()) Text("Finish a solo puzzle to save your first record.", fontSize = 14.sp, color = Muted)
         recent.forEach { result ->
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(result.mode.uppercase() + "  ·  " + result.result, fontSize = 12.sp, color = Ink)
+                Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty), fontSize = 12.sp, color = Ink)
                 Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest)
             }
             HorizontalDivider(color = Rule)

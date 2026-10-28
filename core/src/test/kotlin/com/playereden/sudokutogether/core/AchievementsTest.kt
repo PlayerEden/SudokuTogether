@@ -57,7 +57,7 @@ class AchievementsTest {
         val encoded = ByteArrayOutputStream()
         Protocol.write(encoded, Message("state", snapshot = visible))
         val decoded = Protocol.read(ByteArrayInputStream(encoded.toByteArray()))
-        assertEquals(4, decoded.version)
+        assertEquals(WIRE_PROTOCOL_VERSION, decoded.version)
         assertEquals("laurel", decoded.snapshot!!.hostAppearance.emblem)
         assertTrue(decoded.snapshot!!.guestCells.isEmpty())
     }

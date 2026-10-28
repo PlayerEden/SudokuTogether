@@ -50,6 +50,7 @@ class AtomicSessionStore(private val file: File) : SessionStore {
 fun validateSnapshot(s: Snapshot) {
     require(s.sessionId.isNotBlank() && s.sessionId.length <= 128 && s.epoch.isNotBlank() && s.epoch.length <= 128)
     require(s.puzzle.id.length in 1..128 && Sudoku.solutionCount(s.puzzle.clues) == 1)
+    require(s.puzzle.difficulty == null || s.puzzle.difficulty in listOf("EASY", "MEDIUM", "HARD"))
     require(s.cells.size == 81 && s.revision >= 0)
     require(s.hostName.length in 1..24 && (s.guestName == null || s.guestName.length in 1..24))
     s.cells.forEachIndexed { i, c ->

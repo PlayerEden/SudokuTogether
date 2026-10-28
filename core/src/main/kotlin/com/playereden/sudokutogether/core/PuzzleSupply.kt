@@ -48,7 +48,7 @@ object PuzzleSupply {
             if (puzzle.id in blocked) return@repeat
             val assessed = HumanSudoku.assess(puzzle)
             if (assessed.logicallySolved && assessed.grade == requested) {
-                return RatedPuzzle(puzzle, assessed)
+                return RatedPuzzle(puzzle.copy(difficulty = requested.name), assessed)
             }
         }
         error("Could not generate a fresh ${requested.name.lowercase()} puzzle in $attempts attempts. Try again; no saved puzzle was replaced.")

@@ -53,6 +53,18 @@ Status: **active development plan**. Working title only; all target versions are
 
 Remote internet rooms, public competitive ranks, accounts/cloud sync, purchases, advertising, non-9×9 variants and cross-platform support. Revisit from playtest feedback and maintenance capacity.
 
+## Cross-game foundation — parallel strategic track
+
+**Design goal:** Sudoku Together is the first complete game on a **reusable native Android puzzle foundation**, not a one-off project. Future Crossword/Minesweeper games should inherit host/join/discovery/chat, local save handling, profile/settings, native menu patterns, shared CI and release setup, while implementing their own rules, board UI, win/loss states and hidden-information security.
+
+- F0: document current Sudoku coupling and capture regression baselines (alongside v0.8C).
+- F1: extract stable platform persistence and LAN discovery/framing behind adapters after the current difficulty/save compatibility gate.
+- F2–F3: generic session/visibility interfaces and selectively reusable Compose shells, without forcing Sudoku assumptions onto other board games.
+- F4: prove reuse with a separate Minesweeper prototype before claiming the foundation is ready.
+- F5: publish a separate, clean **GitHub template** with unique app identity/signing/save instructions; do not use the currently skeletal default Sudoku branch as a template.
+
+Design and acceptance detail: [Reusable Android Puzzle Foundation](REUSABLE_ANDROID_PUZZLE_FOUNDATION.md). Track: [Foundation issue #16](https://github.com/PlayerEden/SudokuTogether/issues/16). This must **not** delay finishing Sudoku or compromise old saved games.
+
 ## Engineering guardrails
 
 1. **Baseline:** keep existing QA package ID `.qa`; never overwrite original local records accidentally; retain old signing identity for genuine release updates.
@@ -81,5 +93,8 @@ References: https://cdn.aaai.org/ocs/2517/2517-11201-1-PB.pdf ; https://support.
 ## Current gate status
 
 - v0.7: QA APK builds; emulator interaction tests passed despite a post-test shell reporting bug that has been repaired; two-phone real testing pending.
-- v0.8A: **implementation in progress** on `feat/v0.8-puzzle-foundation`.
-- v0.8B through v0.11: **planned, not shipped**.
+- v0.8A: **built/tested** in PR #9. Fresh random puzzles and recent-64 deduplication shipped to development QA.
+- v0.8B: **built/tested** in PR #15. Deduction-only human solver, bounded non-downgrading tier supply, calibration and regression tests. Difficulty labels are practical technique groupings, not validated human enjoyment scores.
+- v0.8C: **implemented and APK build verified** in PR #17. Native Easy/Medium/Hard selector, host-carried puzzle grade, rematch preservation, old-save compatibility, tiered solo records. GitHub build: https://github.com/PlayerEden/SudokuTogether/actions/runs/40607157498. On-device emulator and real two-phone approval tracked separately.
+- v0.8D and later: **planned, not shipped**. Next: user-controlled hints and pencil assistance, then dedicated real two-phone reliability testing.
+- Reusable cross-game foundation: **design recorded and paused** at the user's direction. Finish Sudoku first.
