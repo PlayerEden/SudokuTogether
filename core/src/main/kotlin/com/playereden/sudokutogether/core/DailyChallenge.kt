@@ -7,7 +7,10 @@ import java.time.ZoneId
 
 /** Offline, local-calendar daily challenge. Stable for a given YYYY-MM-DD on every device. */
 object DailyChallenge {
-    const val MAX_SAVED_DAYS = 31
+    /** Hard safety limit for active and retained daily sessions. */
+    const val MAX_SAVED_DAYS = 128
+    /** Completed sessions are reviewable up to this window; records live separately. */
+    const val MAX_COMPLETED_DAYS = 31
     const val DIFFICULTY = "EASY"
     private const val SALT = "SudokuTogether/daily-v1/"
 
@@ -28,13 +31,19 @@ object DailyChallenge {
 
     fun open(data: LocalPlayerData, date: String, nowMs: Long): LocalPlayerData {
         if (data.dailyProgress.any { it.date == date }) return data
+        require(data.dailyProgress.count { !it.solo.completed } < MAX_SAVED_DAYS) {
+            "Too many unfinished Daily Challenges. Complete an older day before starting another."
+        }
         val progress = DailyProgress(date, PersonalPlay.newSolo(puzzle(date), nowMs))
         // Keep every unfinished day: a rolling history limit must never silently
         // discard a player's in-progress puzzle. Trim only finished entries.
         val all = data.dailyProgress + progress
         val unfinished = all.filterNot { it.solo.completed }
-        val finished = all.filter { it.solo.completed }.takeLast(
-            (MAX_SAVED_DAYS - unfinished.size).coerceAtLeast(0)
+        require(unfinished.size <= MAX_SAVED_DAYS) {
+            "Too many unfinished Daily Challenges. Existing progress was not replaced."
+        }
+        val finished = all.filter { it.solo.completed }.sortedBy { it.date }.takeLast(
+            minOf(MAX_COMPLETED_DAYS, MAX_SAVED_DAYS - unfinished.size)
         )
         return data.copy(dailyProgress = (unfinished + finished).sortedBy { it.date })
     }
