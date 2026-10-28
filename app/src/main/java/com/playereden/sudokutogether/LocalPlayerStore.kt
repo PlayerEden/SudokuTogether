@@ -36,7 +36,7 @@ class LocalPlayerStore(file: File) {
         if (!atomic.baseFile.exists() && !File(atomic.baseFile.path + ".bak").exists()) return LocalPlayerData()
         val saved = json.decodeFromString<LocalPlayerData>(atomic.openRead().use { it.readBytes().toString(Charsets.UTF_8) })
         require(saved.schema == 1 && saved.playerId.isNotBlank() && saved.records.size <= MAX_RECORDS)
-        saved.activeSolo?.let { solo ->
+        fun validateProgress(solo: SoloProgress) {
             require(solo.cells.size == 81 && solo.puzzle.clues.size == 81 && solo.elapsedMs >= 0)
             require(solo.history.size <= 128 && solo.cells.all { it.value in 0..9 && it.notes in 0..511 })
             require(solo.hintsUsed in 0..9999)
@@ -46,8 +46,18 @@ class LocalPlayerStore(file: File) {
                         index in 0..80 && previous.value in 0..9 && previous.notes in 0..511
                     }
             })
-            require(solo.puzzle.clues.indices.all { index -> solo.puzzle.clues[index] == 0 || solo.cells[index].value == solo.puzzle.clues[index] })
+            require(solo.puzzle.clues.indices.all { index ->
+                solo.puzzle.clues[index] == 0 || solo.cells[index].value == solo.puzzle.clues[index]
+            })
             require(solo.completed == Sudoku.complete(solo.puzzle, solo.cells.map { it.value }))
+        }
+        saved.activeSolo?.let(::validateProgress)
+        require(saved.dailyProgress.size <= DailyChallenge.MAX_SAVED_DAYS)
+        require(saved.dailyProgress.map { it.date }.toSet().size == saved.dailyProgress.size)
+        saved.dailyProgress.forEach { daily ->
+            require(runCatching { java.time.LocalDate.parse(daily.date).toString() == daily.date }.getOrDefault(false))
+            require(daily.solo.puzzle.difficulty == DailyChallenge.DIFFICULTY)
+            validateProgress(daily.solo)
         }
         return saved
     }
