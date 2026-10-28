@@ -13,7 +13,7 @@
 - **Historical feature branch:** [`feat/v0.8c-difficulty-selection`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.8c-difficulty-selection) — v0.8C implementation and draft [PR #17](https://github.com/PlayerEden/SudokuTogether/pull/17).
 - **Known-green code checkpoint:** [`checkpoint/v0.8c-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8c-qa-green) at exact commit `fa08a6e4ad17fa082fc134d2c18332ecc5fba38f`. Preserve this branch unchanged as a rollback/reference point.
 - **IMPORTANT:** default [`main`](https://github.com/PlayerEden/SudokuTogether/tree/main) is still a **small documentation/workflow skeleton**, not the full working Android project. It links to this handoff. **Do not conclude the game is missing because you checked only `main`.**
-- GitHub PRs #1, #2, #3, #4, #5, #6, #7, #8, #9, #15 and #17 are a stacked *draft history*. Do not independently merge them out of order or delete their branches without first planning and verifying consolidation. A cleaner eventual `main` promotion is an open repository-maintenance item, not an excuse to delay Sudoku's next playable feature.
+- GitHub PRs #1, #2, #3, #4, #5, #6, #7, #8, #9, #15 and #17 are a stacked *draft history*. Do not independently merge them out of order or delete their branches without first planning and verifying consolidation. The eventual `main` promotion is tracked in [repository issue #18](https://github.com/PlayerEden/SudokuTogether/issues/18); it must not delay the next playable feature.
 
 ## 2. Current playable product — v0.8C (development QA)
 
@@ -75,6 +75,7 @@ Device checklist: [`TESTING.md`](TESTING.md).
 - **GitHub is development memory**: after a substantive pass, update this handoff, roadmap statuses and testing evidence, link from default README, note known issues/next tests and preserve a known-green checkpoint. Keep the source and docs in GitHub even if chats fill up.
 - The user typically wants actual changes, verified APKs **downloadable directly in chat**, and meaningful before/after emulator screenshots where possible. Do not claim a tool build succeeded without confirming a completed green CI run.
 - GitHub Actions public QA workflows are opt-in/manual; avoid unplanned automatic runs and resource waste.
+- The `main` and `development` copies of QA/emulator workflows now both dispatch from the real `development` source by default. **Do not treat a successful workflow from a stale branch as evidence for untested current changes.** GitHub stores history remotely; for disaster resilience, periodically clone or export the repository to a separate device/drive as a truly independent backup.
 
 ## 7. New-chat recovery procedure
 
