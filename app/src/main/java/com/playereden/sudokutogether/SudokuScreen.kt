@@ -59,7 +59,8 @@ data class GameActions(
     val difficulty: (String) -> Unit,
     val hint: () -> Unit,
     val dismissHint: () -> Unit,
-    val autoCleanNotes: (Boolean) -> Unit
+    val autoCleanNotes: (Boolean) -> Unit,
+    val daily: () -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -89,6 +90,7 @@ data class GameActions(
                 Text("Solo Hint shows a logical next step without entering a number. An incorrect entry can prevent hints.", color = Ink)
                 Text("Optional Clean pencil marks is in Your records. It removes matching notes near a placed number; Undo restores them. It's off by default.", color = Ink)
                 Text("Solo records distinguish assisted and unassisted puzzles. Hints or automatic note cleanup mark a finish Assisted.", color = Ink)
+                Text("Daily Challenge: one offline Easy puzzle per local calendar date. It saves separately from regular Solo and you can return throughout the day.", color = Ink)
                 Text("Co-op: share one board over the same Wi-Fi. Versus: race on private boards. Assistance is Solo-only.", color = Ink)
             }
         },
@@ -145,6 +147,27 @@ private fun difficultyName(level: String?): String = when (level) {
             TextButton(onClick = help, contentPadding = PaddingValues(horizontal = 7.dp)) { Text("Help", fontSize = 12.sp) }
         }
         (state.message ?: state.saveIssue)?.let { Notice(it) }
+        OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
+            colors = CardDefaults.outlinedCardColors(containerColor = TealLight)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                val today = state.profile.dailyProgress.firstOrNull { it.date == state.todayDate }?.solo
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("DAILY CHALLENGE", color = Forest, fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp, letterSpacing = 1.1.sp, modifier = Modifier.weight(1f))
+                    Text(state.todayDate, color = Muted, fontSize = 11.sp)
+                }
+                Text("One Easy puzzle each day. Offline, with its own saved progress.",
+                    color = Muted, fontSize = 12.sp)
+                Button(onClick = actions.daily, enabled = !state.busy,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("daily_challenge")) {
+                    Text(when {
+                        today?.completed == true -> "Review today's challenge"
+                        today != null -> "Continue today's challenge"
+                        else -> "Play today's challenge"
+                    })
+                }
+            }
+        }
         OutlinedCard(Modifier.widthIn(max = 440.dp).fillMaxWidth(),
             colors = CardDefaults.outlinedCardColors(containerColor = Paper)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -285,10 +308,11 @@ private fun difficultyName(level: String?): String = when (level) {
             verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(if (state.role == SOLO) "Solo" else if (snapshotMode(state) == VERSUS) "Versus" else "Co-op", fontFamily = FontFamily.Serif, fontSize = 22.sp, color = Forest, fontWeight = FontWeight.SemiBold)
+                    Text(if (state.dailyDate != null) "Daily" else if (state.role == SOLO) "Solo" else if (snapshotMode(state) == VERSUS) "Versus" else "Co-op", fontFamily = FontFamily.Serif, fontSize = 22.sp, color = Forest, fontWeight = FontWeight.SemiBold)
                     SelectionContainer { Text(
                         difficultyName(state.snapshot?.puzzle?.difficulty) + "  ·  " +
                             when {
+                                state.dailyDate != null -> state.dailyDate + " · DAILY PUZZLE"
                                 state.role == SOLO -> "PERSONAL PUZZLE"
                                 state.role == HOST -> "Room code ${state.roomCode}"
                                 state.snapshot?.mode == VERSUS -> "HEAD-TO-HEAD"
@@ -321,6 +345,7 @@ private fun difficultyName(level: String?): String = when (level) {
             } else {
                 val partnerName = if (state.role == HOST) snapshot.guestName else snapshot.hostName
                 val statusText = when {
+                    state.dailyDate != null && snapshot.completed -> "Today's challenge complete! Your daily result is saved."
                     state.role == SOLO && snapshot.completed -> "Solved! Your finish time is saved in My profile."
                     state.role == SOLO -> snapshot.cells.count { it.value != 0 }.toString() + "/81 squares filled"
                     snapshot.mode == VERSUS && snapshot.completed && snapshot.winner == state.role -> "You won! The result is saved in your records."
@@ -401,13 +426,20 @@ private fun difficultyName(level: String?): String = when (level) {
                         Column(Modifier.fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(when {
+                                state.dailyDate != null -> "Daily challenge complete"
                                 state.role == SOLO -> "Puzzle completed"
                                 snapshot.mode == VERSUS && snapshot.winner == state.role -> "Victory!"
                                 snapshot.mode == VERSUS -> "Race finished"
                                 else -> "Solved together!"
                             }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.SemiBold)
-                            if (state.role == HOST || state.role == SOLO) {
+                            if (state.dailyDate != null) {
+                                Text("Come back tomorrow for a new challenge.", color = Muted, fontSize = 12.sp)
+                                Button(onClick = actions.home,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
+                                    Text("Back home")
+                                }
+                            } else if (state.role == HOST || state.role == SOLO) {
                                 Button(onClick = new, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
                                     Text(if (state.role == SOLO) "Play another solo puzzle"
                                         else if (snapshot.mode == VERSUS) "Start another race"
@@ -424,7 +456,8 @@ private fun difficultyName(level: String?): String = when (level) {
                 if (state.role == SOLO) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Saved on this device", Modifier.weight(1f), color = Muted, fontSize = 11.sp)
-                        if (!snapshot.completed) TextButton(onClick = new) { Text("New solo puzzle", fontSize = 11.sp) }
+                        if (!snapshot.completed && state.dailyDate == null)
+                            TextButton(onClick = new) { Text("New solo puzzle", fontSize = 11.sp) }
                     }
                 } else if (state.role == HOST) {
                     Row(Modifier.widthIn(max = 440.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -635,6 +668,13 @@ private fun formatElapsed(milliseconds: Long): String {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("SOLO SUDOKU", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Forest)
                 Text("Puzzles solved: " + stats.soloWins, color = Ink)
+                val dailyCompleted = state.profile.records.filter { it.mode == DAILY && it.result == "SOLVED" }
+                Text("Daily challenges: " + DailyChallenge.completedDays(state.profile.records) + " completed",
+                    color = Forest, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                val dailyClassic = dailyCompleted.filterNot { it.assisted }
+                Text("Daily best unassisted: " +
+                    (dailyClassic.minOfOrNull { it.elapsedMs }?.let(::formatElapsed) ?: "Not yet"),
+                    color = Muted, fontSize = 12.sp)
                 Text("Unassisted " + soloSummary.unassisted + " · Assisted " + soloSummary.assisted,
                     color = Muted, fontSize = 12.sp)
                 Text("Best unassisted: " + (soloSummary.bestUnassistedMs?.let(::formatElapsed) ?: "Not yet"),
