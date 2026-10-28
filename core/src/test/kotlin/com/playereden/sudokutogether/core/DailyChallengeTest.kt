@@ -77,7 +77,7 @@ class DailyChallengeTest {
         assertNotNull(DailyChallenge.find(data, "2026-09-01"))
         assertNull(DailyChallenge.find(data, "2026-10-01"))
         assertNotNull(DailyChallenge.find(data, "2026-11-04"))
-        assertEquals(1 + DailyChallenge.MAX_COMPLETED_DAYS, data.dailyProgress.size)
+        assertEquals(2 + DailyChallenge.MAX_COMPLETED_DAYS, data.dailyProgress.size)
     }
 
     @Test fun reachingSafetyLimitRejectsNewDayWithoutDroppingAnyUnfinishedSave() {
