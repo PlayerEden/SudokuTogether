@@ -56,7 +56,10 @@ data class GameActions(
     val sendChat: (String) -> Unit, val chatVisible: (Boolean) -> Unit, val cosmetic: (String, String) -> Unit,
     val uniformNumbers: (Boolean) -> Unit,
     val touchFeedback: (Boolean) -> Unit,
-    val difficulty: (String) -> Unit
+    val difficulty: (String) -> Unit,
+    val hint: () -> Unit,
+    val dismissHint: () -> Unit,
+    val autoCleanNotes: (Boolean) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -296,6 +299,12 @@ private fun difficultyName(level: String?): String = when (level) {
                     contentPadding = PaddingValues(horizontal = 7.dp)) {
                     Text(if (state.unreadChat > 0) "Chat (" + state.unreadChat + ")" else "Chat", fontSize = 12.sp)
                 }
+                if (state.role == SOLO && state.snapshot?.completed == false) {
+                    TextButton(onClick = actions.hint, enabled = state.canEdit,
+                        contentPadding = PaddingValues(horizontal = 5.dp)) {
+                        Text("Hint", color = Forest, fontSize = 12.sp)
+                    }
+                }
                 IconButton(onClick = help, modifier = Modifier.size(42.dp)) {
                     Text("?", color = Forest, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -433,6 +442,24 @@ private fun difficultyName(level: String?): String = when (level) {
             SudokuInputDock(puzzle, state, actions, ::tick)
         }
         }
+    }
+    state.hint?.let { hint ->
+        AlertDialog(
+            onDismissRequest = actions.dismissHint,
+            title = { Text("Your next deduction", color = Forest, fontFamily = FontFamily.Serif) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Row ${hint.cell / 9 + 1}, column ${hint.cell % 9 + 1}",
+                        fontWeight = FontWeight.SemiBold, color = Forest)
+                    Text(hint.explanation, color = Ink)
+                    Text("Suggested number: ${hint.digit}. Nothing was entered for you.",
+                        color = Muted, fontSize = 12.sp)
+                    Text("Hints are marked as assisted in your personal records.",
+                        color = Muted, fontSize = 11.sp)
+                }
+            },
+            confirmButton = { TextButton(onClick = actions.dismissHint) { Text("Back to puzzle") } }
+        )
     }
     if (chatOpen && state.role != SOLO) RoomChatSheet(state, actions) {
         chatOpen = false
@@ -647,6 +674,15 @@ private fun formatElapsed(milliseconds: Long): String {
             }
             Switch(checked = state.touchFeedback, onCheckedChange = actions.touchFeedback)
         }
+        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Clean pencil marks", color = Forest, fontWeight = FontWeight.SemiBold)
+                Text("Solo only. Placing a number removes that candidate from nearby notes; Undo restores them.",
+                    color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
+            }
+            Switch(checked = state.autoCleanNotes, onCheckedChange = actions.autoCleanNotes)
+        }
         Text("ACHIEVEMENTS", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
         Achievements.progress(state.profile.records).forEach { progress ->
             OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper), modifier = Modifier.fillMaxWidth()) {
@@ -671,7 +707,8 @@ private fun formatElapsed(milliseconds: Long): String {
         if (recent.isEmpty()) Text("Finish a solo puzzle to save your first record.", fontSize = 14.sp, color = Muted)
         recent.forEach { result ->
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty), fontSize = 12.sp, color = Ink)
+                Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty) +
+                    (if (result.assisted) " · Assisted" else ""), fontSize = 12.sp, color = Ink)
                 Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest)
             }
             HorizontalDivider(color = Rule)
