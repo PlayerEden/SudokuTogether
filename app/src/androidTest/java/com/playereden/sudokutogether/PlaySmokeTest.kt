@@ -54,6 +54,29 @@ class PlaySmokeTest {
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
     }
 
+    @Test fun dailyChallengeDoesNotReplaceNormalSoloProgress() {
+        compose.onNodeWithText("New solo puzzle").performClick()
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
+            compose.onNodeWithText("Start new").performClick()
+        compose.waitUntil(20000) {
+            compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithText("Leave room").performClick()
+        compose.onNodeWithText("Resume solo puzzle").assertExists()
+
+        compose.onNodeWithTag("daily_challenge").performScrollTo().performClick()
+        compose.waitUntil(20000) {
+            compose.onAllNodesWithText("Daily", substring = false).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Daily", substring = false).assertExists()
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
+        compose.onNodeWithText("Home").performClick()
+        compose.onNodeWithText("Leave room").performClick()
+        compose.onNodeWithText("Continue today's challenge").assertExists()
+        compose.onNodeWithText("Resume solo puzzle").assertExists()
+    }
+
     @Test fun soloHintsExplainOneDeductionWithoutPlayingIt() {
         compose.onNodeWithText("New solo puzzle").performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
