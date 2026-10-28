@@ -53,6 +53,18 @@ Status: **active development plan**. Working title only; all target versions are
 
 Remote internet rooms, public competitive ranks, accounts/cloud sync, purchases, advertising, non-9×9 variants and cross-platform support. Revisit from playtest feedback and maintenance capacity.
 
+## Cross-game foundation — parallel strategic track
+
+**Design goal:** Sudoku Together is the first complete game on a **reusable native Android puzzle foundation**, not a one-off project. Future Crossword/Minesweeper games should inherit host/join/discovery/chat, local save handling, profile/settings, native menu patterns, shared CI and release setup, while implementing their own rules, board UI, win/loss states and hidden-information security.
+
+- F0: document current Sudoku coupling and capture regression baselines (alongside v0.8C).
+- F1: extract stable platform persistence and LAN discovery/framing behind adapters after the current difficulty/save compatibility gate.
+- F2–F3: generic session/visibility interfaces and selectively reusable Compose shells, without forcing Sudoku assumptions onto other board games.
+- F4: prove reuse with a separate Minesweeper prototype before claiming the foundation is ready.
+- F5: publish a separate, clean **GitHub template** with unique app identity/signing/save instructions; do not use the currently skeletal default Sudoku branch as a template.
+
+Design and acceptance detail: [Reusable Android Puzzle Foundation](REUSABLE_ANDROID_PUZZLE_FOUNDATION.md). Track: [Foundation issue #16](https://github.com/PlayerEden/SudokuTogether/issues/16). This must **not** delay finishing Sudoku or compromise old saved games.
+
 ## Engineering guardrails
 
 1. **Baseline:** keep existing QA package ID `.qa`; never overwrite original local records accidentally; retain old signing identity for genuine release updates.
