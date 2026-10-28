@@ -29,7 +29,14 @@ object DailyChallenge {
     fun open(data: LocalPlayerData, date: String, nowMs: Long): LocalPlayerData {
         if (data.dailyProgress.any { it.date == date }) return data
         val progress = DailyProgress(date, PersonalPlay.newSolo(puzzle(date), nowMs))
-        return data.copy(dailyProgress = (data.dailyProgress + progress).takeLast(MAX_SAVED_DAYS))
+        // Keep every unfinished day: a rolling history limit must never silently
+        // discard a player's in-progress puzzle. Trim only finished entries.
+        val all = data.dailyProgress + progress
+        val unfinished = all.filterNot { it.solo.completed }
+        val finished = all.filter { it.solo.completed }.takeLast(
+            (MAX_SAVED_DAYS - unfinished.size).coerceAtLeast(0)
+        )
+        return data.copy(dailyProgress = (unfinished + finished).sortedBy { it.date })
     }
 
     fun find(data: LocalPlayerData, date: String): SoloProgress? =
