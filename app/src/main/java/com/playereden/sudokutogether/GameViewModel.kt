@@ -31,7 +31,9 @@ data class GameUiState(
     val chatVisible: Boolean = false,
     val uniformNumbers: Boolean = false,
     val touchFeedback: Boolean = true,
-    val selectedDifficulty: String = "EASY"
+    val selectedDifficulty: String = "EASY",
+    val autoCleanNotes: Boolean = false,
+    val hint: SudokuAssistance.Hint? = null
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -56,6 +58,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null, appearance = savedAppearance(),
         uniformNumbers = preferences.getBoolean("uniformNumbers", false),
         touchFeedback = preferences.getBoolean("touchFeedback", true),
+        autoCleanNotes = preferences.getBoolean("autoCleanNotes", false),
         selectedDifficulty = preferences.getString("difficulty", "EASY")
             .let { if (it in listOf("EASY", "MEDIUM", "HARD")) it!! else "EASY" }))
     val state = _state.asStateFlow()
@@ -116,6 +119,46 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (level !in listOf("EASY", "MEDIUM", "HARD") || _state.value.busy) return
         preferences.edit().putString("difficulty", level).apply()
         _state.update { it.copy(selectedDifficulty = level) }
+    }
+    fun setAutoCleanNotes(enabled: Boolean) {
+        preferences.edit().putBoolean("autoCleanNotes", enabled).apply()
+        _state.update { it.copy(autoCleanNotes = enabled) }
+    }
+    fun dismissHint() { _state.update { it.copy(hint = null) } }
+    fun requestHint() {
+        val before = _state.value
+        if (before.role != SOLO || before.page != Page.PLAY || !before.canEdit ||
+            before.snapshot == null || before.hint != null) return
+        val token = generation.get()
+        val expectedId = before.snapshot.sessionId
+        val expectedMoves = before.snapshot.revision
+        _state.update { it.copy(busy = true, message = null) }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val progress = localPlayer.current().activeSolo
+                val hint = if (progress != null && progress.id == expectedId &&
+                    progress.moves.toLong() == expectedMoves && !progress.completed)
+                    SudokuAssistance.nextHint(progress.puzzle, progress.cells.map { it.value }) else null
+                if (hint == null) {
+                    if (generation.get() == token) _state.update { it.copy(busy = false,
+                        message = "No safe logical hint is available. Check for incorrect numbers or use Undo.") }
+                    return@launch
+                }
+                val updated = localPlayer.update { data ->
+                    val current = data.activeSolo
+                    if (current != null && current.id == expectedId &&
+                        current.moves.toLong() == expectedMoves && !current.completed)
+                        data.copy(activeSolo = PersonalPlay.recordHint(current)) else data
+                }
+                if (generation.get() == token && updated.activeSolo?.id == expectedId &&
+                    updated.activeSolo?.moves?.toLong() == expectedMoves) {
+                    _state.update { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
+                } else if (generation.get() == token) _state.update { it.copy(busy = false) }
+            } catch (_: Exception) {
+                if (generation.get() == token) _state.update { it.copy(busy = false,
+                    message = "Could not save hint usage. Your puzzle is unchanged.") }
+            }
+        }
     }
     fun setTouchFeedback(enabled: Boolean) {
         preferences.edit().putBoolean("touchFeedback", enabled).apply()
@@ -241,7 +284,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
             uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback,
-            selectedDifficulty = it.selectedDifficulty) }
+            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
 
@@ -368,7 +411,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun select(cell: Int) {
         if (cell !in 0..80) return
-        _state.update { it.copy(selected = cell) }
+        _state.update { it.copy(selected = cell, hint = null) }
         if (_state.value.role == HOST) server?.select(cell) else if (_state.value.role == GUEST) guest?.select(cell)
     }
     fun toggleNotes() { _state.update { it.copy(notes = !it.notes) } }
@@ -384,7 +427,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val value = _state.value; val snapshot = value.snapshot ?: return
         if (!value.canEdit || cell !in 0..80) return
         val operation = Operation(snapshot.sessionId, snapshot.epoch, cell, snapshot.cells[cell].revision, kind, number, enabled)
-        val current = generation.get(); _state.update { it.copy(pendingId = operation.id, message = null) }
+        val current = generation.get(); _state.update { it.copy(pendingId = operation.id, message = null, hint = null) }
         if (value.role == SOLO) {
             val elapsed = elapsedSolo()
             viewModelScope.launch(Dispatchers.IO) {
@@ -393,7 +436,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         val progress = data.activeSolo
                         if (progress == null || progress.id != snapshot.sessionId) data
                         else {
-                            val next = PersonalPlay.edit(progress, cell, kind, number, enabled, elapsed)
+                            val next = PersonalPlay.edit(progress, cell, kind, number, enabled, elapsed,
+                                autoCleanNotes = value.autoCleanNotes)
                             if (next == null) data else if (next.completed) PersonalPlay.addCompletedSolo(data, next)
                             else data.copy(activeSolo = next)
                         }
