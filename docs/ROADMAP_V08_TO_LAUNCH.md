@@ -1,6 +1,6 @@
 # Sudoku Together — Product & Release Roadmap (v0.8 → Google Play)
 
-Status: **active development plan**. Working title only; all target versions are milestones, not release promises. Source of truth: this document and the stacked draft PRs. Current reference baseline: v0.7 QA on branch `polish/v0.7-thumb-layout`.
+Status: **active development plan**. Working title only; all target versions are milestones, not release promises. Source of truth: this document and the stacked draft PRs. Current reference baseline: v0.10A on `development`, with verified code checkpoint `checkpoint/v0.10a-qa-green`.
 
 ## Product promise and boundaries
 
@@ -104,5 +104,7 @@ References: https://cdn.aaai.org/ocs/2517/2517-11201-1-PB.pdf ; https://support.
 - v0.8C: **implemented and APK build verified** in PR #17. Native Easy/Medium/Hard selector, host-carried puzzle grade, rematch preservation, old-save compatibility, tiered solo records. GitHub build: https://github.com/PlayerEden/SudokuTogether/actions/runs/40607157498. On-device emulator and real two-phone approval tracked separately.
 - v0.8D: **implemented and tested** as Solo-only opt-in hints and pencil cleanup, with atomic Undo, assisted result tracking, core tests and 9/9 Android emulator cases passing. [Build 40610640428](https://github.com/PlayerEden/SudokuTogether/actions/runs/40610640428) / [Emulator 40610910679](https://github.com/PlayerEden/SudokuTogether/actions/runs/40610910679) / [Audit](V0.8D_SOLO_ASSISTS_AUDIT.md). Physical phone approval remains pending.
 - v0.8E: **implemented and verified** in [build 40612864973](https://github.com/PlayerEden/SudokuTogether/actions/runs/40612864973) and [Android emulator 40612871881](https://github.com/PlayerEden/SudokuTogether/actions/runs/40612871881) (9/9). Solo shows one timer, separate assisted/unassisted best times, clearer help and accessible Hint/Help labels. [Audit](V0.8E_SOLO_FAIRNESS_QA.md). **Phone font/TalkBack and two-phone Wi-Fi QA remain outstanding**.
-- v0.9A: **next gate** real two-phone LAN validation and reliability before Split Clues. v0.9B/C, v0.10 and v0.11 planned, not shipped.
+- v0.9A: **physical two-phone LAN QA deferred by user**, still unverified; Split Clues remains blocked by this gate.
+- v0.10A: **built and Android-verified** offline date-based Daily Challenge, saved independently of Solo, with assisted-aware daily results and old-save defaults. [Build 40616087461](https://github.com/PlayerEden/SudokuTogether/actions/runs/40616087461) and [Android emulator 40616779175](https://github.com/PlayerEden/SudokuTogether/actions/runs/40616779175) (10/10 tests); initial failed scroll-naive profile tests were corrected and preserved in [daily QA audit](V0.10A_DAILY_CHALLENGE_QA.md). User/device acceptance remains pending.
+- v0.10B: **next active pass**: richer post-game Solo/Daily result summaries, local daily history and polish. v0.10C, v0.11 remain planned.
 - Reusable cross-game foundation: **design recorded and paused** at the user's direction. Finish Sudoku first.
