@@ -33,7 +33,7 @@ object Achievements {
             AchievementProgress("challenger", "Challenger", "Win your first versus race", wins, 1),
             AchievementProgress("rivalry", "Friendly Rivalry", "Play five versus races", races, 5),
             AchievementProgress("champion", "Champion", "Win three versus races", wins, 3),
-            AchievementProgress("quick-thinker", "Quick Thinker", "Solve a Standard puzzle within ten active minutes", speed, 1)
+            AchievementProgress("quick-thinker", "Quick Thinker", "Solve a solo puzzle within ten minutes (assistance allowed)", speed, 1)
         )
     }
 
