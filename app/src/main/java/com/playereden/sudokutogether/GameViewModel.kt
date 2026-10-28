@@ -272,17 +272,26 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun daily() {
+    fun daily() = openDaily(DailyChallenge.today())
+
+    /** Reopening a past daily is allowed only when it was already saved. */
+    fun openDaily(date: String) {
         if (_state.value.busy) return
+        val today = DailyChallenge.today()
+        if (date != today && localPlayer.current().dailyProgress.none { it.date == date }) {
+            _state.update { it.copy(message = "That daily puzzle is not saved on this phone.") }
+            return
+        }
         stopSoloClock()
         val current = closeRoom()
-        val date = DailyChallenge.today()
         _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = date, busy = true,
             snapshot = null, selected = -1, pendingId = null, notes = false, partnerCell = -1,
             message = null, hint = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val saved = localPlayer.update { data ->
+                    if (date != today && data.dailyProgress.none { it.date == date })
+                        error("That older daily puzzle is no longer saved.")
                     DailyChallenge.open(data, date, System.currentTimeMillis())
                 }
                 if (generation.get() != current) return@launch
@@ -294,7 +303,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 if (generation.get() == current) _state.update { it.copy(page = Page.HOME,
                     busy = false, dailyDate = null, todayDate = DailyChallenge.today(),
-                    message = "Couldn't open today's puzzle. Your Solo progress is still saved.") }
+                    message = if (e.message?.contains("Too many unfinished") == true)
+                        "Your daily progress is safe. Finish an older Daily Challenge before starting a new one."
+                    else "Couldn't open that daily puzzle. Your Solo progress is still saved.") }
             }
         }
     }
