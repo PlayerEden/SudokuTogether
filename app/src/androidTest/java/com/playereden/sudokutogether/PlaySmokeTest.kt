@@ -79,7 +79,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("My profile & records").performScrollTo().performClick()
         compose.onNodeWithText("DAILY HISTORY").assertExists()
         val date = com.playereden.sudokutogether.core.DailyChallenge.today()
-        compose.onNodeWithTag("daily_history_$" + "{date}").performScrollTo().performClick()
+        compose.onNodeWithTag("daily_history_" + date).performScrollTo().performClick()
         compose.waitUntil(20000) {
             compose.onAllNodesWithText("Daily", substring = false).fetchSemanticsNodes().isNotEmpty()
         }
