@@ -59,6 +59,33 @@ def main():
         if tap_text("?"):
             time.sleep(1)
             screenshot("05-in-game-help.png")
+    # Evidence for v0.10B: actual Daily board and locally saved Daily History.
+    # ADB captures are best-effort; interaction tests separately verify navigation.
+    try:
+        if tap_text("Home"):
+            time.sleep(1)
+            tap_text("Leave room")
+            time.sleep(1)
+        daily_opened = False
+        for title in ("Play today's challenge", "Continue today's challenge", "Review today's challenge"):
+            if tap_text(title):
+                daily_opened = True
+                break
+        if daily_opened:
+            time.sleep(7)
+            screenshot("06-daily-gameplay.png")
+            if tap_text("Home"):
+                time.sleep(1)
+                tap_text("Leave room")
+                time.sleep(1)
+        adb("shell", "input", "swipe", "500", "1750", "500", "500", "450")
+        if tap_text("My profile & records"):
+            time.sleep(1)
+            adb("shell", "input", "swipe", "500", "1600", "500", "750", "450")
+            time.sleep(1)
+            screenshot("07-daily-history-profile.png")
+    except Exception as exc:
+        print("Optional Daily screenshot flow could not complete:", exc, flush=True)
     print("Visual QA screenshot collection finished", flush=True)
 
 if __name__ == "__main__":
