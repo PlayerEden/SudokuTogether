@@ -75,6 +75,16 @@ class PlaySmokeTest {
         compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Continue today's challenge").assertExists()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
+
+        compose.onNodeWithText("My profile & records").performScrollTo().performClick()
+        compose.onNodeWithText("DAILY HISTORY").assertExists()
+        val date = com.playereden.sudokutogether.core.DailyChallenge.today()
+        compose.onNodeWithTag("daily_history_$" + "{date}").performScrollTo().performClick()
+        compose.waitUntil(20000) {
+            compose.onAllNodesWithText("Daily", substring = false).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Daily", substring = false).assertExists()
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
     }
 
     @Test fun soloHintsExplainOneDeductionWithoutPlayingIt() {
