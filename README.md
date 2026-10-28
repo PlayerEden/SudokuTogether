@@ -12,4 +12,4 @@ Native Android Sudoku with offline solo, same-Wi-Fi co-op and head-to-head versu
 - [Known-good v0.8E source checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8e-qa-green)
 - [GitHub Actions APK builds](https://github.com/PlayerEden/SudokuTogether/actions)
 
-**Current:** v0.8E native fairness and UX polish verified (9/9 emulator tests). **Next:** v0.9A physical two-phone Wi-Fi reliability QA, then private Split Clues only after that gate. Finish Sudoku before revisiting the reusable framework.
+**Current:** v0.8E native fairness and UX polish verified (9/9 emulator tests). **Next:** v0.10A offline daily puzzles and replayability. Physical two-phone Wi-Fi QA is deferred until the user is ready and remains required before Split Clues. Finish Sudoku before revisiting the reusable framework.
