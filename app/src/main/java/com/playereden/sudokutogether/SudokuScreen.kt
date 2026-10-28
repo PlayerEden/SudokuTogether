@@ -86,7 +86,10 @@ data class GameActions(
                 Text("Fill each row, column and 3×3 box with the numbers 1 through 9. Each number appears only once in each.", color = Ink)
                 Text("Tap a square, then a number. The small counter under each number shows how many of that digit are still missing. Notes lets you pencil in candidates.", color = Ink)
                 Text("Erase clears a square. Undo reverses your most recent safe move.", color = Ink)
-                Text("Co-op: both phones edit one board. Versus: race on separate private boards. Both modes use the same local Wi-Fi.", color = Ink)
+                Text("Solo Hint shows a logical next step without entering a number. An incorrect entry can prevent hints.", color = Ink)
+                Text("Optional Clean pencil marks is in Your records. It removes matching notes near a placed number; Undo restores them. It's off by default.", color = Ink)
+                Text("Solo records distinguish assisted and unassisted puzzles. Hints or automatic note cleanup mark a finish Assisted.", color = Ink)
+                Text("Co-op: share one board over the same Wi-Fi. Versus: race on private boards. Assistance is Solo-only.", color = Ink)
             }
         },
         confirmButton = { TextButton(onClick = { helpOpen = false }) { Text("Got it") } }
@@ -301,11 +304,13 @@ private fun difficultyName(level: String?): String = when (level) {
                 }
                 if (state.role == SOLO && state.snapshot?.completed == false) {
                     TextButton(onClick = actions.hint, enabled = state.canEdit,
+                        modifier = Modifier.heightIn(min = 48.dp).semantics { contentDescription = "Request a solo Sudoku hint" },
                         contentPadding = PaddingValues(horizontal = 5.dp)) {
                         Text("Hint", color = Forest, fontSize = 12.sp)
                     }
                 }
-                IconButton(onClick = help, modifier = Modifier.size(42.dp)) {
+                IconButton(onClick = help, modifier = Modifier.size(48.dp)
+                    .semantics { contentDescription = "How to play Sudoku" }) {
                     Text("?", color = Forest, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 }
                 TextButton(onClick = leave, contentPadding = PaddingValues(horizontal = 6.dp)) { Text("Home", fontSize = 12.sp) }
@@ -317,8 +322,7 @@ private fun difficultyName(level: String?): String = when (level) {
                 val partnerName = if (state.role == HOST) snapshot.guestName else snapshot.hostName
                 val statusText = when {
                     state.role == SOLO && snapshot.completed -> "Solved! Your finish time is saved in My profile."
-                    state.role == SOLO -> "Solo  ·  " + formatElapsed(state.soloElapsedMs) + "  ·  " +
-                        snapshot.cells.count { it.value != 0 }.toString() + "/81 filled"
+                    state.role == SOLO -> snapshot.cells.count { it.value != 0 }.toString() + "/81 squares filled"
                     snapshot.mode == VERSUS && snapshot.completed && snapshot.winner == state.role -> "You won! The result is saved in your records."
                     snapshot.mode == VERSUS && snapshot.completed -> "Your rival finished first. Match complete."
                     snapshot.mode == VERSUS && !state.status.guestActive -> "Waiting for your rival to join or reconnect"
@@ -618,6 +622,7 @@ private fun formatElapsed(milliseconds: Long): String {
 
 @Composable private fun ProfileScreen(state: GameUiState, actions: GameActions) {
     val stats = PersonalPlay.stats(state.profile)
+    val soloSummary = PersonalPlay.soloSummary(state.profile.records)
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)) {
         TextButton(onClick = actions.home, contentPadding = PaddingValues(0.dp)) { Text("Back home") }
@@ -630,15 +635,24 @@ private fun formatElapsed(milliseconds: Long): String {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("SOLO SUDOKU", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Forest)
                 Text("Puzzles solved: " + stats.soloWins, color = Ink)
+                Text("Unassisted " + soloSummary.unassisted + " · Assisted " + soloSummary.assisted,
+                    color = Muted, fontSize = 12.sp)
+                Text("Best unassisted: " + (soloSummary.bestUnassistedMs?.let(::formatElapsed) ?: "Not yet"),
+                    color = Forest, fontSize = 13.sp)
+                if (soloSummary.assisted > 0) Text("Best assisted: " +
+                    (soloSummary.bestAssistedMs?.let(::formatElapsed) ?: "Not yet"), color = Muted, fontSize = 12.sp)
+                HorizontalDivider(color = Rule)
                 for (tier in listOf("EASY", "MEDIUM", "HARD")) {
-                    val tierResults = state.profile.records.filter {
-                        it.mode == SOLO && it.result == "SOLVED" && it.difficulty == tier
-                    }
-                    Text(difficultyName(tier) + " · " + tierResults.size + " solved · Best " +
-                        (tierResults.minOfOrNull { it.elapsedMs }?.let(::formatElapsed) ?: "Not yet"),
+                    val tierSummary = PersonalPlay.soloSummary(state.profile.records, tier)
+                    Text(difficultyName(tier) + " · Unassisted " + tierSummary.unassisted +
+                        " · Best " + (tierSummary.bestUnassistedMs?.let(::formatElapsed) ?: "Not yet"),
+                        color = Muted, fontSize = 12.sp)
+                    if (tierSummary.assisted > 0) Text("  Assisted " + tierSummary.assisted +
+                        " · Best " + (tierSummary.bestAssistedMs?.let(::formatElapsed) ?: "Not yet"),
                         color = Muted, fontSize = 12.sp)
                 }
-                Text("Best time: " + (stats.soloBestMs?.let(::formatElapsed) ?: "Not yet"), color = Ink)
+                Text("Best times are separated so hints never improve your unassisted record.",
+                    color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
                 Text("Total solving time: " + formatElapsed(stats.soloTotalMs), color = Ink)
             }
         }
@@ -708,7 +722,8 @@ private fun formatElapsed(milliseconds: Long): String {
         recent.forEach { result ->
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty) +
-                    (if (result.assisted) " · Assisted" else ""), fontSize = 12.sp, color = Ink)
+                    (if (result.mode == SOLO) (if (result.assisted) " · Assisted" else " · Unassisted") else ""),
+                    fontSize = 12.sp, color = Ink)
                 Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest)
             }
             HorizontalDivider(color = Rule)
