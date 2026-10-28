@@ -60,7 +60,8 @@ data class GameActions(
     val hint: () -> Unit,
     val dismissHint: () -> Unit,
     val autoCleanNotes: (Boolean) -> Unit,
-    val daily: () -> Unit
+    val daily: () -> Unit,
+    val openDaily: (String) -> Unit
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -433,6 +434,24 @@ private fun difficultyName(level: String?): String = when (level) {
                                 else -> "Solved together!"
                             }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.SemiBold)
+                            if (state.role == SOLO) {
+                                val finished = if (state.dailyDate == null) state.profile.activeSolo
+                                    else state.profile.dailyProgress.firstOrNull { it.date == state.dailyDate }?.solo
+                                if (finished?.id == snapshot.sessionId && finished.completed) {
+                                    val assisted = finished.hintsUsed > 0 || finished.usedNoteAssist
+                                    Text("Time  " + formatElapsed(finished.elapsedMs) + "   ·   " +
+                                        difficultyName(finished.puzzle.difficulty),
+                                        color = Forest, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                    Text("${finished.moves} moves   ·   " +
+                                        (if (assisted) "Assisted" else "Unassisted"),
+                                        color = Ink, fontSize = 12.sp)
+                                    if (finished.hintsUsed > 0)
+                                        Text("${finished.hintsUsed} logical hint" +
+                                            (if (finished.hintsUsed == 1) "" else "s") + " used",
+                                            color = Muted, fontSize = 11.sp)
+                                    Text("Saved privately on this phone", color = Muted, fontSize = 11.sp)
+                                }
+                            }
                             if (state.dailyDate != null) {
                                 Text("Come back tomorrow for a new challenge.", color = Muted, fontSize = 12.sp)
                                 Button(onClick = actions.home,
@@ -694,6 +713,46 @@ private fun formatElapsed(milliseconds: Long): String {
                 Text("Best times are separated so hints never improve your unassisted record.",
                     color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
                 Text("Total solving time: " + formatElapsed(stats.soloTotalMs), color = Ink)
+            }
+        }
+        val savedDaily = state.profile.dailyProgress.sortedByDescending { it.date }
+        var showAllDaily by rememberSaveable { mutableStateOf(false) }
+        OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper),
+            modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("DAILY HISTORY", fontSize = 11.sp, letterSpacing = 1.5.sp,
+                        color = Forest, modifier = Modifier.weight(1f))
+                    if (savedDaily.size > 6) TextButton(onClick = { showAllDaily = !showAllDaily }) {
+                        Text(if (showAllDaily) "Show recent" else "Show all ${savedDaily.size}",
+                            fontSize = 12.sp)
+                    }
+                }
+                Text("Your previous daily boards stay separate from regular Solo games.",
+                    fontSize = 11.sp, color = Muted)
+                if (savedDaily.isEmpty()) {
+                    Text("No daily puzzles started yet.", fontSize = 12.sp, color = Muted)
+                }
+                savedDaily.take(if (showAllDaily) savedDaily.size else 6).forEach { day ->
+                    val completed = day.solo.completed
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(day.date, color = Ink, fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold)
+                            Text((if (completed) "Completed" else "In progress") +
+                                " · " + formatElapsed(day.solo.elapsedMs) +
+                                (if (completed && (day.solo.hintsUsed > 0 || day.solo.usedNoteAssist))
+                                    " · Assisted" else ""),
+                                color = Muted, fontSize = 11.sp)
+                        }
+                        OutlinedButton(onClick = { actions.openDaily(day.date) },
+                            modifier = Modifier.heightIn(min = 48.dp).testTag("daily_history_${day.date}")) {
+                            Text(if (completed) "Review" else "Continue")
+                        }
+                    }
+                    HorizontalDivider(color = Rule)
+                }
             }
         }
         OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper), modifier = Modifier.fillMaxWidth()) {
