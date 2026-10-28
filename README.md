@@ -8,8 +8,8 @@ Native Android Sudoku with offline solo, same-Wi-Fi co-op and head-to-head versu
 
 - [Living project handoff](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_HANDOFF.md)
 - [Development roadmap to Google Play](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/ROADMAP_V08_TO_LAUNCH.md)
-- [Latest v0.8E QA milestone](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/V0.8E_SOLO_FAIRNESS_QA.md)
-- [Known-good v0.8E source checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8e-qa-green)
+- [Latest v0.10A Daily Challenge QA milestone](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/V0.10A_DAILY_CHALLENGE_QA.md)
+- [Known-good v0.10A source checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10a-qa-green)
 - [GitHub Actions APK builds](https://github.com/PlayerEden/SudokuTogether/actions)
 
-**Current:** v0.8E native fairness and UX polish verified (9/9 emulator tests). **Next:** v0.10A offline daily puzzles and replayability. Physical two-phone Wi-Fi QA is deferred until the user is ready and remains required before Split Clues. Finish Sudoku before revisiting the reusable framework.
+**Current:** v0.10A offline Daily Challenge verified (10/10 Android tests), on top of v0.8E polish. **Next:** v0.10B richer postgame summaries and local daily progress. Physical two-phone Wi-Fi QA remains deferred until the user is ready, and still blocks Split Clues validation. Finish Sudoku before revisiting the reusable framework.
