@@ -22,6 +22,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("ACHIEVEMENTS").assertExists()
         compose.onNodeWithText("Classic number display").assertExists()
         compose.onNodeWithText("Touch feedback").assertExists()
+        compose.onNodeWithText("Clean pencil marks").assertExists()
         compose.onNodeWithText("First Grid").assertExists()
         assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
@@ -50,6 +51,22 @@ class PlaySmokeTest {
             compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("Medium", substring = true).assertExists()
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
+    }
+
+    @Test fun soloHintsExplainOneDeductionWithoutPlayingIt() {
+        compose.onNodeWithText("New solo puzzle").performClick()
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Start new").performClick()
+        }
+        compose.waitUntil(20000) { compose.onAllNodesWithText("Hint").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Hint").performClick()
+        compose.waitUntil(20000) {
+            compose.onAllNodesWithText("Your next deduction").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithText("Suggested number:", substring = true).assertExists()
+        compose.onNodeWithText("Nothing was entered for you.", substring = true).assertExists()
+        compose.onNodeWithText("Back to puzzle").performClick()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
     }
 
