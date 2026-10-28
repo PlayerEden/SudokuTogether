@@ -101,6 +101,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Resume solo puzzle").assertExists()
         compose.onNodeWithText("My profile & records").performClick()
         compose.onNodeWithText("Your records").assertExists()
+        compose.onNodeWithText("Best unassisted:", substring = true).assertExists()
         compose.onNodeWithText("Offline profile", substring = true).assertExists()
     }
 
