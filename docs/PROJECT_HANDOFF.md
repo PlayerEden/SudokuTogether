@@ -46,25 +46,28 @@
 - **Still unverified physically:** install/update persistence on user's phone; Solo assistance and Undo after restart; readability at high font scaling; **two separate Android phones** sharing same-Wi-Fi co-op and versus reliably. No Split Clues until real-device LAN acceptance. The rest of the game and its future Play Store readiness remain separate milestones.
 - Difficulty calibration details remain in [v0.8B report](V0.8B_HUMAN_DIFFICULTY_CALIBRATION.md).
 
-## 4. Exact next task
+## 4. Exact next task — temporary user-approved reorder
 
-**v0.9A — REAL TWO-PHONE WI-FI ACCEPTANCE AND RELIABILITY**, before Split Clues:
+**User decision (2026-10-27 local): defer the real two-phone multiplayer playtest until the user is ready.** This is a scheduling decision, **not** a pass, waiver, or validation of LAN reliability. Do not request or schedule the physical test unprompted. Continue Sudoku Together work that does not rely on two phones.
 
-1. On matching QA APKs, host Co-op on one phone and join from another using nearby discovery, room code and manual IP fallback. Record connection failures, address hints and UI behavior.
-2. Check two-way moves, notes, two-player Undo safety and simultaneous edits. Verify both phones see correct board and progress and that completed puzzle records persist.
-3. Background/lock/force-stop/relaunch both apps one at a time; inspect reconnect, host replacement, saved sessions and permanent-stuck-state errors.
-4. Run Versus on separate phones; verify neither player receives the other's private grid. Validate matching host-supplied difficulty, race winner and results.
-5. Keep working on device accessibility (TalkBack/large fonts/landscape), repeat hints, and real-screen captures without restructuring Sudoku as a general engine.
-6. File each bug with steps and expected/actual behavior; fix high-impact issues, run unit + emulator QA, record physical tester results, then plan QR invite and optional Split Clues.
+**Next development target: v0.10A, offline Daily Challenge / replayability foundation.**
 
-Roadmap: [v0.9 issue #12](https://github.com/PlayerEden/SudokuTogether/issues/12), [v0.10 #13](https://github.com/PlayerEden/SudokuTogether/issues/13), [v0.11 #14](https://github.com/PlayerEden/SudokuTogether/issues/14). New audit: [`V0.8E_SOLO_FAIRNESS_QA.md`](V0.8E_SOLO_FAIRNESS_QA.md).
+1. Plan one stable, uniquely solvable 9×9 daily puzzle, with a clearly documented local date/time-zone rule, no internet requirement, and a difficulty policy that does not invent grades.
+2. Ensure daily puzzle selection is deterministic across restarts, does not overwrite or corrupt an existing active Solo puzzle, and uses separately persisted daily progress and completion records if needed.
+3. Add useful result summaries, but distinguish daily/standard Solo, assisted/unassisted, and each difficulty; never present offline local records as global ranks.
+4. Add JVM tests for same-day reproducibility, local-date rollover, old-save migration, timer integrity, uniqueness and score separation. Then Android UI tests, screenshots and a verified QA APK.
+5. Keep improving native screen layouts, accessibility and reliability where this does not require two players. Maintain GitHub source, handoff, QA evidence and the known-good checkpoint.
+
+**Deferred, still required before shipping multiplayer claims or introducing Split Clues: v0.9A physical same-Wi-Fi testing.** When the user is ready, check co-op host/join/discovery/manual IP, both-way edits/notes, conflict and Undo safety, pause/background/force-stop, reconnect, chat and versus results on two separate Android phones. Record observed evidence and defects. QR invite and private Split Clues should not be described as validated while this gate is open.
+
+Roadmap: [v0.9 issue #12](https://github.com/PlayerEden/SudokuTogether/issues/12) remains **pending by user choice**; [v0.10 issue #13](https://github.com/PlayerEden/SudokuTogether/issues/13) becomes the active development track; [v0.11 #14](https://github.com/PlayerEden/SudokuTogether/issues/14) is later. Latest verified audit: [`V0.8E_SOLO_FAIRNESS_QA.md`](V0.8E_SOLO_FAIRNESS_QA.md).
 
 ## 5. Remaining release roadmap
 
 - **v0.8E:** fair assisted/unassisted records, duplicate-timer cleanup, explanatory help and touch-target improvements **implemented and Android-tested**. Physical accessibility/font and Solo assist playtests are still pending.
-- **v0.9A/B:** same-Wi-Fi two-phone host/discovery/manual join, rejoin after app background/kill, saved state, chat, racing, edit conflicts, error feedback, QR invitation. Log physical device evidence.
-- **v0.9C:** **Split Clues** optional collaborative mode. Each phone sees a different subset of givens; cannot leak through guest network state, notes, hints, previews, screen-reader semantics, or saved mirror. This depends on v0.9A.
-- **v0.10:** daily puzzle with offline-date handling, fair records and achievement progression, more replayability, useful end-of-match stats.
+- **v0.9A/B:** two-phone LAN playtest and invite/reconnect validation **deferred until user is ready**; still a required gate before multiplayer release claims. Can work on non-device-dependent robustness/tests separately.
+- **v0.9C:** **Split Clues** remains blocked behind actual LAN gate. Optional collaborative mode. Each phone sees a different subset of givens; cannot leak through guest network state, notes, hints, previews, screen-reader semantics, or saved mirror. This depends on v0.9A.
+- **v0.10:** **next active development track**: daily puzzle with offline-date handling, fair records and achievement progression, more replayability, useful end-of-match stats.
 - **v0.11:** distinctive legal/brand review, app icon and store visuals, Android/Play target API validation at submission, signing/AAB, privacy/data safety, closed testing eligibility, accessibility, performance/stability and launch gates.
 - **Later only:** reusable native Android puzzle-game template so future crossword/Minesweeper-type games can reuse infrastructure. Concept preserved in [`REUSABLE_ANDROID_PUZZLE_FOUNDATION.md`](REUSABLE_ANDROID_PUZZLE_FOUNDATION.md) and [issue #16](https://github.com/PlayerEden/SudokuTogether/issues/16). **Paused at user request.** Do not begin extracting it while Sudoku unfinished.
 
