@@ -2,6 +2,11 @@ name: Sudoku Together — Visual UX QA
 # Manual-only: inspect Android-native visuals and run emulator smoke tests.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/visual-qa.yml
 
 
 
@@ -16,7 +21,7 @@ jobs:
       - name: Checkout game source branch
         uses: actions/checkout@v4
         with:
-          ref: polish/v0.7-thumb-layout
+          ref: feat/v0.8c-difficulty-selection
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
