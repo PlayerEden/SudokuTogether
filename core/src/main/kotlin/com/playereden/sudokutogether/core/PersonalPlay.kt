@@ -58,7 +58,33 @@ data class PersonalStats(
     val coopCompletions: Int
 )
 
+/** Read-only record summary. Historical records remain unchanged. */
+data class SoloRecordSummary(
+    val solved: Int,
+    val unassisted: Int,
+    val assisted: Int,
+    val bestUnassistedMs: Long?,
+    val bestAssistedMs: Long?
+)
+
 object PersonalPlay {
+    /** difficulty=null means all solo levels, including pre-difficulty legacy games. */
+    fun soloSummary(records: List<GameRecord>, difficulty: String? = null): SoloRecordSummary {
+        val solved = records.distinctBy { it.id }.filter {
+            it.mode == SOLO && it.result == "SOLVED" &&
+                (difficulty == null || it.difficulty == difficulty)
+        }
+        val unassisted = solved.filterNot { it.assisted }
+        val assisted = solved.filter { it.assisted }
+        return SoloRecordSummary(
+            solved = solved.size,
+            unassisted = unassisted.size,
+            assisted = assisted.size,
+            bestUnassistedMs = unassisted.minOfOrNull { it.elapsedMs },
+            bestAssistedMs = assisted.minOfOrNull { it.elapsedMs }
+        )
+    }
+
     fun newSolo(puzzle: Puzzle, timeMs: Long): SoloProgress {
         require(Sudoku.solutionCount(puzzle.clues) == 1)
         return SoloProgress(UUID.randomUUID().toString(), puzzle, puzzle.clues.map { Cell(it) }, timeMs)
