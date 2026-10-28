@@ -6,7 +6,7 @@ import java.util.UUID
 const val SOLO = "solo"
 const val MAX_RECORDS = 10_000
 
-@Serializable data class SoloUndo(val cell: Int, val before: Cell)
+@Serializable data class SoloUndo(val cell: Int, val before: Cell, val relatedBefore: Map<Int, Cell> = emptyMap())
 
 @Serializable data class SoloProgress(
     val id: String,
@@ -16,7 +16,9 @@ const val MAX_RECORDS = 10_000
     val elapsedMs: Long = 0,
     val moves: Int = 0,
     val history: List<SoloUndo> = emptyList(),
-    val finishedAtMs: Long? = null
+    val finishedAtMs: Long? = null,
+    val hintsUsed: Int = 0,
+    val usedNoteAssist: Boolean = false
 ) {
     val completed: Boolean get() = finishedAtMs != null
     fun snapshot(): Snapshot = Snapshot(
@@ -34,7 +36,9 @@ const val MAX_RECORDS = 10_000
     val elapsedMs: Long,
     val moves: Int,
     val finishedAtMs: Long,
-    val difficulty: String? = null
+    val difficulty: String? = null,
+    val assisted: Boolean = false,
+    val hintsUsed: Int = 0
 )
 
 @Serializable data class LocalPlayerData(
@@ -60,7 +64,8 @@ object PersonalPlay {
         return SoloProgress(UUID.randomUUID().toString(), puzzle, puzzle.clues.map { Cell(it) }, timeMs)
     }
 
-    fun edit(s: SoloProgress, cell: Int, kind: Kind, number: Int = 0, enabled: Boolean = true, elapsedMs: Long, nowMs: Long = System.currentTimeMillis()): SoloProgress? {
+    fun edit(s: SoloProgress, cell: Int, kind: Kind, number: Int = 0, enabled: Boolean = true,
+             elapsedMs: Long, nowMs: Long = System.currentTimeMillis(), autoCleanNotes: Boolean = false): SoloProgress? {
         if (s.completed || cell !in 0..80 || s.puzzle.clues[cell] != 0 || elapsedMs < s.elapsedMs) return null
         if (kind in listOf(Kind.NOTE, Kind.VALUE) && number !in 1..9) return null
         val before = s.cells[cell]
@@ -68,11 +73,13 @@ object PersonalPlay {
         val revision = nextMove.toLong()
         val history: List<SoloUndo>
         val after: Cell
+        val relatedBefore: Map<Int, Cell>
         if (kind == Kind.UNDO) {
             val last = s.history.lastOrNull() ?: return null
             if (last.cell != cell) return null
             history = s.history.dropLast(1)
             after = last.before.copy(revision = revision)
+            relatedBefore = last.relatedBefore
         } else {
             after = when (kind) {
                 Kind.VALUE -> Cell(number, revision = revision)
@@ -85,12 +92,32 @@ object PersonalPlay {
                 Kind.UNDO -> error("Handled earlier")
             }
             if (after.value == before.value && after.notes == before.notes) return null
-            history = (s.history + SoloUndo(cell, before)).takeLast(128)
+            val mask = if (kind == Kind.VALUE && autoCleanNotes) 1 shl (number - 1) else 0
+            relatedBefore = if (mask == 0) emptyMap() else s.cells.withIndex()
+                .filter { (index, other) -> SudokuAssistance.isPeer(index, cell) &&
+                    other.value == 0 && other.notes and mask != 0 }
+                .associate { it.index to it.value }
+            history = (s.history + SoloUndo(cell, before, relatedBefore)).takeLast(128)
         }
-        val cells = s.cells.toMutableList().also { it[cell] = after }
+        val cells = s.cells.toMutableList().also { updated ->
+            updated[cell] = after
+            if (kind == Kind.UNDO) {
+                relatedBefore.forEach { (index, original) -> updated[index] = original.copy(revision = revision) }
+            } else if (relatedBefore.isNotEmpty()) {
+                val mask = (1 shl (number - 1)).inv()
+                relatedBefore.forEach { (index, original) ->
+                    updated[index] = original.copy(notes = original.notes and mask, revision = revision)
+                }
+            }
+        }
         val finished = if (Sudoku.complete(s.puzzle, cells.map { it.value })) nowMs else null
-        return s.copy(cells = cells, history = history, moves = nextMove, elapsedMs = elapsedMs, finishedAtMs = finished)
+        return s.copy(cells = cells, history = history, moves = nextMove, elapsedMs = elapsedMs,
+            finishedAtMs = finished, usedNoteAssist = s.usedNoteAssist ||
+                (kind != Kind.UNDO && relatedBefore.isNotEmpty()))
     }
+
+    fun recordHint(s: SoloProgress): SoloProgress =
+        if (s.completed) s else s.copy(hintsUsed = (s.hintsUsed + 1).coerceAtMost(9999))
 
     fun withElapsed(s: SoloProgress, elapsedMs: Long): SoloProgress =
         if (s.completed) s else s.copy(elapsedMs = maxOf(elapsedMs, s.elapsedMs))
@@ -99,7 +126,8 @@ object PersonalPlay {
         require(finished.completed && Sudoku.complete(finished.puzzle, finished.cells.map { it.value }))
         if (data.records.any { it.id == finished.id }) return data.copy(activeSolo = finished)
         val record = GameRecord(finished.id, SOLO, "SOLVED", finished.puzzle.id,
-            finished.elapsedMs, finished.moves, finished.finishedAtMs!!, finished.puzzle.difficulty)
+            finished.elapsedMs, finished.moves, finished.finishedAtMs!!, finished.puzzle.difficulty,
+            assisted = finished.hintsUsed > 0 || finished.usedNoteAssist, hintsUsed = finished.hintsUsed)
         return data.copy(activeSolo = finished, records = (data.records + record).takeLast(MAX_RECORDS))
     }
 
