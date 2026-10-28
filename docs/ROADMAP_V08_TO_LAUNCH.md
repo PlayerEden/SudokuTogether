@@ -32,6 +32,12 @@ Status: **active development plan**. Working title only; all target versions are
 
 **Do not start Split Clues before 9A**. Its public-facing promise depends on a proven LAN foundation.
 
+## Development order adjustment — two-phone test deferred
+
+**User decision (2026-10-27 local): postpone physical two-phone testing until ready.** The v0.9A physical LAN acceptance gate remains **unverified**; this does not certify co-op, versus, reconnect, privacy projections, QR invitation, or future Split Clues. We will not pressure the user for this test.
+
+Continue with **v0.10A offline Daily Challenge and replayability** plus other single-device-friendly refinement. Preserve compatibility and give v0.10 its own independent tests and APK. Revisit v0.9A when the user opts in; **Split Clues and multiplayer-release acceptance remain dependent on actual physical LAN validation**. Keep this status in the living handoff and default-branch recovery entrypoint.
+
 ## v0.10 — Replayability without grinding
 
 - Daily challenge: one stable daily puzzle with an offline-consistent local-date rule, replay-safe records and a fair date rollover policy. No claimed global leaderboard without a server.
