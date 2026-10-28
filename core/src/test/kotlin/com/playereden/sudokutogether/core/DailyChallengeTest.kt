@@ -77,7 +77,24 @@ class DailyChallengeTest {
         assertNotNull(DailyChallenge.find(data, "2026-09-01"))
         assertNull(DailyChallenge.find(data, "2026-10-01"))
         assertNotNull(DailyChallenge.find(data, "2026-11-04"))
-        assertEquals(DailyChallenge.MAX_SAVED_DAYS, data.dailyProgress.size)
+        assertEquals(1 + DailyChallenge.MAX_COMPLETED_DAYS, data.dailyProgress.size)
+    }
+
+    @Test fun reachingSafetyLimitRejectsNewDayWithoutDroppingAnyUnfinishedSave() {
+        val original = PersonalPlay.newSolo(fixture(), 100L)
+        val start = java.time.LocalDate.of(2026, 1, 1)
+        val progress = (0 until DailyChallenge.MAX_SAVED_DAYS).map { offset ->
+            DailyProgress(start.plusDays(offset.toLong()).toString(), original)
+        }
+        val existing = LocalPlayerData(dailyProgress = progress)
+        val blocked = start.plusDays(DailyChallenge.MAX_SAVED_DAYS.toLong()).toString()
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            DailyChallenge.open(existing, blocked, 999L)
+        }
+        assertTrue(error.message.orEmpty().contains("unfinished"))
+        assertEquals(DailyChallenge.MAX_SAVED_DAYS, existing.dailyProgress.size)
+        assertEquals(progress.first(), existing.dailyProgress.first())
+        assertNull(DailyChallenge.find(existing, blocked))
     }
 
     @Test fun dailyCompletionStoresSeparateIdempotentAssistedRecord() {
