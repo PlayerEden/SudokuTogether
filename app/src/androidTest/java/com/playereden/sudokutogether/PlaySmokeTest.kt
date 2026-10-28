@@ -13,7 +13,7 @@ import org.junit.Assert.assertTrue
 class PlaySmokeTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     @Test fun profileCollectionDisplaysUnlockChoices() {
-        compose.onNodeWithText("My profile & records").performClick()
+        compose.onNodeWithText("My profile & records").performScrollTo().performClick()
         compose.onNodeWithText("YOUR COLLECTION").assertExists()
         compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Board styles").assertExists()
@@ -122,7 +122,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
-        compose.onNodeWithText("My profile & records").performClick()
+        compose.onNodeWithText("My profile & records").performScrollTo().performClick()
         compose.onNodeWithText("Your records").assertExists()
         compose.onNodeWithText("Best unassisted:", substring = true).assertExists()
         compose.onNodeWithText("Offline profile", substring = true).assertExists()
