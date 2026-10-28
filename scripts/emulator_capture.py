@@ -59,6 +59,9 @@ def main():
         if tap_text("?"):
             time.sleep(1)
             screenshot("05-in-game-help.png")
+            if not tap_text("Got it"):
+                adb("shell", "input", "keyevent", "4")
+            time.sleep(1)
     # Evidence for v0.10B: actual Daily board and locally saved Daily History.
     # ADB captures are best-effort; interaction tests separately verify navigation.
     try:
