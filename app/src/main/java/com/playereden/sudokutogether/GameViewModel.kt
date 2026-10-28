@@ -30,7 +30,8 @@ data class GameUiState(
     val chat: List<ChatLine> = emptyList(), val unreadChat: Int = 0,
     val chatVisible: Boolean = false,
     val uniformNumbers: Boolean = false,
-    val touchFeedback: Boolean = true
+    val touchFeedback: Boolean = true,
+    val selectedDifficulty: String = "EASY"
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -54,7 +55,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var soloTick: Job? = null
     private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true, profile = localPlayer.current(), resumeSolo = localPlayer.current().activeSolo != null, appearance = savedAppearance(),
         uniformNumbers = preferences.getBoolean("uniformNumbers", false),
-        touchFeedback = preferences.getBoolean("touchFeedback", true)))
+        touchFeedback = preferences.getBoolean("touchFeedback", true),
+        selectedDifficulty = preferences.getString("difficulty", "EASY")
+            .let { if (it in listOf("EASY", "MEDIUM", "HARD")) it!! else "EASY" }))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
     @Volatile private var server: HostServer? = null
@@ -109,6 +112,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    fun setDifficulty(level: String) {
+        if (level !in listOf("EASY", "MEDIUM", "HARD") || _state.value.busy) return
+        preferences.edit().putString("difficulty", level).apply()
+        _state.update { it.copy(selectedDifficulty = level) }
+    }
     fun setTouchFeedback(enabled: Boolean) {
         preferences.edit().putBoolean("touchFeedback", enabled).apply()
         _state.update { it.copy(touchFeedback = enabled) }
@@ -135,12 +143,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    @Synchronized private fun nextPuzzle(): Puzzle {
+    @Synchronized private fun nextPuzzle(level: String): Puzzle {
         // History is deliberately independent of saved solo/host/guest sessions:
         // installing this update doesn't modify or invalidate unfinished games.
         val recent = preferences.getString("recentPuzzleIds", "")
             .orEmpty().split('|').filter { it.isNotBlank() }
-        val puzzle = PuzzleSupply.next(recent, puzzleRandom::nextLong)
+        val grade = when (level) {
+            "EASY" -> HumanSudoku.Grade.EASY
+            "MEDIUM" -> HumanSudoku.Grade.MEDIUM
+            "HARD" -> HumanSudoku.Grade.HARD
+            else -> error("Choose Easy, Medium or Hard before starting a new puzzle.")
+        }
+        val puzzle = PuzzleSupply.nextRated(grade, recent, puzzleRandom::nextLong).puzzle
         val updated = PuzzleSupply.remember(recent, puzzle.id).joinToString("|")
         check(preferences.edit().putString("recentPuzzleIds", updated).commit()) {
             "Could not save your puzzle history"
@@ -192,7 +206,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val saved = localPlayer.update { data ->
                     if (resume && data.activeSolo != null) data
-                    else data.copy(activeSolo = PersonalPlay.newSolo(nextPuzzle(), System.currentTimeMillis()))
+                    else data.copy(activeSolo = PersonalPlay.newSolo(nextPuzzle(_state.value.selectedDifficulty), System.currentTimeMillis()))
                 }
                 if (generation.get() != current) return@launch
                 val progress = saved.activeSolo!!
@@ -226,7 +240,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
-            uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback) }
+            uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback,
+            selectedDifficulty = it.selectedDifficulty) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
 
@@ -248,7 +263,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         (now - (snapshot.raceStartedAtMs ?: now)).coerceAtLeast(0L) else 0L
                     val record = GameRecord(id, snapshot.mode,
                         if (snapshot.mode == COOP) "SOLVED" else if (snapshot.winner == role) "WIN" else "LOSS",
-                        snapshot.puzzle.id, elapsed, 0, now)
+                        snapshot.puzzle.id, elapsed, 0, now, snapshot.puzzle.difficulty)
                     data.copy(records = (data.records + record).takeLast(MAX_RECORDS))
                 }
             }
@@ -270,7 +285,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 val session = if (resume) {
                     val saved = when (val loaded = store.load()) { is LoadResult.Loaded -> loaded.data; is LoadResult.Recovered -> loaded.data; else -> error("The saved puzzle is unavailable. It has not been replaced.") }
                     GameSession(saved, store::save).also { it.setAppearance(HOST, selectedStyle) }
-                } else GameSession.create(nextPuzzle(), name, store::save, if (versus) VERSUS else COOP, selectedStyle)
+                } else GameSession.create(nextPuzzle(_state.value.selectedDifficulty), name, store::save, if (versus) VERSUS else COOP, selectedStyle)
                 if (generation.get() != current) return@launch
                 val hosted = HostServer(session) { event -> if (generation.get() == current) {
                     recordMultiplayer(event.snapshot, HOST)
@@ -422,7 +437,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         try { server?.replaceGuest() } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save the partner change. Try again.") } }
     } }
     fun newPuzzle() { if (_state.value.role == SOLO) { solo(false); return }; _state.update { it.copy(busy = true, message = null) }; viewModelScope.launch(Dispatchers.IO) {
-        try { server?.newPuzzle(nextPuzzle()) } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save a new puzzle. Your current puzzle is still here.") } }
+        try { server?.let { host ->
+            val difficulty = host.session.snapshot().puzzle.difficulty
+                ?.takeIf { it in listOf("EASY", "MEDIUM", "HARD") }
+                ?: _state.value.selectedDifficulty
+            host.newPuzzle(nextPuzzle(difficulty))
+        } } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save a new puzzle. Your current puzzle is still here.") } }
         finally { _state.update { it.copy(busy = false) } }
     } }
     override fun onCleared() { stopSoloClock(); closeRoom(); super.onCleared() }
