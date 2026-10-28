@@ -1,6 +1,6 @@
 # Sudoku Together — Product & Release Roadmap (v0.8 → Google Play)
 
-Status: **active development plan**. Working title only; all target versions are milestones, not release promises. Source of truth: this document and the stacked draft PRs. Current work: v0.10B tested on a feature branch; the previous known-good `development` checkpoint is v0.10A until source promotion and final visual QA.
+Status: **active development plan**. Working title only; all target versions are milestones, not release promises. Source of truth: this document and the stacked draft PRs. Current verified source: v0.10B on `development`, with exact rollback checkpoint `checkpoint/v0.10b-qa-green`; two 10/10 Android instrumentation suites passed. The new Daily/Profile card is not yet visually certified, and real-device testing is still pending.
 
 ## Product promise and boundaries
 
