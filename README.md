@@ -8,8 +8,8 @@ Native Android Sudoku with offline solo, same-Wi-Fi co-op and head-to-head versu
 
 - [Living project handoff](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_HANDOFF.md)
 - [Development roadmap to Google Play](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/ROADMAP_V08_TO_LAUNCH.md)
-- [Latest v0.8C QA milestone](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/V0.8C_DIFFICULTY_SELECTION_HANDOFF.md)
-- [Known-good code checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8c-qa-green)
+- [Latest v0.8D QA milestone](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/V0.8D_SOLO_ASSISTS_AUDIT.md)
+- [Known-good v0.8D source checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8d-qa-green)
 - [GitHub Actions APK builds](https://github.com/PlayerEden/SudokuTogether/actions)
 
-**Next:** v0.8D optional Sudoku hints and pencil-mark assistance. Finish Sudoku before revisiting our reusable crossword/Minesweeper framework concept.
+**Current:** v0.8D optional Solo hints and pencil-mark assistance verified (9/9 emulator tests). **Next:** v0.8E user-facing fairness/accessibility polish, then physical two-phone Wi-Fi QA. Finish Sudoku before revisiting the reusable framework.
