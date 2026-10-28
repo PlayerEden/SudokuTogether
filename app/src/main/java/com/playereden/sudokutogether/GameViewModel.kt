@@ -33,7 +33,9 @@ data class GameUiState(
     val touchFeedback: Boolean = true,
     val selectedDifficulty: String = "EASY",
     val autoCleanNotes: Boolean = false,
-    val hint: SudokuAssistance.Hint? = null
+    val hint: SudokuAssistance.Hint? = null,
+    val dailyDate: String? = null,
+    val todayDate: String = DailyChallenge.today()
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && (role == SOLO || (!status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -125,6 +127,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(autoCleanNotes = enabled) }
     }
     fun dismissHint() { _state.update { it.copy(hint = null) } }
+    private fun progressFor(data: LocalPlayerData, date: String?): SoloProgress? =
+        if (date == null) data.activeSolo else DailyChallenge.find(data, date)
+
+    private fun withProgress(data: LocalPlayerData, date: String?, progress: SoloProgress): LocalPlayerData =
+        if (date == null) data.copy(activeSolo = progress) else DailyChallenge.update(data, date, progress)
+
     fun requestHint() {
         val before = _state.value
         if (before.role != SOLO || before.page != Page.PLAY || !before.canEdit ||
@@ -135,7 +143,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val progress = localPlayer.current().activeSolo
+                val progress = progressFor(localPlayer.current(), before.dailyDate)
                 val hint = if (progress != null && progress.id == expectedId &&
                     progress.moves.toLong() == expectedMoves && !progress.completed)
                     SudokuAssistance.nextHint(progress.puzzle, progress.cells.map { it.value }) else null
@@ -145,13 +153,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
                 val updated = localPlayer.update { data ->
-                    val current = data.activeSolo
+                    val current = progressFor(data, before.dailyDate)
                     if (current != null && current.id == expectedId &&
                         current.moves.toLong() == expectedMoves && !current.completed)
-                        data.copy(activeSolo = PersonalPlay.recordHint(current)) else data
+                        withProgress(data, before.dailyDate, PersonalPlay.recordHint(current)) else data
                 }
-                if (generation.get() == token && updated.activeSolo?.id == expectedId &&
-                    updated.activeSolo?.moves?.toLong() == expectedMoves) {
+                val confirmed = progressFor(updated, before.dailyDate)
+                if (generation.get() == token && confirmed?.id == expectedId &&
+                    confirmed.moves.toLong() == expectedMoves) {
                     _state.update { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
                 } else if (generation.get() == token) _state.update { it.copy(busy = false) }
             } catch (_: Exception) {
@@ -213,9 +222,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val elapsed = elapsedSolo()
             try {
                 val updated = localPlayer.update { data ->
-                    val solo = data.activeSolo
+                    val solo = progressFor(data, previous.dailyDate)
                     if (solo != null && solo.id == previous.snapshot.sessionId)
-                        data.copy(activeSolo = PersonalPlay.withElapsed(solo, elapsed))
+                        withProgress(data, previous.dailyDate, PersonalPlay.withElapsed(solo, elapsed))
                     else data
                 }
                 _state.update { it.copy(profile = updated, soloElapsedMs = elapsed) }
@@ -244,7 +253,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.busy) return
         stopSoloClock()
         val current = closeRoom()
-        _state.update { it.copy(page = Page.PLAY, role = SOLO, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null, hint = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
+        _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = null, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null, hint = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val saved = localPlayer.update { data ->
@@ -259,6 +268,33 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 startSoloClock(progress)
             } catch (e: Exception) {
                 if (generation.get() == current) _state.update { it.copy(page = Page.HOME, busy = false, message = "Could not save the solo puzzle: " + (e.message ?: "storage unavailable")) }
+            }
+        }
+    }
+
+    fun daily() {
+        if (_state.value.busy) return
+        stopSoloClock()
+        val current = closeRoom()
+        val date = DailyChallenge.today()
+        _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = date, busy = true,
+            snapshot = null, selected = -1, pendingId = null, notes = false, partnerCell = -1,
+            message = null, hint = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val saved = localPlayer.update { data ->
+                    DailyChallenge.open(data, date, System.currentTimeMillis())
+                }
+                if (generation.get() != current) return@launch
+                val progress = DailyChallenge.find(saved, date)!!
+                _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = date,
+                    snapshot = progress.snapshot(), profile = saved, status = RoomStatus(),
+                    connected = true, busy = false, soloElapsedMs = progress.elapsedMs) }
+                startSoloClock(progress)
+            } catch (e: Exception) {
+                if (generation.get() == current) _state.update { it.copy(page = Page.HOME,
+                    busy = false, dailyDate = null, todayDate = DailyChallenge.today(),
+                    message = "Couldn't open today's puzzle. Your Solo progress is still saved.") }
             }
         }
     }
@@ -284,7 +320,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
             uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback,
-            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty) }
+            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty,
+            todayDate = DailyChallenge.today()) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
 
@@ -433,17 +470,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val saved = localPlayer.update { data ->
-                        val progress = data.activeSolo
+                        val progress = progressFor(data, value.dailyDate)
                         if (progress == null || progress.id != snapshot.sessionId) data
                         else {
                             val next = PersonalPlay.edit(progress, cell, kind, number, enabled, elapsed,
                                 autoCleanNotes = value.autoCleanNotes)
-                            if (next == null) data else if (next.completed) PersonalPlay.addCompletedSolo(data, next)
-                            else data.copy(activeSolo = next)
+                            if (next == null) data else if (next.completed) {
+                                if (value.dailyDate == null) PersonalPlay.addCompletedSolo(data, next)
+                                else DailyChallenge.complete(data, value.dailyDate, next)
+                            } else withProgress(data, value.dailyDate, next)
                         }
                     }
                     if (generation.get() == current) {
-                        val progress = saved.activeSolo!!
+                        val progress = progressFor(saved, value.dailyDate)!!
                         if (progress.completed) {
                             soloStartedAt = null
                             soloTick?.cancel()
@@ -471,16 +510,22 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (_state.value.role == SOLO && _state.value.snapshot != null) {
             if (!active) stopSoloClock()
             else if (soloStartedAt == null && !_state.value.snapshot!!.completed) {
-                val progress = localPlayer.current().activeSolo
+                val progress = progressFor(localPlayer.current(), _state.value.dailyDate)
                 if (progress != null) startSoloClock(progress)
             }
+        }
+        if (active && _state.value.page == Page.HOME) {
+            _state.update { it.copy(todayDate = DailyChallenge.today()) }
         }
         viewModelScope.launch(Dispatchers.IO) { server?.setForeground(active); guest?.setForeground(active) }
     }
     fun replacePartner() { viewModelScope.launch(Dispatchers.IO) {
         try { server?.replaceGuest() } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save the partner change. Try again.") } }
     } }
-    fun newPuzzle() { if (_state.value.role == SOLO) { solo(false); return }; _state.update { it.copy(busy = true, message = null) }; viewModelScope.launch(Dispatchers.IO) {
+    fun newPuzzle() { if (_state.value.role == SOLO) {
+        if (_state.value.dailyDate != null) home() else solo(false)
+        return
+    }; _state.update { it.copy(busy = true, message = null) }; viewModelScope.launch(Dispatchers.IO) {
         try { server?.let { host ->
             val difficulty = host.session.snapshot().puzzle.difficulty
                 ?.takeIf { it in listOf("EASY", "MEDIUM", "HARD") }
