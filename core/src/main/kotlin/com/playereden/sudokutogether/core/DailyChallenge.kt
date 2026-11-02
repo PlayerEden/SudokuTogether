@@ -53,9 +53,16 @@ object DailyChallenge {
 
     fun update(data: LocalPlayerData, date: String, progress: SoloProgress): LocalPlayerData {
         require(data.dailyProgress.any { it.date == date && it.solo.id == progress.id })
-        return data.copy(dailyProgress = data.dailyProgress.map {
+        val all = data.dailyProgress.map {
             if (it.date == date) it.copy(solo = progress) else it
-        })
+        }
+        // Completion can free a review slot immediately, without risking any
+        // unfinished save or rewriting the permanent completed-game records.
+        val unfinished = all.filterNot { it.solo.completed }
+        val finished = all.filter { it.solo.completed }.sortedBy { it.date }.takeLast(
+            minOf(MAX_COMPLETED_DAYS, MAX_SAVED_DAYS - unfinished.size)
+        )
+        return data.copy(dailyProgress = (unfinished + finished).sortedBy { it.date })
     }
 
     fun complete(data: LocalPlayerData, date: String, progress: SoloProgress): LocalPlayerData {
