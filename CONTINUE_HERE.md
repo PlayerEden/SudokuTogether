@@ -4,6 +4,8 @@
 
 > **Important:** `main` currently contains this landing page and manual GitHub Actions workflows; **the full Android game is on [`development`](https://github.com/PlayerEden/SudokuTogether/tree/development)**. Do not start from the tiny `main` code tree and assume the game is gone.
 
+**Latest consolidated status/vision report:** [November 2, 2026 -- what's built, what's next, how we could finish, tools and resources](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). Treat this as a planning snapshot; verify current source and tests in the living handoff before coding.
+
 ## Pick up the game in a new chat
 
 1. **[Open the current living project handoff](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_HANDOFF.md)** — exact state, source branch, verified builds, pending tests, decisions, issues, rollout and rollback.
