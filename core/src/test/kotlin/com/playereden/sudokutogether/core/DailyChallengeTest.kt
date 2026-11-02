@@ -97,6 +97,30 @@ class DailyChallengeTest {
         assertNull(DailyChallenge.find(existing, blocked))
     }
 
+    @Test fun completingAnOlderDayPrunesOldFinishedReviewSlotsButKeepsRecords() {
+        val old = PersonalPlay.newSolo(fixture(), 1L)
+        val start = java.time.LocalDate.of(2026, 1, 1)
+        val finished = (0 until DailyChallenge.MAX_COMPLETED_DAYS).map { offset ->
+            DailyProgress(start.plusDays(offset.toLong()).toString(),
+                old.copy(id = "done-$offset", finishedAtMs = 2L))
+        }
+        val lastDate = "2026-10-27"
+        val inProgress = PersonalPlay.newSolo(fixture(), 10L)
+        val existing = LocalPlayerData(
+            dailyProgress = finished + DailyProgress(lastDate, inProgress),
+            records = listOf(GameRecord("old-record", DAILY, "SOLVED", "old-puzzle",
+                200L, 10, 300L, "EASY", dailyDate = start.toString()))
+        )
+        val completed = DailyChallenge.complete(existing, lastDate,
+            inProgress.copy(finishedAtMs = 20L, cells = fixture().clues.map { Cell(it) }.toMutableList().also {
+                it[0] = Cell(1); it[1] = Cell(2); it[9] = Cell(4); it[10] = Cell(5)
+            }))
+        assertEquals(DailyChallenge.MAX_COMPLETED_DAYS, completed.dailyProgress.size)
+        assertNull(DailyChallenge.find(completed, start.toString()))
+        assertNotNull(DailyChallenge.find(completed, lastDate))
+        assertTrue(completed.records.any { it.id == "old-record" })
+    }
+
     @Test fun dailyCompletionStoresSeparateIdempotentAssistedRecord() {
         val date = "2026-10-27"
         val original = PersonalPlay.newSolo(fixture(), 1000L)
