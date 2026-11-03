@@ -8,6 +8,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import androidx.compose.ui.text.TextLayoutResult
 import org.junit.Assert.assertTrue
+import androidx.test.platform.app.InstrumentationRegistry
+import android.graphics.Bitmap
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class PlaySmokeTest {
@@ -27,8 +30,15 @@ class PlaySmokeTest {
         assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
+    private fun diagnostic(name: String) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val output = File(instrumentation.targetContext.getExternalFilesDir("screenshots"), name)
+        output.outputStream().use { instrumentation.uiAutomation.takeScreenshot().compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
     @Test fun homePresentsThreeDistinctModesAndNativeRuleSheet() {
+        diagnostic("90-before-help.png")
         compose.onNodeWithText("Help").performClick()
+        diagnostic("91-after-help.png")
         compose.onNodeWithText("How to play Sudoku").assertExists()
         compose.onNodeWithText("Fill each row", substring = true).assertExists()
         compose.onNodeWithText("Got it").performClick()
@@ -58,9 +68,9 @@ class PlaySmokeTest {
         compose.onNodeWithText("New solo puzzle").performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
             compose.onNodeWithText("Start new").performClick()
-        compose.waitUntil(20000) {
+        try { compose.waitUntil(20000) {
             compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty()
-        }
+        } } finally { diagnostic("92-solo-start.png") }
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
@@ -70,6 +80,7 @@ class PlaySmokeTest {
             compose.onAllNodesWithText("Daily", substring = false).fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("Daily", substring = false).assertExists()
+        diagnostic("93-daily-start.png")
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()

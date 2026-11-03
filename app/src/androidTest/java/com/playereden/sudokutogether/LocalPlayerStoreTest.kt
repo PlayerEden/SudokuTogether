@@ -92,6 +92,55 @@ class LocalPlayerStoreTest {
         assertEquals(text, file.readText())
     }
 
+    @Test fun unreadableAtomicSidecarsDoNotDestroyEitherOriginal() {
+        for (suffix in listOf(".bak", ".new")) {
+            val file = File(root, "sidecar-${suffix.drop(1)}.json").also { it.writeText("primary-$suffix") }
+            val sidecar = File(file.path + suffix).also { it.writeText("sidecar-$suffix") }
+            val store = LocalPlayerStore(file)
+            assertFalse(store.canSave)
+            assertEquals("primary-$suffix", file.readText())
+            assertEquals("sidecar-$suffix", sidecar.readText())
+        }
+    }
+    @Test fun recoveryPreservesEveryPrimaryAndRecoverySidecarBeforeReconciliation() {
+        val file = target().also { it.writeText("damaged-base") }
+        File(file.path + ".bak").writeText("damaged-bak")
+        File(file.path + ".new").writeText("interrupted-new")
+        File(file.path + ".recovery").writeText(json.encodeToString(saved()))
+        File(file.path + ".recovery.new").writeText("interrupted-recovery-new")
+        val store = LocalPlayerStore(file)
+        assertTrue(store.canSave); store.update { it }
+        val preserved = root.listFiles()!!.filter { it.isFile }.map { it.readText() }
+        for (original in listOf("damaged-base", "damaged-bak", "interrupted-new", "interrupted-recovery-new"))
+            assertTrue("Every source survives reconciliation: $original", original in preserved)
+    }
+    @Test fun failedSidecarPreservationLeavesEverySourceUntouched() {
+        val file = target().also { it.writeText("damaged-base") }
+        val sidecar = File(file.path + ".bak").also { it.writeText("damaged-bak") }
+        File(file.path + ".recovery").writeText(json.encodeToString(saved()))
+        check(root.setWritable(false, false))
+        try {
+            val store = LocalPlayerStore(file)
+            assertFalse(store.canSave)
+            assertEquals("damaged-base", file.readText()); assertEquals("damaged-bak", sidecar.readText())
+        } finally { root.setWritable(true, true) }
+    }
+    @Test fun structurallyImpossibleUndoCannotEraseOtherEntries() {
+        val digits = "123456789456789123789123456234567891567891234891234567345678912678912345912345678".map { it.digitToInt() }
+        val puzzle = Puzzle("undo-fixture", digits.mapIndexed { i, n -> if (i in listOf(0, 1, 40)) 0 else n }, "EASY")
+        val solo = PersonalPlay.newSolo(puzzle, 1000L).copy(moves = 1)
+        val bad = listOf(SoloUndo(0, Cell(), mapOf(40 to Cell())), SoloUndo(0, Cell(), mapOf(0 to Cell())),
+            SoloUndo(0, Cell(), mapOf(2 to Cell())), SoloUndo(0, Cell(), mapOf(1 to Cell(2))),
+            SoloUndo(2, Cell()), SoloUndo(0, Cell(revision = 2)))
+        for ((index, undo) in bad.withIndex()) {
+            val invalid = LocalPlayerData(playerId = "undo-player", activeSolo = solo.copy(history = listOf(undo)))
+            val text = json.encodeToString(invalid)
+            val file = File(root, "undo-$index.json").also { it.writeText(text) }
+            val store = LocalPlayerStore(file)
+            assertFalse("Reject impossible Undo payload $index", store.canSave); assertEquals(text, file.readText())
+        }
+    }
+
     @Test fun oldProfilesWithoutNewFieldsKeepTheirIdentityAndCanStillSave() {
         val file = target().also { it.writeText("""{"schema":1,"playerId":"legacy-player","records":[]}""") }
         val store = LocalPlayerStore(file)
