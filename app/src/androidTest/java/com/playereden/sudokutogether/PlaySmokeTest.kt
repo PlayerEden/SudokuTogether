@@ -3,14 +3,12 @@ package com.playereden.sudokutogether
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import androidx.compose.ui.text.TextLayoutResult
 import org.junit.Assert.assertTrue
-import androidx.test.platform.app.InstrumentationRegistry
-import android.graphics.Bitmap
-import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class PlaySmokeTest {
@@ -30,15 +28,22 @@ class PlaySmokeTest {
         assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
-    private fun diagnostic(name: String) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val output = File(instrumentation.targetContext.getExternalFilesDir("screenshots"), name)
-        output.outputStream().use { instrumentation.uiAutomation.takeScreenshot().compress(Bitmap.CompressFormat.PNG, 100, it) }
+    private fun awaitWindowFocus() {
+        compose.waitUntil(10000) {
+            if (!compose.activity.hasWindowFocus()) EmulatorSystemDialogs.dismiss()
+            compose.activity.hasWindowFocus()
+        }
+    }
+    @Before fun awaitProfileAndWindow() {
+        compose.waitUntil(30000) { compose.onAllNodes(hasText("My profile & records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+        EmulatorSystemDialogs.dismiss()
+        awaitWindowFocus()
     }
     @Test fun homePresentsThreeDistinctModesAndNativeRuleSheet() {
-        diagnostic("90-before-help.png")
+        compose.onNodeWithText("Help").performScrollTo().assertIsDisplayed()
+        EmulatorSystemDialogs.dismiss()
+        awaitWindowFocus()
         compose.onNodeWithText("Help").performClick()
-        diagnostic("91-after-help.png")
         compose.onNodeWithText("How to play Sudoku").assertExists()
         compose.onNodeWithText("Fill each row", substring = true).assertExists()
         compose.onNodeWithText("Got it").performClick()
@@ -68,19 +73,16 @@ class PlaySmokeTest {
         compose.onNodeWithText("New solo puzzle").performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
             compose.onNodeWithText("Start new").performClick()
-        try { compose.waitUntil(20000) {
-            compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty()
-        } } finally { diagnostic("92-solo-start.png") }
+        compose.waitUntil(20000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
 
         compose.onNodeWithTag("daily_challenge").performScrollTo().performClick()
         compose.waitUntil(20000) {
-            compose.onAllNodesWithText("Daily", substring = false).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("Daily", substring = false).assertExists()
-        diagnostic("93-daily-start.png")
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
         compose.onNodeWithText("Home").performClick()
         compose.onNodeWithText("Leave room").performClick()
@@ -92,7 +94,7 @@ class PlaySmokeTest {
         val date = com.playereden.sudokutogether.core.DailyChallenge.today()
         compose.onNodeWithTag("daily_history_" + date).performScrollTo().performClick()
         compose.waitUntil(20000) {
-            compose.onAllNodesWithText("Daily", substring = false).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty()
         }
         compose.onNodeWithText("Daily", substring = false).assertExists()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
@@ -150,8 +152,14 @@ class PlaySmokeTest {
     }
 
     @Test fun raceHostWaitsForSecondPlayerBeforeAllowingInput() {
-        compose.onNodeWithText("Versus", substring = false).performClick()
-        compose.onNodeWithText("Host a versus race").performClick()
+        compose.onNodeWithText("Versus", substring = false).performScrollTo().performClick()
+        // Keep this pause-rule test independent of another test's difficulty preference.
+        compose.onNodeWithTag("difficulty_EASY").performScrollTo().assertIsEnabled().performClick()
+        compose.onNodeWithText("Host a versus race").performScrollTo().assertIsEnabled().performClick()
+        // Like co-op, a prior run can leave a saved race that needs explicit replacement.
+        if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
+            compose.onNodeWithText("Start new").performClick()
+        }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Versus").assertExists()
         compose.onNodeWithText("Waiting for your rival", substring = true).assertExists()

@@ -81,6 +81,7 @@ class DailyFinishUiTest {
     }
     private fun launch() {
         scenario = ActivityScenario.launch(MainActivity::class.java)
+        EmulatorSystemDialogs.dismiss()
         compose.waitUntil(30000) { compose.onAllNodes(hasText("My profile & records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
     }
     private fun capture(name: String) {
@@ -114,6 +115,7 @@ class DailyFinishUiTest {
         capture("18-old-daily-finish-large.png")
         scenario!!.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
         compose.waitUntil(15000) { context.resources.configuration.screenWidthDp > context.resources.configuration.screenHeightDp }
+        EmulatorSystemDialogs.dismiss()
         compose.onNodeWithText("1 logical hint used").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Back home").performScrollTo().assertIsDisplayed()
         capture("19-old-daily-finish-large-landscape.png")
@@ -138,6 +140,7 @@ class DailyFinishUiTest {
         capture("13-daily-history-large-compact.png")
         scenario!!.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
         compose.waitUntil(15000) { context.resources.configuration.screenWidthDp > context.resources.configuration.screenHeightDp }
+        EmulatorSystemDialogs.dismiss()
         compose.onNodeWithTag("daily_history_$recentDate").performScrollTo().assertIsDisplayed()
         capture("14-daily-history-large-landscape.png")
         compose.onAllNodesWithText("DAILY · SOLVED · Easy").onFirst().performScrollTo().assertIsDisplayed()
