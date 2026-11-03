@@ -31,6 +31,32 @@ The owner specifically wants a recognizable **series of distinct puzzle games**,
 
 Full implications and a tentative profile screen outline: [Visual Identity & UI Brief](GRIDMATES_VISUAL_IDENTITY_BRIEF.md). Product priority ≠ feature shipped; changes should be staged and tested after the current core Sudoku gates.
 
+## 1B. Local multiplayer is a purpose, not a limitation (2026-11-03)
+
+**Owner's product vision:** Choosing LAN / nearby multiplayer is **not merely a way to avoid server costs, programming complexity or public internet matchmaking**. It's a deliberate, human-centered nod to **connecting with the people already in our lives** — a spouse, sibling, parent, child, friend, or someone sitting beside us. It recalls asking someone nearby to help finish a newspaper crossword or puzzle-book clue. Sometimes one person starts a puzzle and another joins in with a single suggestion; that casual shared moment is the heart of GridMates.
+
+**Core principle:** *Use a small puzzle to make room for real-world connection.* Make it enjoyable to solve alone, and naturally rewarding to invite someone nearby to participate, without turning the experience into a worldwide social network.
+
+### Implications for game design
+
+- **Local-first is an intentional identity.** Preserve offline Solo and optional same-Wi-Fi cooperation/competition as first-class modes, not placeholder features awaiting an online replacement. Don't label LAN a lesser version of "real multiplayer."
+- **Make joining feel effortless.** Host/Join should be easy enough that a person can say "Want to do this puzzle with me?" and be playing soon, with reliable room codes and/or nearby discovery. QR pairing is a future option after real two-phone QA. Do not invent claims of Bluetooth, remote play or internet hosting.
+- **Support interaction, not distraction.** Gameplay should create reasons to communicate in person (shared discoveries, a clue one person spots, complementary contributions). Avoid constant chat prompts, notifications, friend-finding feeds, streak pressure or worldwide rankings as default goals.
+- **Friendly co-op and light competition.** Shared puzzles and local races can be playful; avoid making every partnership a performance contest. Celebrate a puzzle solved together. Preserve individual accomplishment in Solo.
+- **Respect genuine closeness and privacy.** No account or stranger matchmaking should be required for core local play. Do not collect personal contact graphs just to facilitate nearby gameplay.
+- **Friction and accessibility matter.** Offline portability, convenient resume, calm visuals and easy sharing are part of enabling spontaneous kitchen-table/couch/car-ride (passenger) puzzle moments. Multiplayer reliability must still pass **real two-phone LAN tests** before release claims; philosophy doesn't waive engineering gates.
+- **Keep future options open without shifting the promise.** Remote play, optional accounts and cloud sync could be useful to people who are close emotionally but far away physically. Treat those as later extensions only if they support the same relational intent, rather than chasing social-network scale for its own sake.
+- **GridMates: Crossword** can particularly embody the original "three-letter word for..." moment. Preserve crossword-specific natural conversation, not a generic Sudoku-style multiplayer wrapper.
+
+### Messaging exploration — NOT approved public tagline
+
+- "A little puzzle. A little time together."
+- "Better together, even when you're sitting right next to each other."
+- "Good puzzles. Good company."
+- The messaging should be **inviting, not preachy or anti-internet**. Don't shame solo players; a full, satisfying offline Solo experience remains essential.
+
+**Priority:** This is approved design philosophy, not an instruction to stop current Work-chat tasks or change multiplayer transport. The implementation priority stays Sudoku stability, visual quality, real two-device QA, and Play release readiness. It may shape future menu wording, onboarding, store copy, product decisions, and features without adding complexity for its own sake.
+
 ## 2. Shared GridMates identity
 
 **Across the series:**
