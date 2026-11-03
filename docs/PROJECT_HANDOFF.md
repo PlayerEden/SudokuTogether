@@ -2,7 +2,7 @@
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
-> **Approved public game name (2026-11-03): GridMates: Sudoku**, first entry in the **GridMates** puzzle-game series. **GridMates: Crossword** is the next planned game; further series games are possibilities. [Brand decision and implementation guardrails](GRIDMATES_BRAND_AND_SERIES.md). This is a naming/strategy approval, not a claim that app assets, package IDs or the store have already been renamed.
+> **Approved public game name (2026-11-03): GridMates: Sudoku**, first entry in the **GridMates** puzzle-game series. **GridMates: Crossword** is the next planned game; further series games are possibilities. [Brand decision and implementation guardrails](GRIDMATES_BRAND_AND_SERIES.md). **Visual design brief:** [GridMates Visual Identity & UI Design Brief](GRIDMATES_VISUAL_IDENTITY_BRIEF.md) (proposed logo/color/type/UI directions; not yet final user-approved artwork). This is a naming/strategy approval, not a claim that app assets, package IDs or the store have already been renamed.
 >
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
 > Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
