@@ -1,5 +1,7 @@
 # Sudoku Together
 
+[v0.10D visual refresh — draft PR25](https://github.com/PlayerEden/SudokuTogether/pull/25)
+
 > **Latest isolated work: v0.10D Visual QA**, on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on the verified v0.10C source. Read the [living handoff](docs/PROJECT_HANDOFF.md), [visual QA audit](docs/V0.10D_VISUAL_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development remains the previous promoted v0.10B baseline; main is the documentation/manual-CI entrypoint. Prior checkpoints are preserved.
 
 > **Changes:** a cohesive native game theme and icon; immediate Solo Resume and Daily access; Play/Records/Collection/Settings navigation; cosmetic previews; framed grid, clearer controls, adaptive landscape/large-text layouts, improved results and Join keyboard flow. QA `0.10.0-dev4-qa`  / code16. The v0.10C save integrity work remains intact. 87 JVM tests and 42 API26 native cases passed; lint 0 errors/18 warnings. Both independent-review regressions are GREEN after observed RED fixtures. Physical two-phone testing remains deferred; this is not a Play release.

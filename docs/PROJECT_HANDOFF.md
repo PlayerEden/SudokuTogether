@@ -10,6 +10,8 @@
 
 ## v0.10D — latest native visual/convenience pass
 
+[Draft PR25](https://github.com/PlayerEden/SudokuTogether/pull/25) is stacked on v0.10C. [Verified v0.10D checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10d-visual-qa-green) preserves this presentation milestone.
+
 Continue from [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on v0.10C `ddf661e5e612d763e538ad97b47197d8771f2989`. Do not restart from older development/main source and drop the C/D changes. The [visual QA audit](V0.10D_VISUAL_QA.md) and [work log](V0.10D_WORK_LOG.md) own the exact acceptance record; the previous sections below preserve history.
 
 Player-facing work: cohesive cream/forest/gold theme, original adaptive icon, compact mode cards with immediate Resume/Daily actions, bottom Play/Records/Collection/Settings navigation, previewable cosmetics and clearer unlocks, readable records, focused settings, framed classic board and icon tools, explicit cell context, trophy results, and IME Next/Done joining. Solo returns Home directly with saved progress; online rooms retain leave confirmation. No engine, persistence or transport code changed; schema1/protocol5 stay compatible.
