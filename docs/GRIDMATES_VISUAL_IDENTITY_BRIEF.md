@@ -17,6 +17,36 @@
 
 **Intended brand positioning:** *Clean puzzle-tech with friendly warmth*. The product should feel like a polished, credible mobile puzzle game: modern, inviting, thoughtful, distinctive, and more game-like than a plain utility, without clutter or aggression.
 
+## 1A. Owner refinement — puzzle-book spirit, rich-but-unobtrusive capability (2026-11-03)
+
+**Owner intent:** GridMates should evoke the *experience* of a small paperback crossword/Sudoku/variety puzzle book — sitting with a pencil, solving at your own pace, turning back to unfinished pages — while looking and functioning like a **modern mobile app**, not a literal paper/wood/pencil simulation. Nostalgia is about the **calm, accessible, satisfying flow**, not a retro skin or fewer capabilities.
+
+**Do not interpret "simple" as "bare-bones":** the owner explicitly wants a **well-made, dynamic player profile**, earned personalization and meaningful stat/achievement display. Solo and same-Wi-Fi co-op should be strong; a large online multiplayer service is **not a prerequisite**. Optional digital conveniences and original puzzle variations are encouraged if they improve play and don't overwhelm the core puzzle.
+
+### Refined experience hierarchy
+1. **Open and play quickly:** continue an unfinished puzzle, start a new one, browse Daily or collections, optional quick local co-op. Offline solo must remain excellent.
+2. **A satisfying puzzle journal:** accessible history of puzzles completed, personal records and milestones, not an engagement-pressure treadmill.
+3. **A profile worth keeping:** avatar/icon selection, optional backgrounds/themes, title/tagline, earned badge showcase, concise statistics and friendly achievements. Profile content can feel responsive/dynamic without becoming an RPG, monetization layer or social feed.
+4. **Optional friends-at-the-table play:** local two-phone co-op and casual versus, including carefully-tested unique modes; no public global lobbies needed to feel like a complete game.
+5. **Eventual progress portability:** investigate an optional Google Play Games / cloud save path so a new device does not erase user-earned identity and history. Do **not** promise this exists in current builds.
+
+### Preliminary profile sketch (not a screen implementation approval)
+- Top: chosen avatar + player display name + optional title.
+- Snapshot: solved total, personal-best time, favorite mode, selected streak metric *if humane and optional*.
+- Showcase: up to three favorite achievements/badges, with earned state and clear unlock descriptions.
+- Journal: Solo / Daily / Co-op / Versus histories, bests per difficulty and assisted vs unassisted distinctions where truthful.
+- Personalization: avatar icons, board themes, number styles and backgrounds, selected by the player; retain **existing v0.4+ local achievements / cosmetics / records** rather than replacing them.
+- Privacy: no invented global public ranking, follower counts, opponent data, online presence or synced profile before real infrastructure exists.
+
+### Future Google Play Games and backups — research note, not scope commitment
+- Google **Play Games Services v2** platform authentication is for Play Games functionality (such as platform achievements), not automatically an in-game identity or a backup for all local data. Identity/progress/inventory handling remains a separate product decision.
+- Google's **Saved Games** can be evaluated for cloud backup; it requires implementation, enabling in Play Console, and thoughtful sync/conflict handling. Alternatively compare an independently managed cloud save design; do not assume signing in alone saves everything.
+- If pursued, make restoration user-understandable and protect old-device local records, offline play, active saves, achievements, cosmetics and profile identity from accidental overwrite or duplicate rewards. Account-linking must not be forced merely to solve offline puzzles.
+- Play Games achievements are possible future optional integration, distinct from our current **in-game local achievements**.
+- Reference: [Google Play Games Services v2 platform authentication](https://developer.android.com/games/pgs/signin) and [Google Play Games cloud save](https://developer.android.com/games/pgs/savedgames).
+
+**Implementation instruction:** Preserve the current roadmap, QA gates and Android identifiers. Treat this as **product direction** to guide designs and future planning — not blanket authorization for a database, backend, online account system or unreviewed major UI rewrite.
+
 ## 2. Design principles
 
 1. **Smart:** clarity, structure, strong puzzle hierarchy, satisfying completion.
