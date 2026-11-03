@@ -67,6 +67,7 @@ class GameViewModel @JvmOverloads constructor(
             .let { if (it in listOf("EASY", "MEDIUM", "HARD")) it!! else "EASY" }))
     val state = _state.asStateFlow()
     private val generation = AtomicLong()
+    private val localStartLock = Any()
     @Volatile private var server: HostServer? = null
     @Volatile private var guest: GuestClient? = null
     @Volatile private var guestResume: SavedSession? = null
@@ -250,21 +251,27 @@ class GameViewModel @JvmOverloads constructor(
 
     fun solo(resume: Boolean) {
         if (_state.value.busy) return
+        val difficulty = _state.value.selectedDifficulty
         stopSoloClock()
         val current = closeRoom()
         _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = null, finishedSolo = null, snapshot = null, busy = true, selected = -1, pendingId = null, partnerCell = -1, message = null, hint = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
         viewModelScope.launch(workDispatcher) {
             try {
-                val saved = localPlayer.update { data ->
-                    if (resume && data.activeSolo != null) data
-                    else data.copy(activeSolo = PersonalPlay.newSolo(nextPuzzle(_state.value.selectedDifficulty), System.currentTimeMillis()))
-                }
                 if (generation.get() != current) return@launch
-                val progress = saved.activeSolo!!
-                _state.update { it.copy(page = Page.PLAY, role = SOLO, snapshot = progress.snapshot(),
-                    profile = saved, resumeSolo = true, status = RoomStatus(), connected = true,
-                    busy = false, soloElapsedMs = progress.elapsedMs, finishedSolo = progress.takeIf { p -> p.completed }) }
-                startSoloClock(progress)
+                val existing = localPlayer.current().activeSolo
+                val prepared = if (resume && existing != null) existing
+                    else PersonalPlay.newSolo(nextPuzzle(difficulty), System.currentTimeMillis())
+                synchronized(localStartLock) {
+                    if (generation.get() != current) return@launch
+                    val saved = localPlayer.update { data ->
+                        if (resume && data.activeSolo != null) data else data.copy(activeSolo = prepared)
+                    }
+                    val progress = saved.activeSolo!!
+                    _state.update { it.copy(page = Page.PLAY, role = SOLO, snapshot = progress.snapshot(),
+                        profile = saved, resumeSolo = true, status = RoomStatus(), connected = true,
+                        busy = false, soloElapsedMs = progress.elapsedMs, finishedSolo = progress.takeIf { p -> p.completed }) }
+                    startSoloClock(progress)
+                }
             } catch (e: Exception) {
                 if (generation.get() == current) _state.update { it.copy(page = Page.HOME, busy = false, message = "Could not save the solo puzzle: " + (e.message ?: "storage unavailable")) }
             }
@@ -288,17 +295,23 @@ class GameViewModel @JvmOverloads constructor(
             message = null, hint = null, chat = emptyList(), unreadChat = 0, chatVisible = false) }
         viewModelScope.launch(workDispatcher) {
             try {
-                val saved = localPlayer.update { data ->
-                    if (date != today && data.dailyProgress.none { it.date == date })
-                        error("That older daily puzzle is no longer saved.")
-                    DailyChallenge.open(data, date, System.currentTimeMillis())
-                }
                 if (generation.get() != current) return@launch
-                val progress = DailyChallenge.find(saved, date)!!
-                _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = date,
-                    snapshot = progress.snapshot(), profile = saved, status = RoomStatus(),
-                    connected = true, busy = false, soloElapsedMs = progress.elapsedMs, finishedSolo = progress.takeIf { p -> p.completed }) }
-                startSoloClock(progress)
+                val prepared = if (DailyChallenge.find(localPlayer.current(), date) == null) DailyChallenge.puzzle(date) else null
+                synchronized(localStartLock) {
+                    if (generation.get() != current) return@launch
+                    val saved = localPlayer.update { data ->
+                        if (date != today && data.dailyProgress.none { it.date == date })
+                            error("That older daily puzzle is no longer saved.")
+                        DailyChallenge.open(data, date, System.currentTimeMillis()) {
+                            checkNotNull(prepared) { "That daily save changed. Open it again." }
+                        }
+                    }
+                    val progress = DailyChallenge.find(saved, date)!!
+                    _state.update { it.copy(page = Page.PLAY, role = SOLO, dailyDate = date,
+                        snapshot = progress.snapshot(), profile = saved, status = RoomStatus(),
+                        connected = true, busy = false, soloElapsedMs = progress.elapsedMs, finishedSolo = progress.takeIf { p -> p.completed }) }
+                    startSoloClock(progress)
+                }
             } catch (e: Exception) {
                 if (generation.get() == current) _state.update { it.copy(page = Page.HOME,
                     busy = false, dailyDate = null, todayDate = DailyChallenge.today(),
@@ -315,11 +328,12 @@ class GameViewModel @JvmOverloads constructor(
         closeRoom()
         val saved = localPlayer.current()
         _state.update { it.copy(page = Page.PROFILE, profile = saved, resumeSolo = saved.activeSolo != null,
-            snapshot = null, pendingId = null, busy = false, role = SOLO, message = null) }
+            snapshot = null, pendingId = null, busy = false, role = SOLO, message = null,
+            saveIssue = localPlayer.recoveryWarning ?: it.saveIssue) }
     }
 
     private fun closeRoom(): Long {
-        val current = generation.incrementAndGet()
+        val current = synchronized(localStartLock) { generation.incrementAndGet() }
         guest?.close(); guest = null; server?.close(); server = null; discovery.stop()
         return current
     }
@@ -329,7 +343,7 @@ class GameViewModel @JvmOverloads constructor(
         closeRoom()
         val saved = localPlayer.current()
         _state.update { GameUiState(name = it.name, resumeHost = it.resumeHost,
-            resumeGuest = guestResume != null, saveIssue = it.saveIssue, profile = saved, localSaveBlocked = !localPlayer.canSave,
+            resumeGuest = guestResume != null, saveIssue = localPlayer.recoveryWarning ?: it.saveIssue, profile = saved, localSaveBlocked = !localPlayer.canSave,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
             uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback,
             autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty,

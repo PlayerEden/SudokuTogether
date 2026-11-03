@@ -29,12 +29,13 @@ object DailyChallenge {
         return rated.puzzle
     }
 
-    fun open(data: LocalPlayerData, date: String, nowMs: Long): LocalPlayerData {
+    fun open(data: LocalPlayerData, date: String, nowMs: Long, puzzleFactory: () -> Puzzle = { puzzle(date) }): LocalPlayerData {
+        require(LocalDate.parse(date).toString() == date) { "Date must be ISO yyyy-MM-dd" }
         if (data.dailyProgress.any { it.date == date }) return data
         require(data.dailyProgress.count { !it.solo.completed } < MAX_SAVED_DAYS) {
             "Too many unfinished Daily Challenges. Complete an older day before starting another."
         }
-        val progress = DailyProgress(date, PersonalPlay.newSolo(puzzle(date), nowMs))
+        val progress = DailyProgress(date, PersonalPlay.newSolo(puzzleFactory(), nowMs))
         // Keep every unfinished day: a rolling history limit must never silently
         // discard a player's in-progress puzzle. Trim only finished entries.
         return retain(data, data.dailyProgress + progress)

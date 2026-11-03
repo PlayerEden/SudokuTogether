@@ -19,45 +19,52 @@ class LocalPlayerStore(file: File) {
     private var data: LocalPlayerData
 
     init {
+        // AtomicFile.openRead reconciles/deletes sidecars, even before decoding.
+        // Inspect committed candidates without changing any source bytes first.
         val primary = runCatching { read(atomic) }.getOrNull()
-        if (primary != null) {
-            data = primary; canSave = true; recoveryWarning = null
-        } else {
-            val backup = runCatching { read(recovery) }.getOrNull()
-            if (backup != null) {
-                data = backup
-                canSave = !exists(atomic) || preserveDamagedPrimary()
-                needsRepair = true
-                recoveryWarning = if (canSave)
-                    "Your last healthy local backup was recovered. Recent changes may be missing."
-                else "Saved progress was recovered, but saving is paused because the damaged file could not be preserved. Check phone storage and reopen the app."
-            } else if (!exists(atomic) && !exists(recovery)) {
-                data = LocalPlayerData(); canSave = true; recoveryWarning = null
-            } else {
-                // Read-only placeholder for the recovery screen. It must never reach disk.
-                data = LocalPlayerData(); canSave = false
-                recoveryWarning = "Local progress could not be read. Your existing files are preserved and saving is paused. Reopen the app after checking phone storage."
+        val backup = runCatching { read(recovery) }.getOrNull()
+        val loaded = primary ?: backup
+        if (loaded != null) {
+            data = loaded
+            val preserve = buildList {
+                if (primary == null || hasSidecars(atomic)) addAll(sources(atomic))
+                if (backup == null || hasSidecars(recovery)) addAll(sources(recovery))
             }
+            canSave = preserveSources(preserve)
+            needsRepair = primary == null || preserve.isNotEmpty()
+            recoveryWarning = when {
+                !canSave -> "Saved progress was recovered, but saving is paused because the damaged file could not be preserved. Check phone storage and reopen the app."
+                primary == null -> "Your last healthy local backup was recovered. Recent changes may be missing."
+                hasSidecars(atomic) -> "An interrupted local save was recovered. Recent changes may be missing."
+                else -> null
+            }
+        } else if (!exists(atomic) && !exists(recovery)) {
+            data = LocalPlayerData(); canSave = true; recoveryWarning = null
+        } else {
+            // Read-only placeholder. No source file has been reconciled or reset.
+            data = LocalPlayerData(); canSave = false
+            recoveryWarning = "Local progress could not be read. Your existing files are preserved and saving is paused. Reopen the app after checking phone storage."
         }
     }
 
-    private fun exists(file: AtomicFile): Boolean =
-        listOf(file.baseFile, File(file.baseFile.path + ".bak"), File(file.baseFile.path + ".new")).any { it.exists() }
+    private fun sources(file: AtomicFile): List<File> =
+        listOf(file.baseFile, File(file.baseFile.path + ".bak"), File(file.baseFile.path + ".new")).filter { it.exists() }
+    private fun exists(file: AtomicFile): Boolean = sources(file).isNotEmpty()
+    private fun hasSidecars(file: AtomicFile): Boolean = sources(file).any { it != file.baseFile }
 
     private fun read(file: AtomicFile): LocalPlayerData? {
         if (!exists(file)) return null
-        if (!file.baseFile.exists() && !File(file.baseFile.path + ".bak").exists())
-            throw IOException("An interrupted profile write needs recovery.")
-        val text = file.openRead().use {
+        // Legacy .bak is the authoritative pre-transaction save; .new is never committed.
+        val legacyBackup = File(file.baseFile.path + ".bak")
+        val candidate = if (legacyBackup.exists()) legacyBackup else file.baseFile
+        val text = candidate.inputStream().use {
             if (it.channel.size() > 64L * 1024 * 1024) throw IOException("Local progress is too large to read safely.")
             it.readBytes().toString(Charsets.UTF_8)
         }
         return json.decodeFromString<LocalPlayerData>(text).also(::validate)
     }
 
-    private fun preserveDamagedPrimary(): Boolean = runCatching {
-        val sources = listOf(atomic.baseFile, File(atomic.baseFile.path + ".bak"), File(atomic.baseFile.path + ".new"))
-            .filter { it.exists() }
+    private fun preserveSources(sources: List<File>): Boolean = runCatching {
         sources.forEach { source ->
             if (!source.isFile || source.length() > 64L * 1024 * 1024) throw IOException("Cannot preserve damaged progress.")
             val archive = AtomicFile(File(source.path + ".unreadable-" + UUID.randomUUID()))
@@ -90,9 +97,16 @@ class LocalPlayerStore(file: File) {
         fun validateProgress(solo: SoloProgress) {
             require(solo.id.isNotBlank() && solo.cells.size == 81 && solo.puzzle.clues.size == 81 && solo.elapsedMs >= 0 && solo.moves >= 0)
             require(solo.puzzle.clues.all { it in 0..9 } && Sudoku.conflicts(solo.puzzle.clues).isEmpty())
-            require(solo.history.size <= 128 && solo.cells.all(::validCell) && solo.hintsUsed in 0..9999)
-            require(solo.history.all { undo -> undo.cell in 0..80 && validCell(undo.before) &&
-                undo.relatedBefore.size <= 20 && undo.relatedBefore.all { (i, previous) -> i in 0..80 && validCell(previous) } })
+            require(solo.history.size <= 128 && solo.cells.all { validCell(it) && it.revision <= solo.moves } && solo.hintsUsed in 0..9999)
+            require(solo.history.all { undo ->
+                undo.cell in 0..80 && solo.puzzle.clues[undo.cell] == 0 && validCell(undo.before) &&
+                    undo.before.revision < solo.moves && undo.relatedBefore.size <= 20 &&
+                    undo.relatedBefore.all { (i, previous) ->
+                        i in 0..80 && i != undo.cell && solo.puzzle.clues[i] == 0 &&
+                            SudokuAssistance.isPeer(i, undo.cell) && validCell(previous) &&
+                            previous.value == 0 && previous.revision < solo.moves
+                    }
+            })
             require(solo.puzzle.clues.indices.all { i -> solo.puzzle.clues[i] == 0 || solo.cells[i].value == solo.puzzle.clues[i] })
             require(solo.completed == Sudoku.complete(solo.puzzle, solo.cells.map { it.value }))
         }

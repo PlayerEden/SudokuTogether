@@ -141,6 +141,17 @@ class LocalPlayerStoreTest {
         }
     }
 
+    @Test fun legacyUndoWithoutRelatedPayloadCanStillBeUndoneAndSaved() {
+        val original = saved()
+        val text = Json.encodeToString(original)
+        assertFalse(text.contains("relatedBefore"))
+        val store = LocalPlayerStore(target().also { it.writeText(text) })
+        assertTrue(store.canSave)
+        store.update { data -> data.copy(activeSolo = PersonalPlay.edit(data.activeSolo!!, 0, Kind.UNDO,
+            elapsedMs = 1200L, nowMs = 2000L)!!) }
+        assertEquals(0, store.current().activeSolo!!.cells[0].notes)
+    }
+
     @Test fun oldProfilesWithoutNewFieldsKeepTheirIdentityAndCanStillSave() {
         val file = target().also { it.writeText("""{"schema":1,"playerId":"legacy-player","records":[]}""") }
         val store = LocalPlayerStore(file)
