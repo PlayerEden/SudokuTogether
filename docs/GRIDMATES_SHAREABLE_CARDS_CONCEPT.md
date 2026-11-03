@@ -66,6 +66,10 @@ Official Android docs:
 - [Share files securely with FileProvider](https://developer.android.com/training/secure-file-sharing)
 - [Android App Links](https://developer.android.com/training/app-links)
 
+### Distinguish old "share test APK" from future "share game"
+
+The current `MainActivity.shareApk()` sends the installed QA/development APK file. For an official Play release, **don't label that as the new user-facing Share Game action**: a verified Play Store link (once available) is safer and easier for ordinary players, while an APK export might remain only for deliberate sideload/dev QA scenarios. Keep **Share result/profile** (PNG export) and **Share game** (link) as separate actions so players understand what will be sent.
+
 ## 5. Privacy and fair competition
 
 - **Explicit sharing only.** No background uploading and no public user profiles required.
