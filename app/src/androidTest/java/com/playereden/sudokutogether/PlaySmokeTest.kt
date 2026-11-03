@@ -47,18 +47,18 @@ class PlaySmokeTest {
         compose.onNodeWithText("How to play Sudoku").assertExists()
         compose.onNodeWithText("Fill each row", substring = true).assertExists()
         compose.onNodeWithText("Got it").performClick()
-        compose.onNodeWithText("Co-op").performClick()
+        compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("Join a puzzle").assertExists()
-        compose.onNodeWithText("Versus", substring = false).performClick()
+        compose.onNodeWithText("Versus", substring = false).performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("Host a versus race").assertExists()
-        compose.onNodeWithText("Solo").performClick()
+        compose.onNodeWithText("Solo").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("New solo puzzle").assertExists()
     }
 
     @Test fun selectedDifficultyAppearsOnTheActualPuzzle() {
         compose.onNodeWithTag("difficulty_MEDIUM").assertExists().performClick()
         compose.onNodeWithTag("difficulty_MEDIUM").assertIsSelected()
-        compose.onNodeWithText("New solo puzzle").performClick()
+        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
@@ -70,7 +70,7 @@ class PlaySmokeTest {
     }
 
     @Test fun dailyChallengeDoesNotReplaceNormalSoloProgress() {
-        compose.onNodeWithText("New solo puzzle").performClick()
+        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
             compose.onNodeWithText("Start new").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
@@ -101,7 +101,7 @@ class PlaySmokeTest {
     }
 
     @Test fun soloHintsExplainOneDeductionWithoutPlayingIt() {
-        compose.onNodeWithText("New solo puzzle").performClick()
+        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
@@ -117,8 +117,8 @@ class PlaySmokeTest {
     }
 
     @Test fun hostedRoomHasCompactChatSheet() {
-        compose.onNodeWithText("Co-op").performClick()
-        compose.onNodeWithText("Host a puzzle").performClick()
+        compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Host a puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
@@ -132,7 +132,7 @@ class PlaySmokeTest {
     }
 
     @Test fun soloPlayCanResumeAndOpenLocalProfile() {
-        compose.onNodeWithText("New solo puzzle").performClick()
+        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
         // Another smoke test can leave a partially solved local puzzle.
         // Starting fresh asks for confirmation so we don't discard progress.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
@@ -167,8 +167,8 @@ class PlaySmokeTest {
     }
 
     @Test fun hostCanEnterUndoAndSharePencilMarksWithoutInternet() {
-        compose.onNodeWithText("Co-op").performClick()
-        compose.onNodeWithText("Host a puzzle").assertExists().performClick()
+        compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Host a puzzle").performScrollTo().assertIsDisplayed().performClick()
         // A prior emulator test may leave a saved host room on this device.
         // The expected confirmation is part of the real user flow.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
