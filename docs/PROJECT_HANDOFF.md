@@ -1,12 +1,20 @@
-# Sudoku Together — CURRENT PROJECT HANDOFF
+# GridMates: Sudoku — CURRENT PROJECT HANDOFF
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
-> Last reconciled: **2026-11-03 America/Chicago**.
-> Game priority: **finish Sudoku Together before building any other game**.
+> Last reconciled: **2026-11-03 UTC**.
+> Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
+
+## v0.11A — latest GridMates branding/copy candidate
+
+Continue from [`feat/gridmates-brand-copy`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-brand-copy), based on verified v0.10D. The newer save/visual work and the planning documents on development are both carried forward. Do not restart from the older promoted v0.10B app or merge stacked drafts out of order.
+
+The owner approved **GridMates: Sudoku**, then authorized branding and concise game UI. Home now prioritizes playing; redundant slogans, explanations and development notes are removed. App/version/local-storage information and APK sharing are in Settings → About. Connection help is on demand. Existing warnings, result fairness, classic rules, callbacks, storage and LAN remain intact. Three original marks are presented in native screens; connected tiles is provisional until owner selection. The current palette is retained for comparison. Profile expansion follows branding selection; Crossword follows Sudoku completion.
+
+Version17 / `0.11.0-dev1-qa`; min26/target35, `.qa`, schema1/protocol5, v0.10D QA certificate remain. [Draft PR26](https://github.com/PlayerEden/SudokuTogether/pull/26); [QA checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11a-gridmates-qa-green); [exact QA and limitations](V0.11A_GRIDMATES_QA.md); [work log](V0.11A_WORK_LOG.md). 87 JVM tests and31 accepted API26 native cases passed; lint0 errors/20 warnings. The exact original16→17 APK update preserved the seeded whole-profile hash, active puzzle/note, identity and preferences. The upgrade fixture does not independently demonstrate a nonempty completed-history upgrade. Extreme-text word wrapping, physical LAN, newer Android, tablets and TalkBack remain open. Main/development are not promoted and repository/application identifiers are not renamed.
 
 ## v0.10D — latest native visual/convenience pass
 

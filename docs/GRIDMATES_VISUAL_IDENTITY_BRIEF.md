@@ -193,3 +193,7 @@ Avoid combat language such as “Crush your enemies” or overdone meme/gamifica
 - Whether to rename the existing GitHub repository, and whether any Android identifiers should ever change (separate migration plan required).
 
 **Decision record convention:** Update this document as the user approves/rejects specific artwork and tokens. Distinguish **proposed**, **approved**, **implemented**, and **verified**. Do not equate this brief with shipping work.
+
+## Implementation comparison — November3
+
+The owner authorized proceeding with the identity and concise UI. The v0.11A candidate carries forward the actual v0.10D app, not the older promoted source. Original connected-tiles, tile-dot G and shared-window vectors are shown on the same production Home layout. The current cream/forest/gold palette is intentionally held constant to judge the marks. These are proposals; name approval does not lock a logo or the earlier blue/teal palette. See V0.11A_GRIDMATES_QA.md.

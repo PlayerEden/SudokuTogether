@@ -2,7 +2,7 @@
 **Decision recorded:** 2026-11-03  
 **Status:** User-approved creative naming decision; implementation, trademark/store clearance and launch assets pending  
 **Canonical game repo:** https://github.com/PlayerEden/SudokuTogether  
-**Working app source:** `development`
+**Latest implementation candidate:** `feat/gridmates-brand-copy`, based on verified v0.10D; `development` remains the older promoted baseline.
 
 ## 1. Names locked by the project owner
 
@@ -89,3 +89,7 @@ Naming choice is approved; **no app code or repository rename is authorized by t
 - **GitHub:** durable approved decisions and explicit proposed-vs-built distinctions, so context does not depend on a particular chat remaining open.
 
 If the owner changes a design decision, update this document and link the implementation work to the revised decision. Preserve prior milestones/checkpoints and do not represent future plans as features already shipped.
+
+## November3 implementation update
+
+The owner subsequently authorized the branding/copy implementation and emphasized concise, credible mobile-game UI. The approved GridMates title is applied in v0.11A. Three original native/vector logo concepts are available; connected tiles is provisional, and final artwork approval remains open. The accepted cream/forest/gold presentation is retained while comparing marks. See V0.11A_GRIDMATES_QA.md for actual evidence and limits. The current app does not advertise future account/backup capabilities.

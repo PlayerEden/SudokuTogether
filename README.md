@@ -1,8 +1,12 @@
-# Sudoku Together
+# GridMates: Sudoku
 
-[v0.10D visual refresh — draft PR25](https://github.com/PlayerEden/SudokuTogether/pull/25)
+[v0.11A GridMates identity and concise UI — draft PR26](https://github.com/PlayerEden/SudokuTogether/pull/26)
 
-> **Latest isolated work: v0.10D Visual QA**, on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on the verified v0.10C source. Read the [living handoff](docs/PROJECT_HANDOFF.md), [visual QA audit](docs/V0.10D_VISUAL_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development remains the previous promoted v0.10B baseline; main is the documentation/manual-CI entrypoint. Prior checkpoints are preserved.
+> **Latest work: GridMates v0.11A**, on [`feat/gridmates-brand-copy`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-brand-copy). [Brand/copy audit](docs/V0.11A_GRIDMATES_QA.md). The approved public name is GridMates: Sudoku; logo concepts remain provisional. The earlier v0.10D source is preserved below.
+
+> **v0.11A QA:** version17 / `0.11.0-dev1-qa`; 87 JVM tests and 31 accepted API26 native cases passed, lint0 errors/20 warnings. The exact APK updated v0.10D while preserving the seeded profile, active puzzle/note, identity and preferences. [QA checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11a-gridmates-qa-green). Two-phone/device release gates remain open.
+
+> **Previous isolated work: v0.10D Visual QA**, on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on the verified v0.10C source. Read the [living handoff](docs/PROJECT_HANDOFF.md), [visual QA audit](docs/V0.10D_VISUAL_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development remains the previous promoted v0.10B baseline; main is the documentation/manual-CI entrypoint. Prior checkpoints are preserved.
 
 > **Changes:** a cohesive native game theme and icon; immediate Solo Resume and Daily access; Play/Records/Collection/Settings navigation; cosmetic previews; framed grid, clearer controls, adaptive landscape/large-text layouts, improved results and Join keyboard flow. QA `0.10.0-dev4-qa`  / code16. The v0.10C save integrity work remains intact. 87 JVM tests and 42 API26 native cases passed; lint 0 errors/18 warnings. Both independent-review regressions are GREEN after observed RED fixtures. Physical two-phone testing remains deferred; this is not a Play release.
 
@@ -10,7 +14,7 @@
 
 A native Android Sudoku game built for **solo, local Wi-Fi co-op, and head-to-head racing**. Co-op and versus use two phones: one hosts, the other joins on the same home Wi-Fi. Solo and local personal records work offline. A cloud account, internet rooms, and synced leaderboards are **not** included.
 
-The name is provisional. This project has its own implementation and original generated puzzles; an unrelated app already uses the same public title.
+GridMates: Sudoku is the approved public name. The logo is provisional; see the [identity brief](docs/GRIDMATES_VISUAL_IDENTITY_BRIEF.md). The game uses its own implementation and original generated puzzles.
 
 ## v0.4 experimental: player badges and earned milestones
 

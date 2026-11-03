@@ -32,9 +32,9 @@
 
 **Interfaces:** ProfileScreen gains `share: () -> Unit`; Settings consumes it. `AboutGame(onDismiss: () -> Unit, share: () -> Unit)` displays app/version/storage information. Existing GameActions stay unchanged.
 
-- [ ] Run baseline JVM/native convenience checks and observe the new About-sharing test fail because the destination is absent.
-- [ ] Apply concise copy and the name; move app information/share to About and connection guidance behind its help action. Keep safety and fairness facts.
-- [ ] Pass the About-sharing regression and existing convenience/gameplay/keyboard checks; visually inspect native screens and commit.
+- [x] Run baseline JVM/native convenience checks and observe the new About-sharing test fail because the destination is absent.
+- [x] Apply concise copy and the name; move app information/share to About and connection guidance behind its help action. Keep safety and fairness facts.
+- [x] Pass the About-sharing regression and existing convenience/gameplay/keyboard checks; visually inspect native screens and commit.
 
 ### Task2: Original vector concepts and final acceptance
 
@@ -42,9 +42,9 @@
 
 **Interfaces:** `GridMatesMark(modifier: Modifier, style: GridMatesMarkStyle)` draws original vectors. HomeScreen consumes a defaulted mark style so native previews can render each proposed identity without a development selector in the product.
 
-- [ ] Draw three original concepts and show them in the production Home layout, with compact monochrome/icon samples. Connected tiles is the provisional default.
-- [ ] Run JVM/lint/APK/test assembly, selected native acceptance, an actual v0.10D upgrade check and inspect the screenshot comparisons. Pure copy/artwork receives visual assessment, not tests that mirror strings.
-- [ ] Obtain one fresh read-only whole-branch review; resolve material findings with targeted regressions and document decisions/limits.
+- [x] Draw three original concepts and show them in the production Home layout, with compact monochrome/icon samples. Connected tiles is the provisional default.
+- [x] Run JVM/lint/APK/test assembly, selected native acceptance, an actual v0.10D upgrade check and inspect the screenshot comparisons. Pure copy/artwork receives visual assessment, not tests that mirror strings.
+- [x] Obtain one fresh read-only whole-branch review; resolve material findings with targeted regressions and document decisions/limits.
 - [ ] Preserve source and docs in a new draft stacked on v0.10D, retain a checkpoint, and deliver the signed QA APK and visual proposals for the owner's choice.
 
 Preflight: ProfileScreen's share callback is passed from SudokuApp's existing `share`; no ViewModel contract changes. Home's defaulted mark style affects presentation only. No data/interface conflict found.

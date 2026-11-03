@@ -37,6 +37,7 @@ class GameVisualAuditTest {
         originalName?.let { context.getSharedPreferences("settings", 0).edit().putString("name", it).commit() }
     }
     private fun save(name: String) {
+        compose.waitForIdle()
         val file = File(context.getExternalFilesDir("screenshots"), "v010d-$prefix-$name.png")
         NativeWindowCapture.save(compose.activity, file)
         println("SUDOKU_SCREENSHOT: ${file.absolutePath}")

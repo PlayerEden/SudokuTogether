@@ -35,3 +35,7 @@ First validate Host/Join and reconnect on the two actual phones. Then refine rea
 ## v0.10D private debug QA identity
 
 The presentation milestone keeps the `.qa` package and protocol5/schema1. To build future QA updates, use the separately saved `SudokuTogether-v0.10D-private-QA-signing.zip` debug keystore and verify public certificate SHA-256 `949731a60cb187405282efc8233d6e68ab5b46e9bf6765f70aa2b60dcc543b2c`. Restore its debug.keystore to the build user's Android debug-keystore location before assembly. Do not commit or attach that private backup to a public PR/evidence ZIP. This is separate from production signing and differs from older QA certificates, including v0.10C. A signing conflict must not be bypassed by uninstalling a progress-bearing app.
+
+## v0.11A GridMates QA updates
+
+The GridMates display-name change keeps `com.playereden.sudokutogether.qa` and reuses the v0.10D debug certificate above. The delivered version17 / `0.11.0-dev1-qa` APK passed an actual in-place update from the original version16 APK with saved puzzle/note, identity and preferences retained. Use the existing private v0.10D backup for subsequent QA updates; do not generate a replacement key. No new signing backup is needed for this pass. The public name does not change the application ID, schema1, protocol5 or private-file locations. See [the exact audit and coverage limits](V0.11A_GRIDMATES_QA.md).
