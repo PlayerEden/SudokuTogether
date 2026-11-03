@@ -1,4 +1,4 @@
-# Sudoku Together
+# GridMates: Sudoku
 
 > **GitHub is the development backup.** Start with the [living handoff](docs/PROJECT_HANDOFF.md), [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md) and [v0.10B QA audit](docs/V0.10B_DAILY_HISTORY_QA.md). Full app source is on `development`; default `main` is still a docs and manual-CI entrypoint. Known-green rollback: [`checkpoint/v0.10b-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10b-qa-green).
 
@@ -8,7 +8,7 @@
 
 A native Android Sudoku game built for **solo, local Wi-Fi co-op, and head-to-head racing**. Co-op and versus use two phones: one hosts, the other joins on the same home Wi-Fi. Solo and local personal records work offline. A cloud account, internet rooms, and synced leaderboards are **not** included.
 
-The name is provisional. This project has its own implementation and original generated puzzles; an unrelated app already uses the same public title.
+**Approved public-facing title (2026-11-03): GridMates: Sudoku**, the first of a planned **GridMates** puzzle series; **GridMates: Crossword** is next. [Read the brand and series plan](docs/GRIDMATES_BRAND_AND_SERIES.md). The source repository, Android app identifiers and existing QA artifacts still use the former development name *Sudoku Together* until a safe, tested rebrand pass. Store/trademark clearance remains pending.
 
 ## v0.4 experimental: player badges and earned milestones
 

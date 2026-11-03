@@ -1,9 +1,11 @@
-# Sudoku Together — CURRENT PROJECT HANDOFF
+# GridMates: Sudoku (formerly Sudoku Together) — CURRENT PROJECT HANDOFF
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
+> **Approved public game name (2026-11-03): GridMates: Sudoku**, first entry in the **GridMates** puzzle-game series. **GridMates: Crossword** is the next planned game; further series games are possibilities. [Brand decision and implementation guardrails](GRIDMATES_BRAND_AND_SERIES.md). This is a naming/strategy approval, not a claim that app assets, package IDs or the store have already been renamed.
+>
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
-> Game priority: **finish Sudoku Together before building any other game**.
+> Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
