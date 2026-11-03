@@ -78,6 +78,14 @@ The owner raised a *tentative* possibility of a **broadcast/public global leader
 
 **Current decision:** Preserve as an *optional future research note*. Priorities remain core puzzle experience, local game reliability, helpful hints, profile enjoyment, privacy and Google Play release testing.
 
+## 1D. Shareable accomplishments — exploring a bridge beyond nearby play (2026-11-03)
+
+The owner is **enthusiastic about opt-in shareable GridMates cards** for personal profiles, earned cosmetics, completed Solo/Daily puzzles, and cooperative/versus match results. The intention is to share little moments with friends/family **even when not physically together**, through existing messages and social media, while also generating organic word-of-mouth awareness of the game.
+
+Use existing Android Sharesheet and on-device image generation: **no required GridMates public accounts, servers, social network or automatic posting**. Keep stats honest and give players control of names and partner details; distinguish assisted/unassisted results and avoid Daily solution spoilers. A future verified Play Store download link on the card/share text is possible **only after the app is actually published**. A global online leaderboard remains a separate undecided idea.
+
+**Status:** strongly liked concept, **not yet final feature scope or committed launch milestone**. See [Shareable Cards Concept](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md) for phased exploration and Work-chat guardrails.
+
 ## 2. Shared GridMates identity
 
 **Across the series:**
