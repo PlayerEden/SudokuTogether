@@ -8,6 +8,8 @@
 >
 > **Approved launch business model (2026-11-03):** free-to-install, *rare* between-puzzle full-screen interstitial ads, and optional one-time Remove Ads purchase. No ads during puzzles, hints or multiplayer interruptions; no paid app download. Exact frequency/price and implementation still pending. [Monetization & Play Testing Plan](GRIDMATES_MONETIZATION_AND_PLAY_TESTING_PLAN.md). **First-time Play developer account setup and release/testing walkthrough:** [Google Play From-Scratch Launch Guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md) (owner has no account yet). This is product direction, not evidence that AdMob or Billing exists.
 >
+> **Exploration:** Shareable completion/profile/co-op/versus cards are now a user-favored concept, using on-device image generation + Android Sharesheet, without mandatory accounts or server. See [Shareable Cards Concept](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md). Privacy, spoiler safety, honest results and optional organic store discovery are essential. Not yet implementation approval or a v1 gate.
+>
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
 > Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
