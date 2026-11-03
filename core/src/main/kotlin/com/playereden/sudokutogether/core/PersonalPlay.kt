@@ -72,7 +72,26 @@ data class SoloRecordSummary(
     val bestAssistedMs: Long?
 )
 
+/** Accepted progress remains available even when archive retention prunes its board. */
+data class LocalPlayUpdate(val data: LocalPlayerData, val progress: SoloProgress?)
+
 object PersonalPlay {
+    fun applyEdit(data: LocalPlayerData, dailyDate: String?, operation: Operation,
+                  elapsedMs: Long, nowMs: Long, autoCleanNotes: Boolean = false): LocalPlayUpdate {
+        val current = if (dailyDate == null) data.activeSolo else DailyChallenge.find(data, dailyDate)
+        if (current == null || current.id != operation.sessionId || current.id != operation.epoch ||
+            operation.cell !in 0..80 || current.cells[operation.cell].revision != operation.expectedCellRevision)
+            return LocalPlayUpdate(data, null)
+        val next = edit(current, operation.cell, operation.kind, operation.number, operation.enabled,
+            elapsedMs, nowMs, autoCleanNotes) ?: return LocalPlayUpdate(data, current)
+        val saved = when {
+            dailyDate != null && next.completed -> DailyChallenge.complete(data, dailyDate, next)
+            dailyDate != null -> DailyChallenge.update(data, dailyDate, next)
+            next.completed -> addCompletedSolo(data, next)
+            else -> data.copy(activeSolo = next)
+        }
+        return LocalPlayUpdate(saved, next)
+    }
     /** difficulty=null means all solo levels, including pre-difficulty legacy games. */
     fun soloSummary(records: List<GameRecord>, difficulty: String? = null): SoloRecordSummary {
         val solved = records.distinctBy { it.id }.filter {

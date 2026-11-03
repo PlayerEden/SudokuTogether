@@ -31,14 +31,19 @@ class NativeScreenshotTest {
     }
 
     @Test fun capturesHomeModesAndSelectedPuzzleForVisualReview() {
+        EmulatorSystemDialogs.dismiss()
         compose.waitUntil(20000) {
-            compose.onAllNodesWithText("New solo puzzle").fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodes(hasText("New solo puzzle") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.waitUntil(10000) {
+            if (!compose.activity.hasWindowFocus()) EmulatorSystemDialogs.dismiss()
+            compose.activity.hasWindowFocus()
         }
         save("01-home.png")
-        compose.onNodeWithText("Co-op").performClick()
+        compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
         save("02-coop-menu.png")
-        compose.onNodeWithText("Solo").performClick()
-        compose.onNodeWithText("New solo puzzle").performClick()
+        compose.onNodeWithText("Solo").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }

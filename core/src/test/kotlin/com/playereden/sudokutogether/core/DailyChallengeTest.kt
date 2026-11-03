@@ -9,6 +9,35 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class DailyChallengeTest {
+    @Test fun completingAnOldDayPrunesItsBoardButKeepsItsRecordAndIsIdempotent() {
+        val old = PersonalPlay.newSolo(fixture().copy(difficulty = "EASY"), 1000L)
+        val completed = old.copy(cells = solution.map { Cell(it) }, finishedAtMs = 5000L, elapsedMs = 4000L)
+        val recent = (1..31).map { day -> DailyProgress("2026-10-${day.toString().padStart(2, '0')}",
+            completed.copy(id = "recent-$day")) }
+        val initial = LocalPlayerData(dailyProgress = recent + DailyProgress("2026-09-01", old),
+            records = listOf(GameRecord("previous-record", SOLO, "SOLVED", "previous", 1000L, 1, 2000L)))
+        val saved = DailyChallenge.complete(initial, "2026-09-01", completed)
+        assertEquals(31, saved.dailyProgress.size)
+        assertNull(DailyChallenge.find(saved, "2026-09-01"))
+        assertEquals(2, saved.records.size)
+        assertTrue(saved.records.any { it.id == "previous-record" })
+        assertEquals("2026-09-01", saved.records.last().dailyDate)
+        assertEquals(saved, DailyChallenge.complete(saved, "2026-09-01", completed))
+    }
+
+    @Test fun completingANewDayKeepsEveryUnfinishedBoardAndOnly31CompletedReviews() {
+        val progress = PersonalPlay.newSolo(fixture().copy(difficulty = "EASY"), 1000L)
+        val completed = progress.copy(cells = solution.map { Cell(it) }, finishedAtMs = 5000L)
+        val recent = (1..31).map { day -> DailyProgress("2026-10-${day.toString().padStart(2, '0')}", completed.copy(id = "old-$day")) }
+        val initial = LocalPlayerData(dailyProgress = recent + DailyProgress("2026-09-01", progress.copy(id = "unfinished")) +
+            DailyProgress("2026-11-02", progress))
+        val saved = DailyChallenge.complete(initial, "2026-11-02", completed)
+        assertEquals(32, saved.dailyProgress.size)
+        assertNotNull(DailyChallenge.find(saved, "2026-09-01"))
+        assertNull(DailyChallenge.find(saved, "2026-10-01"))
+        assertNotNull(DailyChallenge.find(saved, "2026-11-02"))
+    }
+
     @Test fun sameLocalDateAlwaysHasExactlyOneSameUniquelySolvableEasyPuzzle() {
         for (day in listOf("2026-10-27", "2026-10-28", "2026-12-31", "2027-01-01")) {
             val first = DailyChallenge.puzzle(day)

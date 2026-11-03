@@ -15,7 +15,7 @@ object DailyChallenge {
     private const val SALT = "SudokuTogether/daily-v1/"
 
     fun today(zone: ZoneId = ZoneId.systemDefault(), instant: java.time.Instant = java.time.Instant.now()): String =
-        LocalDate.ofInstant(instant, zone).toString()
+        instant.atZone(zone).toLocalDate().toString()
 
     fun puzzle(date: String): Puzzle {
         // Exact ISO parsing makes date identity explicit, unambiguous and testable.
@@ -29,15 +29,19 @@ object DailyChallenge {
         return rated.puzzle
     }
 
-    fun open(data: LocalPlayerData, date: String, nowMs: Long): LocalPlayerData {
+    fun open(data: LocalPlayerData, date: String, nowMs: Long, puzzleFactory: () -> Puzzle = { puzzle(date) }): LocalPlayerData {
+        require(LocalDate.parse(date).toString() == date) { "Date must be ISO yyyy-MM-dd" }
         if (data.dailyProgress.any { it.date == date }) return data
         require(data.dailyProgress.count { !it.solo.completed } < MAX_SAVED_DAYS) {
             "Too many unfinished Daily Challenges. Complete an older day before starting another."
         }
-        val progress = DailyProgress(date, PersonalPlay.newSolo(puzzle(date), nowMs))
+        val progress = DailyProgress(date, PersonalPlay.newSolo(puzzleFactory(), nowMs))
         // Keep every unfinished day: a rolling history limit must never silently
         // discard a player's in-progress puzzle. Trim only finished entries.
-        val all = data.dailyProgress + progress
+        return retain(data, data.dailyProgress + progress)
+    }
+
+    private fun retain(data: LocalPlayerData, all: List<DailyProgress>): LocalPlayerData {
         val unfinished = all.filterNot { it.solo.completed }
         require(unfinished.size <= MAX_SAVED_DAYS) {
             "Too many unfinished Daily Challenges. Existing progress was not replaced."
@@ -53,15 +57,18 @@ object DailyChallenge {
 
     fun update(data: LocalPlayerData, date: String, progress: SoloProgress): LocalPlayerData {
         require(data.dailyProgress.any { it.date == date && it.solo.id == progress.id })
-        return data.copy(dailyProgress = data.dailyProgress.map {
+        return retain(data, data.dailyProgress.map {
             if (it.date == date) it.copy(solo = progress) else it
         })
     }
 
     fun complete(data: LocalPlayerData, date: String, progress: SoloProgress): LocalPlayerData {
         require(progress.completed && Sudoku.complete(progress.puzzle, progress.cells.map { it.value }))
+        val existing = data.records.firstOrNull { it.id == progress.id }
+        require(existing == null || (existing.mode == DAILY && existing.dailyDate == date))
+        if (existing != null && data.dailyProgress.none { it.date == date && it.solo.id == progress.id }) return data
         val updated = update(data, date, progress)
-        if (updated.records.any { it.id == progress.id }) return updated
+        if (existing != null) return updated
         val record = GameRecord(progress.id, DAILY, "SOLVED", progress.puzzle.id,
             progress.elapsedMs, progress.moves, progress.finishedAtMs!!,
             progress.puzzle.difficulty, assisted = progress.hintsUsed > 0 || progress.usedNoteAssist,

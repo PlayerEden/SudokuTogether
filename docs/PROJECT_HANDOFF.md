@@ -2,17 +2,29 @@
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
-> Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
+> Last reconciled: **2026-11-02 America/Chicago**.
 > Game priority: **finish Sudoku Together before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
 
+## v0.10C takeover — latest isolated source
+
+Continue from [`fix/v0.10c-save-integrity-polish`](https://github.com/PlayerEden/SudokuTogether/tree/fix/v0.10c-save-integrity-polish), [draft PR23 into development](https://github.com/PlayerEden/SudokuTogether/pull/23). Base: development a4448bf; application fixes at c80faea. Keep the previous v0.10B checkpoint. Do not restart obsolete v0.2 branches or merge the older prune-only experiment.
+
+QA rollback checkpoint: [`checkpoint/v0.10c-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10c-qa-green). The earlier v0.10B checkpoint remains intact.
+
+Final QA: 85 core + 2 JVM tests passed;31 Android8/API26 cases and 1 persisted-race repeat passed, with font/orientation scenarios isolated into separate instrumentation processes. APK and 14-image evidence ZIP are saved in chat. Lint: 0 errors / 13 warnings. The API35 software-emulator boot timed out before tests; physical two-phone acceptance stays deferred.
+
+This pass implements verified profile recovery/commit checks and blocked-save protection, structural Undo validation, safe immediate Daily pruning with retained finish state, Android8 date compatibility, adaptive native History/results and isolated timer recomposition. It also rejects superseded local starts before persistence and preserves recovery explanations after hosting. Read the [v0.10C audit](V0.10C_SAVE_INTEGRITY_QA.md) and [work log](V0.10C_WORK_LOG.md) for exact current checks, artifact fingerprint, review decisions and limits.
+
+QA version 0.10.0-dev3-qa/code 15, `.qa`, min26/target35; schema 1/player IDs/LAN 5 remain compatible. Debug signing can differ from an existing QA APK; do not uninstall a progress-bearing app to bypass a mismatch. Next is deliberate integration of this draft, then v0.11 signing/update and brand/Play foundations. Two-phone acceptance stays deferred, with Split Clues, larger boards and framework extraction later. The sections below preserve the earlier promoted v0.10B baseline; the latest audit takes precedence for this branch.
+
 ## 1. Where the real project lives
 
 - Repository: https://github.com/PlayerEden/SudokuTogether
 - **Development/source branch:** [`development`](https://github.com/PlayerEden/SudokuTogether/tree/development) — full native Android source, game rules, tests, Gradle wrapper, previous docs. Use this as the starting point for the **next** development slice, and update it when a new slice is verified.
-- **Latest milestone feature branch:** [`feat/v0.10b-daily-history-results`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10b-daily-history-results) — Daily History, real completion summaries, safe unfinished-puzzle retention, merged [PR #22](https://github.com/PlayerEden/SudokuTogether/pull/22) (source promoted into `development`). Previous v0.10A implementation [PR #21](https://github.com/PlayerEden/SudokuTogether/pull/21).
+- **Previous promoted milestone feature branch:** [`feat/v0.10b-daily-history-results`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10b-daily-history-results) — Daily History, real completion summaries, safe unfinished-puzzle retention, merged [PR #22](https://github.com/PlayerEden/SudokuTogether/pull/22) (source promoted into `development`). Previous v0.10A implementation [PR #21](https://github.com/PlayerEden/SudokuTogether/pull/21).
 - **Latest known-green source checkpoint:** [`checkpoint/v0.10b-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10b-qa-green) at exact code commit `83df54621bb2713917b518ee8ccfed4c25511a80`. Earlier verified checkpoints: [`v0.10A`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10a-qa-green), [`v0.8E`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8e-qa-green), [`v0.8D`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8d-qa-green) and [`v0.8C`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8c-qa-green). Never force-push/delete these.
 - **IMPORTANT:** default [`main`](https://github.com/PlayerEden/SudokuTogether/tree/main) is still a **small documentation/workflow skeleton**, not the full working Android project. It links to this handoff. **Do not conclude the game is missing because you checked only `main`.**
 - GitHub PRs #1–#22 include an older stacked feature history (many still drafts), while **PR #22 has been merged into `development`**. Do not merge or delete earlier stacked branches out of order. Do not independently merge them out of order or delete their branches without first planning and verifying consolidation. The eventual `main` promotion is tracked in [repository issue #18](https://github.com/PlayerEden/SudokuTogether/issues/18); it must not delay the next playable feature.
@@ -52,9 +64,9 @@
 - **Still unverified physically:** user's actual phone Daily History/complete-game results, save upgrade, local midnight transition, narrow screen, TalkBack and large fonts. Two-phone Wi-Fi testing is **explicitly deferred by user**, not passed or waived. Never declare Split Clues/network release ready before real-device LAN acceptance.
 - Specific audit: [`V0.10B_DAILY_HISTORY_QA.md`](V0.10B_DAILY_HISTORY_QA.md).
 
-## 4. Exact next task — user-approved development order
+## 4. Previous development order — v0.10C now recorded above
 
-**Next: v0.10C / v0.11 — restrained, single-phone improvements toward launch readiness**, and preserve physical multiplayer gate:
+**Previous order (superseded by the current v0.10C audit above):** restrained improvements toward launch readiness, preserving the physical multiplayer gate:
 
 1. Review actual Daily History and Solo/Daily completed-game screens, including large-font/landscape accessibility and sensible touch targets. Capture actual on-device screenshots where possible.
 2. Assess measured offline replayability: meaningful daily achievements or streak presentation that never pressures users, misreports missed days, or pretends online/global competition. Protect existing saves and avoid pointless gamification.
