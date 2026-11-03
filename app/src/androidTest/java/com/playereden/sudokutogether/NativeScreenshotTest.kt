@@ -43,6 +43,7 @@ class NativeScreenshotTest {
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
         save("02-coop-menu.png")
         compose.onNodeWithText("Solo").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithTag("difficulty_EASY").performScrollTo().performClick()
         compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()

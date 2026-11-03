@@ -1,8 +1,10 @@
 # Sudoku Together
 
-> **Latest isolated work: v0.10C QA**, on [`fix/v0.10c-save-integrity-polish`](https://github.com/PlayerEden/SudokuTogether/tree/fix/v0.10c-save-integrity-polish), [draft PR23](https://github.com/PlayerEden/SudokuTogether/pull/23). Read the [living handoff](docs/PROJECT_HANDOFF.md), [current audit](docs/V0.10C_SAVE_INTEGRITY_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development holds the previous promoted v0.10B milestone; default main remains the docs/manual-CI entrypoint. The prior [v0.10B rollback checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10b-qa-green) remains available.
+[v0.10D visual refresh — draft PR25](https://github.com/PlayerEden/SudokuTogether/pull/25)
 
-> **Changes:** verified local recovery and write protection, safe Daily retention with exact old-day finish details, Android8 startup repair, adaptive large-text History/results and a localized Solo timer. QA `0.10.0-dev3-qa` / code 15. Verified:85 core + 2 JVM tests, 31 Android8 cases plus a saved-race repeat, with configuration-test isolation. Lint has 0 errors / 13 warnings. Exact evidence and signing limits are in the audit. Physical two-phone testing remains deferred; Split Clues remains later work.
+> **Latest isolated work: v0.10D Visual QA**, on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on the verified v0.10C source. Read the [living handoff](docs/PROJECT_HANDOFF.md), [visual QA audit](docs/V0.10D_VISUAL_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development remains the previous promoted v0.10B baseline; main is the documentation/manual-CI entrypoint. Prior checkpoints are preserved.
+
+> **Changes:** a cohesive native game theme and icon; immediate Solo Resume and Daily access; Play/Records/Collection/Settings navigation; cosmetic previews; framed grid, clearer controls, adaptive landscape/large-text layouts, improved results and Join keyboard flow. QA `0.10.0-dev4-qa`  / code16. The v0.10C save integrity work remains intact. 87 JVM tests and 42 API26 native cases passed; lint 0 errors/18 warnings. Both independent-review regressions are GREEN after observed RED fixtures. Physical two-phone testing remains deferred; this is not a Play release.
 
 > **Historical notes below** document the original v0.1–v0.4 development stages, including test-status statements from those stages. They are preserved for traceability, not the current build status.
 
@@ -53,7 +55,7 @@ Branch: `feat/solo-profiles-race-v0.2` (based on the existing v0.1 co-op branch)
 
 1. Install the same APK on both Android phones (Android 8 or newer). If prompted, allow installation from the app opening the APK. You can share the APK file directly; your partner does not need access to this private repository.
 2. Connect both phones to the same home Wi-Fi. Guest networks with device isolation can block connections.
-3. Choose **Host a puzzle** on one phone. On the other, choose **Join a puzzle**, select the nearby room, and enter the code displayed by the host.
+3. Choose **Co-op**, then **Host a puzzle** on one phone. On the other, choose **Join a puzzle**, select the nearby room, and enter the code displayed by the host.
 4. If the room is not discovered, enter the complete address displayed by the host, including its port, then enter the room code. A code alone does not locate a phone.
 5. Both people can enter numbers and shared notes freely. Starting clues stay fixed. Duplicate numbers are highlighted; wrong guesses do not end the game.
 6. Keep both apps visible while playing. If either phone leaves the game, entries pause. Return to the apps, or use **Reconnect** and select the host's room again. The host can reopen **Resume your puzzle** after a restart.

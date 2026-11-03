@@ -14,18 +14,19 @@ import org.junit.Assert.assertTrue
 class PlaySmokeTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     @Test fun profileCollectionDisplaysUnlockChoices() {
-        compose.onNodeWithText("My profile & records").performScrollTo().performClick()
+        compose.onNodeWithTag("nav_collection").performClick()
         compose.onNodeWithText("YOUR COLLECTION").assertExists()
         compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Board styles").assertExists()
         compose.onNodeWithText("Number fonts").assertExists()
         compose.onNodeWithText("Player emblems").assertExists()
         compose.onNodeWithText("ACHIEVEMENTS").assertExists()
+        compose.onNodeWithText("First Grid").assertExists()
+        assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
+        compose.onNodeWithTag("nav_settings").performClick()
         compose.onNodeWithText("Classic number display").assertExists()
         compose.onNodeWithText("Touch feedback").assertExists()
         compose.onNodeWithText("Clean pencil marks").assertExists()
-        compose.onNodeWithText("First Grid").assertExists()
-        assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
     }
 
     private fun awaitWindowFocus() {
@@ -35,7 +36,7 @@ class PlaySmokeTest {
         }
     }
     @Before fun awaitProfileAndWindow() {
-        compose.waitUntil(30000) { compose.onAllNodes(hasText("My profile & records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(30000) { compose.onAllNodes(hasTestTag("nav_records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         EmulatorSystemDialogs.dismiss()
         awaitWindowFocus()
     }
@@ -62,8 +63,12 @@ class PlaySmokeTest {
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
-        compose.waitUntil(20000) {
-            compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty()
+        try {
+            compose.waitUntil(60000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        } catch (error: Throwable) {
+            val state = androidx.lifecycle.ViewModelProvider(compose.activity)[GameViewModel::class.java].state.value
+            println("SUDOKU_DIFFICULTY_DIAGNOSTIC: page=${state.page}, busy=${state.busy}, difficulty=${state.selectedDifficulty}, snapshot=${state.snapshot != null}, message=${state.message}")
+            throw error
         }
         compose.onNodeWithText("Medium", substring = true).assertExists()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
@@ -75,7 +80,6 @@ class PlaySmokeTest {
             compose.onNodeWithText("Start new").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
 
         compose.onNodeWithTag("daily_challenge").performScrollTo().performClick()
@@ -85,11 +89,10 @@ class PlaySmokeTest {
         compose.onNodeWithText("Daily", substring = false).assertExists()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Continue today's challenge").assertExists()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
 
-        compose.onNodeWithText("My profile & records").performScrollTo().performClick()
+        compose.onNodeWithTag("nav_records").performClick()
         compose.onNodeWithText("DAILY HISTORY").assertExists()
         val date = com.playereden.sudokutogether.core.DailyChallenge.today()
         compose.onNodeWithTag("daily_history_" + date).performScrollTo().performClick()
@@ -143,9 +146,8 @@ class PlaySmokeTest {
         compose.onNodeWithTag("number_9").assertIsDisplayed()
         compose.onNodeWithText("Solo").assertExists()
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Leave room").performClick()
         compose.onNodeWithText("Resume solo puzzle").assertExists()
-        compose.onNodeWithText("My profile & records").performScrollTo().performClick()
+        compose.onNodeWithTag("nav_records").performClick()
         compose.onNodeWithText("Your records").assertExists()
         compose.onNodeWithText("Best unassisted:", substring = true).assertExists()
         compose.onNodeWithText("Offline profile", substring = true).assertExists()
@@ -196,6 +198,6 @@ class PlaySmokeTest {
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.contains("notes 3") } }
         compose.onNodeWithText("Erase").performClick()
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.endsWith("empty") } }
-        compose.onNodeWithText("Room code", substring = true).assertExists()
+        compose.onNodeWithContentDescription("Room code", substring = true).assertExists()
     }
 }

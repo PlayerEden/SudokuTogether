@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
     private val model: GameViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val background = Color(0xFFF7F4EC).toArgb()
+        val background = Cream.toArgb()
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(background, Forest.toArgb()), navigationBarStyle = SystemBarStyle.light(background, Forest.toArgb()))
         setContent {
             val state by model.state.collectAsStateWithLifecycle()
@@ -36,8 +36,7 @@ class MainActivity : ComponentActivity() {
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 onDispose { window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
             }
-            MaterialTheme(colorScheme = lightColorScheme(primary = Forest, onPrimary = Paper, background = Cream,
-                surface = Paper, onSurface = Ink, onBackground = Ink, secondary = Gold, outline = Rule)) {
+            SudokuTogetherTheme {
                 SudokuApp(state, actions, ::shareApk)
             }
         }

@@ -1,6 +1,6 @@
 # Sudoku Together — Product & Release Roadmap (v0.8 → Google Play)
 
-Status: **active development plan**. Latest isolated work: v0.10C on [`fix/v0.10c-save-integrity-polish`](https://github.com/PlayerEden/SudokuTogether/tree/fix/v0.10c-save-integrity-polish), [draft PR23](https://github.com/PlayerEden/SudokuTogether/pull/23). The [current audit](V0.10C_SAVE_INTEGRITY_QA.md) records exact checks and remaining gates. Development/checkpoint v0.10B remain the earlier promoted baseline; physical two-phone acceptance remains deferred.
+Status: **active development plan**. Latest isolated work: v0.10D on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on v0.10C. The [current visual audit](V0.10D_VISUAL_QA.md) records exact checks and limits. Development/checkpoint v0.10B remain the promoted baseline; physical two-phone acceptance stays deferred.
 
 ## Product promise and boundaries
 
@@ -109,3 +109,5 @@ References: https://cdn.aaai.org/ocs/2517/2517-11201-1-PB.pdf ; https://support.
 - v0.10B: **implemented and core/Android emulator verified**: Solo/Daily finish summaries, profile Daily History with Continue/Review, safety cap preserving unfinished dates and bounded completed review slots. [Build 40621938766](https://github.com/PlayerEden/SudokuTogether/actions/runs/40621938766) passed; [emulator 40622291879](https://github.com/PlayerEden/SudokuTogether/actions/runs/40622291879) **10/10 tests passed**. A screenshot-focused rerun and physical-device review remain separate. [Audit](V0.10B_DAILY_HISTORY_QA.md). v0.10C / v0.11 next as appropriate; physical two-phone LAN acceptance still deferred.
 - v0.10C: verified recovery/write protection, safe immediate Daily retention and old-day finish state, Android8 compatibility and adaptive History/results are implemented on the isolated branch. [Audit](V0.10C_SAVE_INTEGRITY_QA.md) / PR23 track acceptance and integration. No production or physical LAN certification.
 - Reusable cross-game foundation: **design recorded and paused** at the user's direction. Finish Sudoku first.
+
+- v0.10D: native visual/convenience overhaul implemented, preserving v0.10C engine/data/protocol behavior. New game theme/icon, direct Resume/Daily access, focused journal destinations, cosmetic previews, measured board sizing, large-text header/short-window fallback and styled joining/results. See the visual QA audit for final acceptance. Initial adaptive icon is complete; final branding, optional monochrome theming and Play release remain v0.11 work.
