@@ -5,6 +5,8 @@
 **Audience:** Work implementation chat + GridMates series product planning  
 **Related documents:** [GridMates Brand & Series](GRIDMATES_BRAND_AND_SERIES.md), [Puzzle Coach and Scoring Proposal](GRIDMATES_PUZZLE_COACH_AND_SCORING_PROPOSAL.md), [Monetization Plan](GRIDMATES_MONETIZATION_AND_PLAY_TESTING_PLAN.md), [Google Play Launch Guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md)
 
+> **Owner's preferred UX decision (2026-11-03):** a simple, optional **Share result** button on the finished puzzle results screen. See the more concrete [Share Results UX Design Brief](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md), including behavior, preview, privacy, Android integration and QA. This is not an auto-share, a mandatory prompt or a claim of existing code.
+
 ## 1. Owner intent and why it matters
 
 User suggests that players could **share profile cards, their statistics/earned cosmetics, solo completions, Daily results, and local co-op/versus match outcomes** via messaging apps and social media. This supports people who are physically far away while keeping GridMates' intentional *offline-first, nearby-connection* identity. A share is an invited real-world interaction, not automatic entry into a mass online platform. It could also create natural word-of-mouth discovery/advertising for the game.
