@@ -16,7 +16,7 @@ class GameConvenienceTest {
 
     @Before fun ready() {
         compose.waitUntil(30000) {
-            compose.onAllNodes(hasText("New solo puzzle") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodes(hasText("New puzzle") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
         }
         EmulatorSystemDialogs.dismiss()
         compose.waitUntil(10000) { compose.activity.hasWindowFocus() }
@@ -24,7 +24,7 @@ class GameConvenienceTest {
 
     private fun newSolo() {
         compose.onNodeWithTag("difficulty_EASY").performScrollTo().performClick()
-        compose.onNodeWithText("New solo puzzle").performScrollTo().performClick()
+        compose.onNodeWithText("New puzzle").performScrollTo().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
             compose.onNodeWithText("Start new").performClick()
         compose.waitUntil(30000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
@@ -35,7 +35,7 @@ class GameConvenienceTest {
         val before = compose.onNodeWithTag("cell_0").fetchSemanticsNode().config[
             androidx.compose.ui.semantics.SemanticsProperties.ContentDescription]
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Resume solo puzzle").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Continue").assertIsDisplayed().performClick()
         compose.waitUntil(30000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("cell_0").assertContentDescriptionEquals(*before.toTypedArray())
     }
@@ -52,7 +52,7 @@ class GameConvenienceTest {
         compose.onNodeWithTag("nav_records").performClick()
         compose.onNodeWithText("DAILY HISTORY").assertExists()
         compose.onNodeWithTag("nav_play").performClick()
-        compose.onNodeWithText("New solo puzzle").assertExists()
+        compose.onNodeWithText("New puzzle").assertExists()
     }
 
     @Test fun compactBoardAndKeypadAreVisibleTogether() {

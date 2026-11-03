@@ -139,7 +139,7 @@ class DailyFinishUiTest {
         compose.onNodeWithText("Back home").performScrollTo().assertIsDisplayed()
         capture("19-old-daily-finish-large-landscape.png")
         compose.onNodeWithText("Back home").performClick()
-        compose.onNodeWithText("Resume solo puzzle").assertExists()
+        compose.onNodeWithText("Continue").assertExists()
     }
     @Test fun historyDatesAndActionsFitAt200PercentOnACompactPhoneAndLandscape() {
         shell("wm size 640x1136"); shell("settings put system font_scale 2.0")
@@ -167,7 +167,7 @@ class DailyFinishUiTest {
     }
     @Test fun soloFinishMetadataAndReplayRemainReachableWithLargeText() {
         shell("wm size 640x1136"); shell("settings put system font_scale 2.0")
-        launch(); compose.onNodeWithText("Resume solo puzzle").performScrollTo().performClick()
+        launch(); compose.onNodeWithText("Continue").performScrollTo().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("cell_0").performScrollTo().performClick().assertIsSelected()
         // At compact 200% text the whole play screen scrolls. Bring the dock
@@ -177,7 +177,7 @@ class DailyFinishUiTest {
         compose.waitUntil(20000) { compose.onAllNodesWithText("Puzzle completed").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Puzzle completed").performScrollTo(); capture("16-solo-finish-large-metadata.png")
         compose.onNodeWithText("1 logical hint used").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Play another solo puzzle").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed()
         capture("17-solo-finish-large-actions.png")
         val finished = LocalPlayerStore(File(context.filesDir, "local-player.json")).current().activeSolo!!
         assertTrue(finished.completed); assertTrue(finished.elapsedMs >= 4500L)

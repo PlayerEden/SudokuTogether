@@ -128,13 +128,13 @@ internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTING
     }
 }
 
-@Composable internal fun JournalHeader(title: String, subtitle: String, home: () -> Unit) {
+@Composable internal fun JournalHeader(title: String, subtitle: String?, home: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         IconButton(home, modifier = Modifier.size(48.dp).background(Paper, RoundedCornerShape(14.dp))
             .semantics { contentDescription = "Back home" }) { GameIcon(GameSymbol.BACK) }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.headlineMedium, color = Forest)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
+            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
         }
     }
 }

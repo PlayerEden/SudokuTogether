@@ -179,10 +179,7 @@ import kotlinx.coroutines.delay
             if (roomStatus && state.role == GUEST && !state.connected)
                 GamePrimaryButton("Reconnect", { actions.showJoin(true) }, !state.busy)
             if (state.role == SOLO) {
-                Row(Modifier.widthIn(max = 460.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Saved on this device", Modifier.weight(1f), color = Muted, fontSize = 10.sp)
-                    if (!snapshot.completed && state.dailyDate == null) TextButton(new) { Text("New solo puzzle", fontSize = 11.sp) }
-                }
+                if (!snapshot.completed && state.dailyDate == null) TextButton(new) { Text("New puzzle", fontSize = 11.sp) }
             } else if (state.role == HOST) {
                 TextButton(toggleDetails) { Text(if (details) "Less" else "Room details", fontSize = 12.sp) }
                 if (details) GamePanel(Modifier.widthIn(max = 460.dp).fillMaxWidth()) {
@@ -191,8 +188,7 @@ import kotlinx.coroutines.delay
                     TextButton(new, enabled = !state.busy) { Text(if (snapshot.mode == VERSUS) "Next race" else "New puzzle") }
                     if (snapshot.guestName != null) TextButton(replace, enabled = !state.busy) { Text("Replace partner") }
                 }
-            } else Text(if (snapshot.mode == VERSUS) "Your answers are private. Your opponent sees progress only."
-                else "Every number and pencil mark is shared.", color = Muted, fontSize = 11.sp)
+            }
         }
     }
 }
@@ -351,25 +347,24 @@ private fun roomStatusText(state: GameUiState): String {
                             Text("${finished.hintsUsed} logical hint" +
                                 (if (finished.hintsUsed == 1) "" else "s") + " used",
                                 color = Muted, fontSize = 11.sp)
-                        Text("Saved privately on this phone", color = Muted, fontSize = 11.sp)
                     }
                 }
                 if (state.dailyDate != null) {
-                    Text(if (state.dailyDate == state.todayDate) "Come back tomorrow for a new challenge."
-                        else "Find today's challenge on Home.", color = Muted, fontSize = 12.sp)
+                    Text(if (state.dailyDate == state.todayDate) "New puzzle tomorrow."
+                        else "Today's puzzle is on Home.", color = Muted, fontSize = 12.sp)
                     Button(onClick = actions.home,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
                         Text("Back home")
                     }
                 } else if (state.role == HOST || state.role == SOLO) {
                     Button(onClick = new, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
-                        Text(if (state.role == SOLO) "Play another solo puzzle"
-                            else if (snapshot.mode == VERSUS) "Start another race"
-                            else "Start another co-op puzzle")
+                        Text(if (state.role == SOLO) "New puzzle"
+                            else if (snapshot.mode == VERSUS) "Next race"
+                            else "New puzzle")
                     }
                 } else Text("Your host can start the next puzzle.", color = Muted, fontSize = 12.sp)
                 if (state.role == SOLO) TextButton(onClick = actions.profile) {
-                    Text("View personal records")
+                    Text("Records")
                 }
             }
         }
