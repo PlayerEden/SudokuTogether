@@ -45,6 +45,6 @@
 - [x] Draw three original concepts and show them in the production Home layout, with compact monochrome/icon samples. Connected tiles is the provisional default.
 - [x] Run JVM/lint/APK/test assembly, selected native acceptance, an actual v0.10D upgrade check and inspect the screenshot comparisons. Pure copy/artwork receives visual assessment, not tests that mirror strings.
 - [x] Obtain one fresh read-only whole-branch review; resolve material findings with targeted regressions and document decisions/limits.
-- [ ] Preserve source and docs in a new draft stacked on v0.10D, retain a checkpoint, and deliver the signed QA APK and visual proposals for the owner's choice.
+- [x] Preserve source and docs in a new draft stacked on v0.10D, retain a checkpoint, and deliver the signed QA APK and visual proposals for the owner's choice.
 
 Preflight: ProfileScreen's share callback is passed from SudokuApp's existing `share`; no ViewModel contract changes. Home's defaulted mark style affects presentation only. No data/interface conflict found.
