@@ -26,21 +26,25 @@ class GameVisualAuditTest {
 
     @Before fun ready() {
         originalName = context.getSharedPreferences("settings", 0).getString("name", "Player")
-        compose.waitUntil(30000) { compose.onAllNodes(hasText("New solo puzzle") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(30000) { compose.onAllNodes(hasText("New puzzle") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         EmulatorSystemDialogs.dismiss()
-        compose.waitUntil(10000) { compose.activity.hasWindowFocus() }
+        compose.waitUntil(10000) {
+            if (!compose.activity.hasWindowFocus()) EmulatorSystemDialogs.dismiss()
+            compose.activity.hasWindowFocus()
+        }
     }
     @After fun restoreName() {
         originalName?.let { context.getSharedPreferences("settings", 0).edit().putString("name", it).commit() }
     }
     private fun save(name: String) {
+        compose.waitForIdle()
         val file = File(context.getExternalFilesDir("screenshots"), "v010d-$prefix-$name.png")
         NativeWindowCapture.save(compose.activity, file)
         println("SUDOKU_SCREENSHOT: ${file.absolutePath}")
     }
     private fun startSolo() {
         compose.onNodeWithTag("difficulty_EASY").performScrollTo().performClick()
-        compose.onNodeWithText("New solo puzzle").performScrollTo().performClick()
+        compose.onNodeWithText("New puzzle").performScrollTo().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithText("Start new").performClick()
         compose.waitUntil(30000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
     }
@@ -48,15 +52,17 @@ class GameVisualAuditTest {
         save("home")
         compose.onNodeWithText("Co-op").performScrollTo().performClick(); save("coop-menu")
         compose.onNodeWithText("Versus").performScrollTo().performClick(); save("versus-menu")
-        compose.onNodeWithText("Join a puzzle").performScrollTo().performClick(); save("join-top")
-        compose.onNodeWithText("Host address, including port").performScrollTo().performTextInput("192.0.2.10:41421")
-        compose.onNodeWithText("Host address, including port").performImeAction()
-        compose.onNodeWithText("Six-digit room code").assertIsFocused().performTextInput("123456")
+        compose.onNodeWithText("Join room").performScrollTo().performClick(); save("join-top")
+        compose.onNodeWithText("Host address").performScrollTo().performTextInput("192.0.2.10:41421")
+        compose.onNodeWithText("Host address").performImeAction()
+        compose.onNodeWithText("Room code").assertIsFocused().performTextInput("123456")
         compose.runOnUiThread {
             compose.activity.getSystemService(InputMethodManager::class.java)
                 .hideSoftInputFromWindow(compose.activity.window.decorView.windowToken, 0)
         }
-        compose.onNodeWithText("Join room").performScrollTo().assertIsEnabled(); save("join-form")
+        compose.onNodeWithTag("join_room").performScrollTo().assertIsEnabled(); save("join-form")
+        compose.onNodeWithText("Connection help").performScrollTo().performClick()
+        compose.onNodeWithText("Got it").assertIsDisplayed().performClick()
         compose.onNodeWithContentDescription("Back home").performScrollTo().performClick()
         compose.onNodeWithTag("nav_collection").performClick(); save("collection")
         compose.onNodeWithText("Number colors").performScrollTo(); save("collection-colors")

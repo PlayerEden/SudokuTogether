@@ -64,12 +64,12 @@ data class GameActions(
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
             when (state.page) {
-                Page.HOME -> HomeScreen(state, actions, share, { if (state.resumeHost || state.saveIssue != null) confirmation = "fresh" else actions.host(false) },
+                Page.HOME -> HomeScreen(state, actions, { if (state.resumeHost || state.saveIssue != null) confirmation = "fresh" else actions.host(false) },
                     { if (state.resumeSolo && state.profile.activeSolo?.completed == false) confirmation = "freshSolo" else actions.solo(false) },
                     { if (state.resumeRace) confirmation = "freshRace" else actions.hostRace(false) }, { helpOpen = true }, ::journal)
                 Page.JOIN -> JoinScreen(state, actions)
                 Page.PLAY -> PlayScreen(state, routedActions, { if (state.role == SOLO) actions.home() else confirmation = "leave" }, { confirmation = "new" }, { confirmation = "partner" }, { helpOpen = true })
-                Page.PROFILE -> ProfileScreen(state, actions, journalTab, { helpOpen = true })
+                Page.PROFILE -> ProfileScreen(state, actions, journalTab, { helpOpen = true }, share)
             }
             }
             if (state.page == Page.HOME || state.page == Page.PROFILE)

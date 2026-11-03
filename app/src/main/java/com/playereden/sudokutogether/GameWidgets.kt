@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -107,14 +108,17 @@ internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTING
 }
 
 @Composable internal fun GameNavigation(page: Page, tab: JournalTab, play: () -> Unit, journal: (JournalTab) -> Unit, enabled: Boolean = true) {
+    val fullLabels = listOf("Play", "Records", "Collection", "Settings")
+    val labels = if (LocalDensity.current.fontScale > 1.5f) listOf("Play", "Stats", "Styles", "More") else fullLabels
     Surface(color = Paper, shadowElevation = 8.dp) {
         Row(Modifier.fillMaxWidth().widthIn(max = 560.dp).padding(horizontal = 8.dp)) {
             listOf("play", "records", "collection", "settings").forEachIndexed { index, id ->
                 val selected = if (index == 0) page == Page.HOME else page == Page.PROFILE && tab == JournalTab.entries[index - 1]
-                val label = listOf("Play", "Records", "Collection", "Settings")[index]
+                val label = labels[index]
                 val symbol = listOf(GameSymbol.GRID, GameSymbol.TROPHY, GameSymbol.PALETTE, GameSymbol.SETTINGS)[index]
                 Column(Modifier.weight(1f).testTag("nav_$id")
                     .selectable(selected, enabled = enabled, onClick = { if (index == 0) play() else journal(JournalTab.entries[index - 1]) }, role = Role.Tab)
+                    .semantics { contentDescription = fullLabels[index] }
                     .heightIn(min = 68.dp).padding(horizontal = 2.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Box(Modifier.size(42.dp, 27.dp).background(if (selected) GreenTint else Color.Transparent, RoundedCornerShape(9.dp)), contentAlignment = Alignment.Center) {
@@ -128,13 +132,13 @@ internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTING
     }
 }
 
-@Composable internal fun JournalHeader(title: String, subtitle: String, home: () -> Unit) {
+@Composable internal fun JournalHeader(title: String, subtitle: String?, home: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         IconButton(home, modifier = Modifier.size(48.dp).background(Paper, RoundedCornerShape(14.dp))
             .semantics { contentDescription = "Back home" }) { GameIcon(GameSymbol.BACK) }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.headlineMedium, color = Forest)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
+            if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
         }
     }
 }

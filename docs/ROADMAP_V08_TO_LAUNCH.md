@@ -1,6 +1,6 @@
-# Sudoku Together — Product & Release Roadmap (v0.8 → Google Play)
+# GridMates: Sudoku — Product & Release Roadmap (v0.8 → Google Play)
 
-Status: **active development plan**. Latest isolated work: v0.10D on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on v0.10C. The [current visual audit](V0.10D_VISUAL_QA.md) records exact checks and limits. Development/checkpoint v0.10B remain the promoted baseline; physical two-phone acceptance stays deferred.
+Status: **active development plan**. Latest candidate: [v0.11A GridMates brand/copy pass](V0.11A_GRIDMATES_QA.md), on [`feat/gridmates-brand-copy`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-brand-copy), based on v0.10D. The GridMates name is approved; final logo selection is open. Native profile expansion follows branding; GridMates: Crossword follows Sudoku completion. Previous visual work: v0.10D on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on v0.10C. The [previous visual audit](V0.10D_VISUAL_QA.md) retains its exact checks and limits. Development/checkpoint v0.10B remain the promoted baseline; physical two-phone acceptance stays deferred.
 
 ## Product promise and boundaries
 

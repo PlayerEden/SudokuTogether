@@ -1,11 +1,9 @@
 package com.playereden.sudokutogether
 
 import android.content.pm.ActivityInfo
-import android.graphics.Bitmap
 import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
@@ -60,8 +58,9 @@ class CompactPlayLayoutTest {
     }
     private fun capture(name: String) {
         val file = File(context.getExternalFilesDir("screenshots"), "v010d-compact-$name.png")
-        file.parentFile!!.mkdirs()
-        file.outputStream().use { check(compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        var activity: MainActivity? = null
+        scenario!!.onActivity { activity = it }
+        NativeWindowCapture.save(requireNotNull(activity), file)
     }
     @Test fun activeCompactLandscapeAt200PercentKeepsBoardAndEveryToolReachable() {
         launch(true)

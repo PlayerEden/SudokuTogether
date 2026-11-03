@@ -14,6 +14,7 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.*
 @Composable internal fun JoinScreen(state: GameUiState, actions: GameActions) {
     var address by rememberSaveable(state.address) { mutableStateOf(state.address) }
     var code by rememberSaveable { mutableStateOf("") }
+    var helpOpen by rememberSaveable { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     val codeFocus = remember { FocusRequester() }
     val canJoin = !state.busy && parseAddress(address) != null && (state.resumingGuest || code.length == 6)
@@ -31,20 +33,13 @@ import androidx.compose.ui.unit.*
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).imePadding().padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            JournalHeader(if (state.resumingGuest) "Back to your puzzle" else "Find your partner", "Two phones. One Wi-Fi.", actions.home)
-            GamePanel(color = GreenTint) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    GameIcon(GameSymbol.PEOPLE, modifier = Modifier.size(28.dp))
-                    Text("Your partner hosts a puzzle. You join their room.", color = Forest, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                }
-                Text("Connect both phones to the same Wi-Fi and keep the host's app open.", color = Muted, fontSize = 13.sp, lineHeight = 20.sp)
-            }
+            JournalHeader(if (state.resumingGuest) "Rejoin room" else "Join room", "Same Wi-Fi", actions.home)
             GamePanel {
-                SectionTitle("Nearby rooms", "Choose a room, then enter its code.")
+                SectionTitle("Nearby rooms")
                 if (state.rooms.isEmpty()) Row(Modifier.fillMaxWidth().background(Cream, RoundedCornerShape(12.dp)).padding(14.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     GameIcon(GameSymbol.GRID, Muted, Modifier.size(20.dp))
-                    Text("Looking for a puzzle nearby…\nYou can enter its address below.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.weight(1f))
+                    Text("No nearby rooms yet.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.weight(1f))
                 }
                 state.rooms.forEach { room ->
                     val formatted = if (room.host.contains(':')) "[${room.host}]:${room.port}" else "${room.host}:${room.port}"
@@ -59,23 +54,33 @@ import androidx.compose.ui.unit.*
                         }
                     }
                 }
-                OutlinedTextField(address, { address = it }, label = { Text("Host address, including port") },
+                OutlinedTextField(address, { address = it }, label = { Text("Host address") },
                     placeholder = { Text("192.168.1.24:41421") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { codeFocus.requestFocus() }), shape = RoundedCornerShape(13.dp))
                 OutlinedTextField(code, { code = it.filter(Char::isDigit).take(6) },
-                    label = { Text(if (state.resumingGuest) "Room code (optional when rejoining)" else "Six-digit room code") },
+                    label = { Text(if (state.resumingGuest) "Room code (optional)" else "Room code") },
                     singleLine = true, modifier = Modifier.fillMaxWidth().focusRequester(codeFocus), shape = RoundedCornerShape(13.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { join() }))
-                GamePrimaryButton(if (state.busy) "Connecting…" else "Join room", ::join, canJoin)
+                GamePrimaryButton(if (state.busy) "Connecting…" else "Join room", ::join, canJoin, modifier = Modifier.testTag("join_room"))
                 if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
                 state.message?.let { Notice(it) }
                 if (state.resumingGuest) TextButton(onClick = { actions.showJoin(false) }, enabled = !state.busy,
-                    modifier = Modifier.fillMaxWidth()) { Text("Join with a new code instead") }
+                    modifier = Modifier.fillMaxWidth()) { Text("Use a new code") }
             }
-            Text("Can't see a room? Copy the join address from the host's Room details. Some guest or public Wi-Fi networks block connections between devices.",
-                color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+            TextButton(onClick = { helpOpen = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text("Connection help") }
+
         }
     }
+    if (helpOpen) AlertDialog(onDismissRequest = { helpOpen = false },
+        title = { Text("Connection help") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Connect both phones to the same Wi-Fi and keep the host's app open.")
+                Text("For manual joining, enter the address and port from Room details, then the six-digit code.")
+                Text("Some guest networks block connections between phones.")
+            }
+        },
+        confirmButton = { TextButton(onClick = { helpOpen = false }) { Text("Got it") } })
 }

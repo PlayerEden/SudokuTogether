@@ -29,7 +29,6 @@ import com.playereden.sudokutogether.core.DailyProgress
                     Text(if (showAll) "Show recent" else "Show all ${saved.size}", fontSize = 12.sp)
                 }
             }
-            Text("Continue a saved day or review a finished one.", fontSize = 12.sp, color = Muted)
             if (saved.isEmpty()) Text("No daily puzzles started yet.", fontSize = 12.sp, color = Muted)
             for (day in saved.take(if (showAll) saved.size else 6)) {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {

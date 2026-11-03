@@ -35,6 +35,9 @@ internal val SoftWhite = Color(0xFFFEFDF8)
             secondaryContainer = GoldTint, onSecondaryContainer = Ink,
             background = Cream, onBackground = Ink, surface = Paper, onSurface = Ink,
             surfaceVariant = GreenTint, onSurfaceVariant = Muted,
+            surfaceContainer = Paper, surfaceContainerLow = Paper,
+            surfaceContainerLowest = Cream, surfaceContainerHigh = Paper,
+            surfaceContainerHighest = GreenTint, surfaceTint = Forest,
             outline = Rule, outlineVariant = Rule.copy(alpha = .65f),
             error = Color(0xFFA84436), onError = Color.White
         ),

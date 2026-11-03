@@ -15,7 +15,7 @@ class PlaySmokeTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     @Test fun profileCollectionDisplaysUnlockChoices() {
         compose.onNodeWithTag("nav_collection").performClick()
-        compose.onNodeWithText("YOUR COLLECTION").assertExists()
+        compose.onNodeWithTag("nav_collection").assertIsSelected()
         compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Board styles").assertExists()
         compose.onNodeWithText("Number fonts").assertExists()
@@ -41,25 +41,25 @@ class PlaySmokeTest {
         awaitWindowFocus()
     }
     @Test fun homePresentsThreeDistinctModesAndNativeRuleSheet() {
-        compose.onNodeWithText("Help").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithContentDescription("How to play Sudoku").performScrollTo().assertIsDisplayed()
         EmulatorSystemDialogs.dismiss()
         awaitWindowFocus()
-        compose.onNodeWithText("Help").performClick()
+        compose.onNodeWithContentDescription("How to play Sudoku").performClick()
         compose.onNodeWithText("How to play Sudoku").assertExists()
         compose.onNodeWithText("Fill each row", substring = true).assertExists()
         compose.onNodeWithText("Got it").performClick()
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Join a puzzle").assertExists()
+        compose.onNodeWithText("Join room").assertExists()
         compose.onNodeWithText("Versus", substring = false).performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Host a versus race").assertExists()
+        compose.onNodeWithText("Host race").assertExists()
         compose.onNodeWithText("Solo").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("New solo puzzle").assertExists()
+        compose.onNodeWithText("New puzzle").assertExists()
     }
 
     @Test fun selectedDifficultyAppearsOnTheActualPuzzle() {
         compose.onNodeWithTag("difficulty_MEDIUM").assertExists().performClick()
         compose.onNodeWithTag("difficulty_MEDIUM").assertIsSelected()
-        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
@@ -75,12 +75,12 @@ class PlaySmokeTest {
     }
 
     @Test fun dailyChallengeDoesNotReplaceNormalSoloProgress() {
-        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
             compose.onNodeWithText("Start new").performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Resume solo puzzle").assertExists()
+        compose.onNodeWithText("Continue").assertExists()
 
         compose.onNodeWithTag("daily_challenge").performScrollTo().performClick()
         compose.waitUntil(20000) {
@@ -89,8 +89,8 @@ class PlaySmokeTest {
         compose.onNodeWithText("Daily", substring = false).assertExists()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Continue today's challenge").assertExists()
-        compose.onNodeWithText("Resume solo puzzle").assertExists()
+        compose.onNodeWithText("In progress").assertExists()
+        compose.onNodeWithText("Continue").assertExists()
 
         compose.onNodeWithTag("nav_records").performClick()
         compose.onNodeWithText("DAILY HISTORY").assertExists()
@@ -104,7 +104,7 @@ class PlaySmokeTest {
     }
 
     @Test fun soloHintsExplainOneDeductionWithoutPlayingIt() {
-        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
@@ -121,7 +121,7 @@ class PlaySmokeTest {
 
     @Test fun hostedRoomHasCompactChatSheet() {
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Host a puzzle").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Host room").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
@@ -135,7 +135,7 @@ class PlaySmokeTest {
     }
 
     @Test fun soloPlayCanResumeAndOpenLocalProfile() {
-        compose.onNodeWithText("New solo puzzle").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed().performClick()
         // Another smoke test can leave a partially solved local puzzle.
         // Starting fresh asks for confirmation so we don't discard progress.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
@@ -146,18 +146,17 @@ class PlaySmokeTest {
         compose.onNodeWithTag("number_9").assertIsDisplayed()
         compose.onNodeWithText("Solo").assertExists()
         compose.onNodeWithText("Home").performClick()
-        compose.onNodeWithText("Resume solo puzzle").assertExists()
+        compose.onNodeWithText("Continue").assertExists()
         compose.onNodeWithTag("nav_records").performClick()
-        compose.onNodeWithText("Your records").assertExists()
+        compose.onNodeWithTag("nav_records").assertIsSelected()
         compose.onNodeWithText("Best unassisted:", substring = true).assertExists()
-        compose.onNodeWithText("Offline profile", substring = true).assertExists()
     }
 
     @Test fun raceHostWaitsForSecondPlayerBeforeAllowingInput() {
         compose.onNodeWithText("Versus", substring = false).performScrollTo().performClick()
         // Keep this pause-rule test independent of another test's difficulty preference.
         compose.onNodeWithTag("difficulty_EASY").performScrollTo().assertIsEnabled().performClick()
-        compose.onNodeWithText("Host a versus race").performScrollTo().assertIsEnabled().performClick()
+        compose.onNodeWithText("Host race").performScrollTo().assertIsEnabled().performClick()
         // Like co-op, a prior run can leave a saved race that needs explicit replacement.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
@@ -170,7 +169,7 @@ class PlaySmokeTest {
 
     @Test fun hostCanEnterUndoAndSharePencilMarksWithoutInternet() {
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Host a puzzle").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Host room").performScrollTo().assertIsDisplayed().performClick()
         // A prior emulator test may leave a saved host room on this device.
         // The expected confirmation is part of the real user flow.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {

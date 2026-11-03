@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -18,23 +19,22 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.*
 import com.playereden.sudokutogether.core.*
 
-@Composable internal fun ProfileScreen(state: GameUiState, actions: GameActions, tab: JournalTab, help: () -> Unit) {
+@Composable internal fun ProfileScreen(state: GameUiState, actions: GameActions, tab: JournalTab, help: () -> Unit, share: () -> Unit) {
     key(tab) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Column(Modifier.widthIn(max = 520.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                JournalHeader(when (tab) { JournalTab.RECORDS -> "Your records"; JournalTab.COLLECTION -> "Your collection"; JournalTab.SETTINGS -> "Settings" },
-                    when (tab) { JournalTab.RECORDS -> "Every puzzle is progress."; JournalTab.COLLECTION -> "Make the grid your own."; JournalTab.SETTINGS -> "Play the way you like." }, actions.home)
+                JournalHeader(when (tab) { JournalTab.RECORDS -> "Records"; JournalTab.COLLECTION -> "Collection"; JournalTab.SETTINGS -> "Settings" },
+                    null, actions.home)
                 if (state.localSaveBlocked) state.saveIssue?.let { Notice(it) }
                 when (tab) {
                     JournalTab.RECORDS -> {
                         PlayerIdentity(state.appearance, state.name, compact = false)
-                        Text("Offline profile · saved only on this device", color = Muted, fontSize = 12.sp)
                         RecordOverview(state)
                         RecordsContent(state, actions)
                     }
                     JournalTab.COLLECTION -> CollectionContent(state, actions)
-                    JournalTab.SETTINGS -> SettingsContent(state, actions, help)
+                    JournalTab.SETTINGS -> SettingsContent(state, actions, help, share)
                 }
             }
         }
@@ -71,8 +71,6 @@ import com.playereden.sudokutogether.core.*
                     " · Best " + (tierSummary.bestAssistedMs?.let(::formatElapsed) ?: "Not yet"),
                     color = Muted, fontSize = 12.sp)
             }
-            Text("Best times are separated so hints never improve your unassisted record.",
-                color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
             Text("Total solving time: " + formatElapsed(stats.soloTotalMs), color = Ink)
         }
     }
@@ -88,7 +86,7 @@ import com.playereden.sudokutogether.core.*
     }
     Text("RECENT FINISHES", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
     val recent = state.profile.records.takeLast(15).reversed()
-    if (recent.isEmpty()) Text("Finish a solo puzzle to save your first record.", fontSize = 14.sp, color = Muted)
+    if (recent.isEmpty()) Text("No games yet.", fontSize = 14.sp, color = Muted)
     recent.forEach { result ->
         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty) +
@@ -98,8 +96,6 @@ import com.playereden.sudokutogether.core.*
         }
         HorizontalDivider(color = Rule)
     }
-    Text("Records are saved only on this phone. Uninstalling the app or clearing its data can erase them.",
-        fontSize = 12.sp, lineHeight = 18.sp, color = Muted)
 }
 
 @Composable private fun ColumnScope.CollectionContent(state: GameUiState, actions: GameActions) {
@@ -109,9 +105,6 @@ import com.playereden.sudokutogether.core.*
     }
     Text("Earned milestones " + Achievements.earnedCount(state.profile.records) + " of " + Achievements.progress(state.profile.records).size,
         color = Muted, fontSize = 13.sp)
-    Text("YOUR COLLECTION", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
-    Text("Earn styles by finishing puzzles. Number colors and fonts travel with your moves in co-op.",
-        color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
     CosmeticSelector("Number colors", "ink", Cosmetics.inks, state.appearance.ink, state, actions)
     CosmeticSelector("Board styles", "board", Cosmetics.boards, state.appearance.board, state, actions)
     CosmeticSelector("Number fonts", "font", Cosmetics.fonts, state.appearance.font, state, actions)
@@ -159,10 +152,11 @@ import com.playereden.sudokutogether.core.*
     }
 }
 
-@Composable private fun ColumnScope.SettingsContent(state: GameUiState, actions: GameActions, help: () -> Unit) {
+@Composable private fun ColumnScope.SettingsContent(state: GameUiState, actions: GameActions, help: () -> Unit, share: () -> Unit) {
+    var aboutOpen by rememberSaveable { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     GamePanel {
-        SectionTitle("Your player", "This is the name your partner sees in a room.")
+        SectionTitle("Player")
         OutlinedTextField(state.name, actions.name, label = { Text("Player name") }, singleLine = true,
             modifier = Modifier.fillMaxWidth().testTag("player_name"), shape = RoundedCornerShape(13.dp),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }))
@@ -170,24 +164,27 @@ import com.playereden.sudokutogether.core.*
     }
     GamePanel {
         SectionTitle("Comfort & display")
-        SettingToggle("Classic number display", "Use one readable style for all entered numbers on your screen.", state.uniformNumbers, actions.uniformNumbers)
+        SettingToggle("Classic number display", "One style for all entries.", state.uniformNumbers, actions.uniformNumbers)
         HorizontalDivider(color = Rule)
-        SettingToggle("Touch feedback", "Gentle haptics for board and number taps, using your phone's settings.", state.touchFeedback, actions.touchFeedback)
+        SettingToggle("Touch feedback", "Board and keypad vibration.", state.touchFeedback, actions.touchFeedback)
     }
     GamePanel {
         SectionTitle("Solo assistance")
-        SettingToggle("Clean pencil marks", "Remove matching nearby notes when you place a number. Undo restores them.", state.autoCleanNotes, actions.autoCleanNotes)
-        Text("Using this option or a logical hint marks that puzzle Assisted. Your unassisted best times stay separate.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        SettingToggle("Clean pencil marks", "Remove matching notes from nearby cells.", state.autoCleanNotes, actions.autoCleanNotes)
+        Text("Marks puzzles Assisted. Unassisted best times stay separate.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
     }
     GamePanel {
-        SectionTitle("A little help")
+        SectionTitle("Help")
         OutlinedButton(help, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(13.dp)) {
             GameIcon(GameSymbol.HELP, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("How to play Sudoku")
         }
-        Text("Solo and Daily work offline. Co-op and Versus connect two phones on the same Wi-Fi.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
     }
-    Text("Your profile and saves stay on this phone. Clearing app data or uninstalling can erase them. Online accounts and backup are planned for later.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
-    Text("Sudoku Together · " + BuildConfig.VERSION_NAME, color = Muted, fontSize = 10.sp)
+    OutlinedButton(onClick = { focus.clearFocus(); aboutOpen = true },
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(13.dp)) {
+        Text("About GridMates")
+    }
+    if (aboutOpen) AboutGame({ aboutOpen = false }, share)
+
 }
 
 @Composable internal fun SettingToggle(title: String, detail: String, checked: Boolean, change: (Boolean) -> Unit) {

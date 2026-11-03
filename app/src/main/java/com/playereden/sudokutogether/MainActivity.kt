@@ -46,16 +46,16 @@ class MainActivity : ComponentActivity() {
     private fun shareApk() { lifecycleScope.launch {
         try {
             val file = withContext(Dispatchers.IO) {
-                File(cacheDir, "shared/SudokuTogether-${BuildConfig.VERSION_NAME}.apk").also { target ->
+                File(cacheDir, "shared/GridMates-Sudoku-${BuildConfig.VERSION_NAME}.apk").also { target ->
                     target.parentFile!!.mkdirs(); File(applicationInfo.sourceDir).copyTo(target, overwrite = true)
                 }
             }
             val uri = FileProvider.getUriForFile(this@MainActivity, "$packageName.files", file)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/vnd.android.package-archive"; putExtra(Intent.EXTRA_STREAM, uri)
-                clipData = ClipData.newRawUri("Sudoku Together APK", uri); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                clipData = ClipData.newRawUri("GridMates: Sudoku APK", uri); addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            startActivity(Intent.createChooser(intent, "Share Sudoku Together"))
+            startActivity(Intent.createChooser(intent, "Share GridMates: Sudoku"))
         } catch (_: Exception) { Toast.makeText(this@MainActivity, "Couldn't prepare the APK to share. Try sharing your downloaded APK file.", Toast.LENGTH_LONG).show() }
     } }
 }

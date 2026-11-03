@@ -168,7 +168,7 @@ private val TealColor = Color(0xFFDCECE4)
         Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp).padding(bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Room chat", fontFamily = FontFamily.Serif, color = Forest, fontSize = 23.sp)
-            Text("Only players in this Wi-Fi room can chat. Messages are temporary and aren't saved to your profile.",
+            Text("Messages aren't saved.",
                 color = Muted, fontSize = 12.sp)
             LazyColumn(Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 310.dp), state = scroll,
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
