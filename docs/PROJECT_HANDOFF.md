@@ -10,6 +10,8 @@
 >
 > **Exploration:** Shareable completion/profile/co-op/versus cards are now a user-favored concept, using on-device image generation + Android Sharesheet, without mandatory accounts or server. See [Shareable Cards Concept](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md). Privacy, spoiler safety, honest results and optional organic store discovery are essential. Not yet implementation approval or a v1 gate.
 >
+> **Share Result UX placement (2026-11-03):** owner wants a straightforward, optional **Share result** button on the completed puzzle results screen, not a pop-up or interruption; design includes previewed offline PNG and native Android Sharesheet. [Focused UX brief](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md) · [broader social card concept](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md). Proposal for Work review, not yet implemented or a release gate.
+>
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
 > Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
