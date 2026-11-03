@@ -56,19 +56,19 @@
 
 **Interfaces:** Existing GameActions are preserved. History row/action tags remain date-addressed; completion metadata gets a stable tag. Test fixtures seed and restore controlled QA profile files around manually launched ActivityScenario instances.
 
-- [ ] Add failing UI coverage for finishing an older saved Daily, result metadata after eviction, date-neutral text, reachable history actions at 200% font and after activity recreation.
-- [ ] Inspect actual captures; fix date wording, adaptive history actions, recent-record wrapping and any observed compact/landscape clipping. Keep 48dp controls.
-- [ ] Capture Home, Daily/history and both finish screens via Compose at normal and 200% text, including landscape; restore test profile/configuration afterward.
-- [ ] Increment QA version. Run full unit/lint/debug/instrumentation build and emulator tests; inspect images; commit `fix: polish daily history and finish screens across text sizes`.
+- [x] Add failing UI coverage for finishing an older saved Daily, result metadata after eviction, date-neutral text, reachable history actions at 200% font and after activity recreation.
+- [x] Inspect actual captures; fix date wording, adaptive history actions, recent-record wrapping and any observed compact/landscape clipping. Keep 48dp controls.
+- [x] Capture Home, Daily/history and both finish screens via Compose at normal and 200% text, including landscape; restore test profile/configuration afterward.
+- [x] Increment QA version. Run full unit/lint/debug/instrumentation build and emulator tests; inspect images; commit `fix: polish daily history and finish screens across text sizes`.
 
 ### Task 4: Independent review, verified QA handoff and durable source
 
 **Files:** QA notes, living handoff/roadmap, plan, README as appropriate; APK/screenshots outside git.
 
-- [ ] Obtain one fresh whole-branch review against the spec and the five Review Focus cases. Reproduce and fix material findings with RED→GREEN regressions and a green suite.
-- [ ] Verify app package/version/signature and checksum; record test counts, actual emulator versions, screenshot coverage, and physical/signing limits.
-- [ ] Save and verify the feature source in GitHub, open a draft PR into development, and preserve the old green checkpoint. Do not promote to main or publish to Play.
-- [ ] Save the verified QA APK and useful screenshot comparison for delivery. Give a concise outcome and material remaining gates. No repeated execution-approval question.
+- [x] Obtain one fresh whole-branch review against the spec and the five Review Focus cases. Reproduce and fix material findings with RED→GREEN regressions and a green suite.
+- [x] Verify app package/version/signature and checksum; record test counts, actual emulator versions, screenshot coverage, and physical/signing limits.
+- [x] Save and verify the feature source in GitHub, open a draft PR into development, and preserve the old green checkpoint. Do not promote to main or publish to Play.
+- [x] Save the verified QA APK and useful screenshot comparison for delivery. Give a concise outcome and material remaining gates. No repeated execution-approval question.
 
 ## Self-review and execution
 

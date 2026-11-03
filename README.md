@@ -1,8 +1,8 @@
 # Sudoku Together
 
-> **GitHub is the development backup.** Start with the [living handoff](docs/PROJECT_HANDOFF.md), [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md) and [v0.10B QA audit](docs/V0.10B_DAILY_HISTORY_QA.md). Full app source is on `development`; default `main` is still a docs and manual-CI entrypoint. Known-green rollback: [`checkpoint/v0.10b-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10b-qa-green).
+> **Latest isolated work: v0.10C QA**, on [`fix/v0.10c-save-integrity-polish`](https://github.com/PlayerEden/SudokuTogether/tree/fix/v0.10c-save-integrity-polish), [draft PR23](https://github.com/PlayerEden/SudokuTogether/pull/23). Read the [living handoff](docs/PROJECT_HANDOFF.md), [current audit](docs/V0.10C_SAVE_INTEGRITY_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development holds the previous promoted v0.10B milestone; default main remains the docs/manual-CI entrypoint. The prior [v0.10B rollback checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10b-qa-green) remains available.
 
-> **Current development (v0.10B):** Offline Daily Challenge (introduced and Android-tested in v0.10A) now has a **Daily History** section in the profile to continue/review saved dates, plus true Solo/Daily completion summaries with time, moves, difficulty and assisted/unassisted status. Retention no longer discards unfinished daily work at 31 dates: it protects unfinished sessions up to a bounded 128 total, retains up to 31 completed review boards, and rejects overflow without silently erasing progress. Normal Solo, co-op and versus remain intact. [Full Android build 40621938766](https://github.com/PlayerEden/SudokuTogether/actions/runs/40621938766) **passed**; [emulator 40622291879](https://github.com/PlayerEden/SudokuTogether/actions/runs/40622291879) and [rerun 40623046297](https://github.com/PlayerEden/SudokuTogether/actions/runs/40623046297) both **passed 10/10 Android tests**. QA screenshots show Home; Daily History visual capture remains pending due to emulator system UI noise, not a user-tested release claim. **Physical two-phone testing remains deferred at the user's request** and blocks Split Clues. Next: controlled visual/accessibility and Play-readiness improvements, not reusable-game framework work.
+> **Changes:** verified local recovery and write protection, safe Daily retention with exact old-day finish details, Android8 startup repair, adaptive large-text History/results and a localized Solo timer. QA `0.10.0-dev3-qa` / code 15. Verified:85 core + 2 JVM tests, 31 Android8 cases plus a saved-race repeat, with configuration-test isolation. Lint has 0 errors / 13 warnings. Exact evidence and signing limits are in the audit. Physical two-phone testing remains deferred; Split Clues remains later work.
 
 > **Historical notes below** document the original v0.1–v0.4 development stages, including test-status statements from those stages. They are preserved for traceability, not the current build status.
 
@@ -62,7 +62,7 @@ The multiplayer modes support a trusted home LAN. The room code controls admissi
 
 ## Build
 
-The v0.2 branch requires a fresh Android compile and physical multiplayer acceptance before sharing a new APK. Do not replace the original signed APK with a debug build if you plan to update in place; keep the same original signing identity.\n
+Current QA uses an isolated `.qa` package and a local debug key. In-place updates require the same package/signing identity. See the current audit before installing over older QA builds.
 Install JDK 17 and Android SDK platform 35/build-tools 35.0.0. Set `ANDROID_HOME` to the SDK directory (or use an untracked `local.properties`).
 
 ```bash
