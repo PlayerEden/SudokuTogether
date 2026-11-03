@@ -57,6 +57,27 @@ Full implications and a tentative profile screen outline: [Visual Identity & UI 
 
 **Priority:** This is approved design philosophy, not an instruction to stop current Work-chat tasks or change multiplayer transport. The implementation priority stays Sudoku stability, visual quality, real two-device QA, and Play release readiness. It may shape future menu wording, onboarding, store copy, product decisions, and features without adding complexity for its own sake.
 
+## 1C. Nuance: technology-positive, people-first (2026-11-03)
+
+**Owner clarification:** GridMates is **not anti-internet, anti-technology or anti-online-community**. The owner values those things; many other games already emphasize broad online discovery and social ecosystems. GridMates deliberately offers a *complementary* experience that helps people spend meaningful moments with people they already know. Do not frame the vision as a criticism of internet friendship or a requirement that everyone be physically together.
+
+**Scope flexibility:** Optional internet-hosted multiplayer, remote co-op between family/friends, cloud saves or other online services may make sense much later. **Nothing here forbids those additions.** They are simply not the goal, a launch requirement or a current commitment. The owner explicitly asked **not to lock out future possibilities**.
+
+**Candidate brand tagline the owner likes:** **“GridMates — Good puzzles. Good company.”** Favorited by the owner as of 2026-11-03; **not yet a formally locked storefront tagline or final artwork approval**. It works for both enjoyable Solo and gentle social play; avoid making the game feel exclusive to partnered players.
+
+### Possible lightweight global visibility — idea only, not a commitment
+
+The owner raised a *tentative* possibility of a **broadcast/public global leaderboard** for friendly score comparison and a degree of profile/collectible show-off **without full online social gameplay**. They are *not sure they want it*, so **do not add a leaderboard, backend, or Play Games integration without a later decision**.
+
+- **Google Play Games Services** offers hosted Android leaderboards with daily/weekly/all-time and public/social views; it may avoid a custom leaderboard server. See [Google Play Console leaderboards](https://support.google.com/googleplay/android-developer/answer/2990418) and [Android leaderboard overview](https://developer.android.com/games/pgs/leaderboards).
+- Standard public documentation does not clearly establish an unconditional $0/usage guarantee. Verify current quotas, limits, service costs/terms and implementation effort in the owner's eventual Play Console setup before making budget promises.
+- The native Play Games leaderboard shows **Play Games identity and supported ranking data**, **not automatically GridMates' custom avatar frames, badges, unlocked cosmetics or entire player profile**. A fully custom online showcase would require additional design, permissions, and potentially a backend. **Optional locally generated shareable achievement/profile cards** could offer a no-server way to show off.
+- If pursued, preserve **offline Solo + LAN multiplayer without a Google sign-in requirement**; make public score sharing transparent and user-controlled, and show respectful privacy/settings language.
+- Do not base a global competition on the current speculative scoring rubric. Finish scoring logic, assistance fairness, difficulty comparability, basic tamper resistance and real-world calibration before promising fair rankings.
+- Avoid leaderboard visibility becoming the main interaction, turning a calm puzzle into stressful competition, or replacing local co-op/versus.
+
+**Current decision:** Preserve as an *optional future research note*. Priorities remain core puzzle experience, local game reliability, helpful hints, profile enjoyment, privacy and Google Play release testing.
+
 ## 2. Shared GridMates identity
 
 **Across the series:**
