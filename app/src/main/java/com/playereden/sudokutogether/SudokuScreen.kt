@@ -159,7 +159,7 @@ private fun difficultyName(level: String?): String = when (level) {
                 }
                 Text("One Easy puzzle each day. Offline, with its own saved progress.",
                     color = Muted, fontSize = 12.sp)
-                Button(onClick = actions.daily, enabled = !state.busy,
+                Button(onClick = actions.daily, enabled = !state.busy && !state.localSaveBlocked,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("daily_challenge")) {
                     Text(when {
                         today?.completed == true -> "Review today's challenge"
@@ -215,11 +215,11 @@ private fun difficultyName(level: String?): String = when (level) {
                     color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
                 when (mode) {
                     "solo" -> {
-                        if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy,
+                        if (state.resumeSolo) OutlinedButton(onClick = { actions.solo(true) }, enabled = !state.busy && !state.localSaveBlocked,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                             Text(if (state.profile.activeSolo?.completed == true) "Review last solo puzzle" else "Resume solo puzzle")
                         }
-                        Button(onClick = freshSolo, enabled = !state.busy,
+                        Button(onClick = freshSolo, enabled = !state.busy && !state.localSaveBlocked,
                             modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("New solo puzzle") }
                     }
                     "together" -> {
@@ -256,7 +256,7 @@ private fun difficultyName(level: String?): String = when (level) {
                 OutlinedTextField(value = state.name, onValueChange = actions.name,
                     label = { Text("Player name") }, singleLine = true,
                     modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp))
-                OutlinedButton(onClick = actions.profile,
+                OutlinedButton(onClick = actions.profile, enabled = !state.busy,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("My profile & records") }
             }
         }
@@ -435,7 +435,8 @@ private fun difficultyName(level: String?): String = when (level) {
                             }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.SemiBold)
                             if (state.role == SOLO) {
-                                val finished = if (state.dailyDate == null) state.profile.activeSolo
+                                val finished = state.finishedSolo?.takeIf { it.id == snapshot.sessionId }
+                                    ?: if (state.dailyDate == null) state.profile.activeSolo
                                     else state.profile.dailyProgress.firstOrNull { it.date == state.dailyDate }?.solo
                                 if (finished?.id == snapshot.sessionId && finished.completed) {
                                     val assisted = finished.hintsUsed > 0 || finished.usedNoteAssist
@@ -679,6 +680,7 @@ private fun formatElapsed(milliseconds: Long): String {
         verticalArrangement = Arrangement.spacedBy(14.dp)) {
         TextButton(onClick = actions.home, contentPadding = PaddingValues(0.dp)) { Text("Back home") }
         Text("Your records", fontSize = 32.sp, fontFamily = FontFamily.Serif, color = Forest)
+        if (state.localSaveBlocked) state.saveIssue?.let { Notice(it) }
         PlayerIdentity(state.appearance, state.name, compact = false)
         Text("Earned milestones " + Achievements.earnedCount(state.profile.records) + " of " +
             Achievements.progress(state.profile.records).size, fontSize = 13.sp, color = Muted)
