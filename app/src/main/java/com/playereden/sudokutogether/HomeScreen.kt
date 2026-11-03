@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -27,22 +28,7 @@ import androidx.compose.ui.unit.*
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                GridMatesMark(Modifier.size(40.dp), markStyle)
-                Column(Modifier.weight(1f)) {
-                    Text("GridMates", color = Forest, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold)
-                    Text("Sudoku", color = Muted, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 1.sp)
-                }
-                IconButton(help, modifier = Modifier.size(48.dp).semantics { contentDescription = "How to play Sudoku" }) {
-                    GameIcon(GameSymbol.HELP, modifier = Modifier.size(22.dp))
-                }
-                IconButton(onClick = { journal(JournalTab.RECORDS) }, enabled = !state.busy,
-                    modifier = Modifier.size(48.dp).background(GreenTint, RoundedCornerShape(16.dp))
-                        .semantics { contentDescription = "My profile & records" }) {
-                    Text(emblemSymbol(state.appearance.emblem), color = inkFor(state.appearance.ink, false), fontSize = 23.sp)
-                }
-            }
+            HomeHeader(state, help, { journal(JournalTab.RECORDS) }, markStyle)
             (state.message ?: state.saveIssue)?.let { Notice(it) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(Triple("solo", "Solo", GameSymbol.PERSON), Triple("together", "Co-op", GameSymbol.PEOPLE),
@@ -130,6 +116,40 @@ import androidx.compose.ui.unit.*
                 }
             }
 
+        }
+    }
+}
+
+@Composable private fun HomeHeader(state: GameUiState, help: () -> Unit, profile: () -> Unit,
+    markStyle: GridMatesMarkStyle) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val reflow = LocalDensity.current.fontScale > 1.3f || maxWidth < 280.dp
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                GridMatesMark(Modifier.size(40.dp), markStyle)
+                Column(Modifier.weight(1f)) {
+                    Text("GridMates", color = Forest, fontSize = 20.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("Sudoku", color = Muted, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 1.sp)
+                }
+                if (!reflow) HomeHeaderActions(state, help, profile)
+            }
+            if (reflow) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                HomeHeaderActions(state, help, profile)
+            }
+        }
+    }
+}
+
+@Composable private fun HomeHeaderActions(state: GameUiState, help: () -> Unit, profile: () -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        IconButton(help, modifier = Modifier.size(48.dp).semantics { contentDescription = "How to play Sudoku" }) {
+            GameIcon(GameSymbol.HELP, modifier = Modifier.size(22.dp))
+        }
+        IconButton(profile, enabled = !state.busy,
+            modifier = Modifier.size(48.dp).background(GreenTint, RoundedCornerShape(16.dp))
+                .semantics { contentDescription = "My profile & records" }) {
+            Text(emblemSymbol(state.appearance.emblem), color = inkFor(state.appearance.ink, false), fontSize = 23.sp)
         }
     }
 }

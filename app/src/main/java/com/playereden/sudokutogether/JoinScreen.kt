@@ -75,6 +75,12 @@ import androidx.compose.ui.unit.*
     }
     if (helpOpen) AlertDialog(onDismissRequest = { helpOpen = false },
         title = { Text("Connection help") },
-        text = { Text("Connect both phones to the same Wi-Fi and keep the host's app open. For manual joining, enter the address and port from Room details, then the six-digit code. Some guest networks block connections between phones.") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Connect both phones to the same Wi-Fi and keep the host's app open.")
+                Text("For manual joining, enter the address and port from Room details, then the six-digit code.")
+                Text("Some guest networks block connections between phones.")
+            }
+        },
         confirmButton = { TextButton(onClick = { helpOpen = false }) { Text("Got it") } })
 }

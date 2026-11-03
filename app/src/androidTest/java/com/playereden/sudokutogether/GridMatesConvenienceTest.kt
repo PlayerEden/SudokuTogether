@@ -21,7 +21,10 @@ class GridMatesConvenienceTest {
     @Before fun ready() {
         compose.waitUntil(30000) { compose.onAllNodes(hasTestTag("nav_settings") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
         EmulatorSystemDialogs.dismiss()
-        compose.waitUntil(10000) { compose.activity.hasWindowFocus() }
+        compose.waitUntil(10000) {
+            if (!compose.activity.hasWindowFocus()) EmulatorSystemDialogs.dismiss()
+            compose.activity.hasWindowFocus()
+        }
     }
     @Test fun aboutSharesTheInstalledApkAndReturnsToSettings() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -39,7 +42,7 @@ class GridMatesConvenienceTest {
             image.recycle()
             compose.onNodeWithText("Share APK").performScrollTo().performClick()
             compose.waitUntil(15000) { monitor.hits == 1 }
-            compose.onNodeWithText("Done").performScrollTo().performClick()
+            compose.onNodeWithText("Done").assertIsDisplayed().performClick()
             compose.onNodeWithTag("nav_settings").assertIsSelected()
             compose.onNodeWithTag("nav_play").performClick()
             compose.onNodeWithTag("nav_play").assertIsSelected()

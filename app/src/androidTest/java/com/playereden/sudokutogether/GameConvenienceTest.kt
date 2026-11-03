@@ -19,7 +19,10 @@ class GameConvenienceTest {
             compose.onAllNodes(hasText("New puzzle") and isEnabled()).fetchSemanticsNodes().isNotEmpty()
         }
         EmulatorSystemDialogs.dismiss()
-        compose.waitUntil(10000) { compose.activity.hasWindowFocus() }
+        compose.waitUntil(10000) {
+            if (!compose.activity.hasWindowFocus()) EmulatorSystemDialogs.dismiss()
+            compose.activity.hasWindowFocus()
+        }
     }
 
     private fun newSolo() {
