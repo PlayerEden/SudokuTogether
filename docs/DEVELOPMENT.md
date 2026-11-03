@@ -31,3 +31,7 @@ Local signing uses the path supplied by `SUDOKU_SIGNING_FILE`. The manual GitHub
 ## Next work after device feedback
 
 First validate Host/Join and reconnect on the two actual phones. Then refine readability and joining friction. Additional puzzle ratings, hints, QR pairing, a dedicated one-device mode, competitive races, and internet play can follow without replacing the core reducer/transport boundaries.
+
+## v0.10D private debug QA identity
+
+The presentation milestone keeps the `.qa` package and protocol5/schema1. To build future QA updates, use the separately saved `SudokuTogether-v0.10D-private-QA-signing.zip` debug keystore and verify public certificate SHA-256 `949731a60cb187405282efc8233d6e68ab5b46e9bf6765f70aa2b60dcc543b2c`. Restore its debug.keystore to the build user's Android debug-keystore location before assembly. Do not commit or attach that private backup to a public PR/evidence ZIP. This is separate from production signing and differs from older QA certificates, including v0.10C. A signing conflict must not be bypassed by uninstalling a progress-bearing app.

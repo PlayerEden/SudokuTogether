@@ -34,13 +34,12 @@ class GameVisualAuditTest {
         originalName?.let { context.getSharedPreferences("settings", 0).edit().putString("name", it).commit() }
     }
     private fun save(name: String) {
-        compose.waitForIdle()
         val file = File(context.getExternalFilesDir("screenshots"), "v010d-$prefix-$name.png")
-        file.parentFile!!.mkdirs()
-        file.outputStream().use { check(compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        NativeWindowCapture.save(compose.activity, file)
         println("SUDOKU_SCREENSHOT: ${file.absolutePath}")
     }
     private fun startSolo() {
+        compose.onNodeWithTag("difficulty_EASY").performScrollTo().performClick()
         compose.onNodeWithText("New solo puzzle").performScrollTo().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithText("Start new").performClick()
         compose.waitUntil(30000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }

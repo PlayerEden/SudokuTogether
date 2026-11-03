@@ -83,12 +83,22 @@ class DailyFinishUiTest {
         scenario = ActivityScenario.launch(MainActivity::class.java)
         EmulatorSystemDialogs.dismiss()
         compose.waitUntil(30000) { compose.onAllNodes(hasTestTag("nav_records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10000) {
+            var focused = false
+            scenario!!.onActivity { focused = it.hasWindowFocus() }
+            if (!focused) EmulatorSystemDialogs.dismiss()
+            focused
+        }
     }
     private fun capture(name: String) {
-        compose.waitForIdle()
-        val file = File(context.getExternalFilesDir("screenshots"), name); file.parentFile!!.mkdirs()
-        file.outputStream().use { check(compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)) }
+        val file = File(context.getExternalFilesDir("screenshots"), name)
+        scenario!!.onActivity { activity ->
+            // Retain the current recreated Activity, then capture outside the main thread.
+            captureActivity = activity
+        }
+        NativeWindowCapture.save(requireNotNull(captureActivity), file)
     }
+    private var captureActivity: MainActivity? = null
     private fun profile() = compose.onNodeWithTag("nav_records").performClick()
     @Test fun anOlderDailyKeepsItsFinishDetailsAfterItsReviewBoardIsPruned() {
         launch(); profile()
@@ -98,8 +108,17 @@ class DailyFinishUiTest {
         compose.onNodeWithTag("daily_history_$oldDate").performScrollTo().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         capture("11-old-daily-playing.png")
-        compose.onNodeWithTag("cell_0").performClick(); compose.onNodeWithTag("number_1").performClick()
-        compose.waitUntil(20000) { compose.onAllNodesWithText("Daily challenge complete", substring = false).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("cell_0").performClick().assertIsSelected()
+        compose.onNodeWithTag("number_1").assertIsEnabled().performClick()
+        try {
+            compose.waitUntil(30000) { compose.onAllNodesWithText("Daily challenge complete", substring = false).fetchSemanticsNodes().isNotEmpty() }
+        } catch (error: Throwable) {
+            scenario!!.onActivity {
+                val state = androidx.lifecycle.ViewModelProvider(it)[GameViewModel::class.java].state.value
+                println("SUDOKU_DAILY_DIAGNOSTIC: page=${state.page}, busy=${state.busy}, selected=${state.selected}, cell=${state.snapshot?.cells?.firstOrNull()?.value}, complete=${state.snapshot?.completed}, message=${state.message}")
+            }
+            throw error
+        }
         compose.onAllNodesWithText("Today's challenge complete", substring = true).assertCountEquals(0)
         compose.onNodeWithText("Daily challenge complete", substring = false).performScrollTo()
         compose.onNodeWithText("Assisted", substring = true).assertIsDisplayed()
@@ -150,7 +169,11 @@ class DailyFinishUiTest {
         shell("wm size 640x1136"); shell("settings put system font_scale 2.0")
         launch(); compose.onNodeWithText("Resume solo puzzle").performScrollTo().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithTag("cell_0").performScrollTo().performClick(); compose.onNodeWithTag("number_1").performClick()
+        compose.onNodeWithTag("cell_0").performScrollTo().performClick().assertIsSelected()
+        // At compact 200% text the whole play screen scrolls. Bring the dock
+        // into view before injecting a real touch at its coordinates.
+        println("SUDOKU_SOLO_DOCK_BEFORE_SCROLL: ${compose.onNodeWithTag("number_1").fetchSemanticsNode().boundsInRoot}")
+        compose.onNodeWithTag("number_1").performScrollTo().assertIsDisplayed().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithText("Puzzle completed").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Puzzle completed").performScrollTo(); capture("16-solo-finish-large-metadata.png")
         compose.onNodeWithText("1 logical hint used").performScrollTo().assertIsDisplayed()

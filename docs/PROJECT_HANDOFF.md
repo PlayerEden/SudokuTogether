@@ -2,11 +2,21 @@
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
-> Last reconciled: **2026-11-02 America/Chicago**.
+> Last reconciled: **2026-11-03 America/Chicago**.
 > Game priority: **finish Sudoku Together before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
+
+## v0.10D — latest native visual/convenience pass
+
+Continue from [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on v0.10C `ddf661e5e612d763e538ad97b47197d8771f2989`. Do not restart from older development/main source and drop the C/D changes. The [visual QA audit](V0.10D_VISUAL_QA.md) and [work log](V0.10D_WORK_LOG.md) own the exact acceptance record; the previous sections below preserve history.
+
+Player-facing work: cohesive cream/forest/gold theme, original adaptive icon, compact mode cards with immediate Resume/Daily actions, bottom Play/Records/Collection/Settings navigation, previewable cosmetics and clearer unlocks, readable records, focused settings, framed classic board and icon tools, explicit cell context, trophy results, and IME Next/Done joining. Solo returns Home directly with saved progress; online rooms retain leave confirmation. No engine, persistence or transport code changed; schema1/protocol5 stay compatible.
+
+Independent review found two important 200% layout problems; both reproduced RED on a compact API26 emulator before the fix. Large-text multiplayer headers now reflow; narrow/short windows can scroll the whole interface, landscape rails begin at520dp, and size-dependent board layout uses same-pass SubcomposeLayout. A finished game no longer leaves an empty controls rail. 87 JVM tests and 42 API26 native cases passed; lint 0 errors/18 warnings. Both independent-review regressions are GREEN after observed RED fixtures.
+
+QA `0.10.0-dev4-qa`, code16, `.qa`, min26/target35. Private debug QA identity is backed up separately as `SudokuTogether-v0.10D-private-QA-signing.zip` (never commit/share it publicly). Its certificate differs from v0.10C: keep a progress-bearing old install on a signing conflict. Production signing/update migration, physical two-phone LAN, newer Android runtime, TalkBack/tablets, final brand/Play, Split Clues, variants and foundation extraction remain later gates. Main/development are not promoted by this pass; retain the previous checkpoints and stack the new draft on v0.10C.
 
 ## v0.10C takeover — latest isolated source
 
@@ -23,7 +33,7 @@ QA version 0.10.0-dev3-qa/code 15, `.qa`, min26/target35; schema 1/player IDs/LA
 ## 1. Where the real project lives
 
 - Repository: https://github.com/PlayerEden/SudokuTogether
-- **Development/source branch:** [`development`](https://github.com/PlayerEden/SudokuTogether/tree/development) — full native Android source, game rules, tests, Gradle wrapper, previous docs. Use this as the starting point for the **next** development slice, and update it when a new slice is verified.
+- **Promoted baseline branch:** [`development`](https://github.com/PlayerEden/SudokuTogether/tree/development) — full source at the earlier promoted v0.10B milestone. The latest v0.10C/D source is identified above; preserve those unmerged changes when starting the next slice.
 - **Previous promoted milestone feature branch:** [`feat/v0.10b-daily-history-results`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10b-daily-history-results) — Daily History, real completion summaries, safe unfinished-puzzle retention, merged [PR #22](https://github.com/PlayerEden/SudokuTogether/pull/22) (source promoted into `development`). Previous v0.10A implementation [PR #21](https://github.com/PlayerEden/SudokuTogether/pull/21).
 - **Latest known-green source checkpoint:** [`checkpoint/v0.10b-qa-green`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10b-qa-green) at exact code commit `83df54621bb2713917b518ee8ccfed4c25511a80`. Earlier verified checkpoints: [`v0.10A`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.10a-qa-green), [`v0.8E`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8e-qa-green), [`v0.8D`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8d-qa-green) and [`v0.8C`](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.8c-qa-green). Never force-push/delete these.
 - **IMPORTANT:** default [`main`](https://github.com/PlayerEden/SudokuTogether/tree/main) is still a **small documentation/workflow skeleton**, not the full working Android project. It links to this handoff. **Do not conclude the game is missing because you checked only `main`.**

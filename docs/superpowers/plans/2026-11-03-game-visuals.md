@@ -1,6 +1,6 @@
 # Game visuals and convenience implementation plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Give Sudoku Together a cohesive game presentation and faster everyday navigation without changing its Sudoku, saves or LAN rules.
 
@@ -32,10 +32,10 @@
 
 **Interfaces:** Consumes existing `GameUiState`, `GameActions`. Produces `JournalTab { RECORDS, COLLECTION, SETTINGS }`, `SudokuTogetherTheme(content)`, original vector `GameIcon`, shared `GamePanel`/action/header components, `HomeScreen(state, actions, share, fresh, freshSolo, freshRace, help, journal)` and `GameNavigation(page, tab, play, journal)`.
 
-- [ ] Write `resumeIsVisibleWithoutScrolling` and `journalDestinationsAreOneTapAway`; run on the baseline and observe missing convenience assertions fail.
-- [ ] Implement theme and destination navigation, prioritize Resume and move identity editing to Settings. Retain mode/difficulty and replacement actions; bump QA version to code16 / `0.10.0-dev4`.
-- [ ] Run core/app JVM tests, assembly, and both targeted native cases. Expected: all pass.
-- [ ] Capture/inspect Home and modes, then commit this coherent presentation slice.
+- [x] Write `resumeIsVisibleWithoutScrolling` and `journalDestinationsAreOneTapAway`; run on the baseline and observe missing convenience assertions fail.
+- [x] Implement theme and destination navigation, prioritize Resume and move identity editing to Settings. Retain mode/difficulty and replacement actions; bump QA version to code16 / `0.10.0-dev4`.
+- [x] Run core/app JVM tests, assembly, and both targeted native cases. Expected: all pass.
+- [x] Capture/inspect Home and modes, then commit this coherent presentation slice.
 
 ### Task 2: Play and pairing presentation
 
@@ -43,11 +43,11 @@
 
 **Interfaces:** Consumes Task1 theme/widgets; preserves `PlayScreen(state, actions, leave, new, replace, help)` and `JoinScreen(state, actions)`. Board and input remain projections of existing state; all mutations still use existing GameActions.
 
-- [ ] Write `compactBoardAndKeypadAreVisibleTogether`; verify the baseline layout overlap fails before replacing play layout.
-- [ ] Implement compact/landscape board sizing from the actual remaining area, explicit selected-cell context, icon-led controls and trophy completion panel. Keep hidden-information/pause conditions and saved results unchanged.
-- [ ] Style joining and add appropriate IME Next/Done focus behavior; keep address/code validation.
-- [ ] Run full native smoke flows and targeted compact layout case. Expected: all pass, including real entry/Undo/notes/resume, hint explanation, Daily separation, co-op chat and race pause.
-- [ ] Inspect native board/selection/notes/Join/completion captures, then commit.
+- [x] Write `compactBoardAndKeypadAreVisibleTogether`; verify the baseline layout overlap fails before replacing play layout.
+- [x] Implement compact/landscape board sizing from the actual remaining area, explicit selected-cell context, icon-led controls and trophy completion panel. Keep hidden-information/pause conditions and saved results unchanged.
+- [x] Style joining and add appropriate IME Next/Done focus behavior; keep address/code validation.
+- [x] Run full native smoke flows and targeted compact layout case. Expected: all pass, including real entry/Undo/notes/resume, hint explanation, Daily separation, co-op chat and race pause.
+- [x] Inspect native board/selection/notes/Join/completion captures, then commit.
 
 ### Task 3: Journal, collection and acceptance
 
@@ -55,12 +55,12 @@
 
 **Interfaces:** Consumes `JournalTab`; produces `ProfileScreen(state, actions, tab, help)` with focused Records/Collection/Settings. Uses existing cosmetic unlock and persistent preference actions unchanged.
 
-- [ ] Verify journal navigation contract: each destination contains its own content; Settings editing survives a return to Home; Records can reopen Daily History.
-- [ ] Implement readable record panels, live cosmetic previews and lock requirements, and accessible settings rows.
-- [ ] Run full core/app JVM suite + lint + APK/test assembly, native smoke/convenience and relevant large-text Daily/result cases. Expected: green tests; lint findings documented honestly.
-- [ ] Capture and visually inspect compact portrait/landscape/200% text for Home, board, Records, Collection, Settings and results; fix material visual problems. Pure cosmetic changes are assessed visually, not by implementation-mirroring tests.
-- [ ] Obtain one fresh whole-branch read-only review, address material findings with appropriate regressions, and preserve final verification and limitations.
-- [ ] Commit, save the branch/draft PR without merging, and deliver verified APK/visual evidence with hashes and update-signing caution.
+- [x] Verify journal navigation contract: each destination contains its own content; Settings editing survives a return to Home; Records can reopen Daily History.
+- [x] Implement readable record panels, live cosmetic previews and lock requirements, and accessible settings rows.
+- [x] Run full core/app JVM suite + lint + APK/test assembly, native smoke/convenience and relevant large-text Daily/result cases. Expected: green tests; lint findings documented honestly.
+- [x] Capture and visually inspect compact portrait/landscape/200% text for Home, board, Records, Collection, Settings and results; fix material visual problems. Pure cosmetic changes are assessed visually, not by implementation-mirroring tests.
+- [x] Obtain one fresh whole-branch read-only review, address material findings with appropriate regressions, and preserve final verification and limitations.
+- [x] Commit, save the branch/draft PR without merging, and deliver verified APK/visual evidence with hashes and update-signing caution.
 
 ## Preflight interface scan
 
