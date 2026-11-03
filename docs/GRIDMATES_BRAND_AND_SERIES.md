@@ -19,6 +19,18 @@ The owner specifically wants a recognizable **series of distinct puzzle games**,
 
 **Tagline candidate, not approved:** “Two minds. One puzzle.” (Could undersell solo; evaluate during brand/design pass.)
 
+## 1A. Experience clarification — nostalgic spirit, full-featured execution (2026-11-03)
+
+**Owner priority:** Capture the cozy simplicity of traditional paperback pencil-and-paper puzzle books **without recreating paper textures literally or sacrificing useful modern features**. Think a pocket puzzle collection that is delightful to open, solve and revisit.
+
+- Strong offline solo puzzles; great usability, fast resume, Daily and personal history.
+- Local Wi-Fi co-op and optional gentle competition — broad cloud matchmaking and public online services are **not essential to the series promise**.
+- **A rich but grounded player profile is important**, not a cut: earned/customizable avatars and icons, cosmetics, showcase badges, statistics, achievements, puzzle history and a sense of identity.
+- Puzzle formats should be distinctive and occasionally offer thoughtful twists, while always respecting classic modes.
+- **Longer-term:** evaluate Google Play Games integration and truly portable backup / restoration for people upgrading phones. Local play remains usable without an account. Platform sign-in and cloud progress backup are separate integrations, not automatic or currently implemented.
+
+Full implications and a tentative profile screen outline: [Visual Identity & UI Brief](GRIDMATES_VISUAL_IDENTITY_BRIEF.md). Product priority ≠ feature shipped; changes should be staged and tested after the current core Sudoku gates.
+
 ## 2. Shared GridMates identity
 
 **Across the series:**
