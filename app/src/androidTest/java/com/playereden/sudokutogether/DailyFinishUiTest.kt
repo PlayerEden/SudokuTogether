@@ -82,14 +82,14 @@ class DailyFinishUiTest {
     private fun launch() {
         scenario = ActivityScenario.launch(MainActivity::class.java)
         EmulatorSystemDialogs.dismiss()
-        compose.waitUntil(30000) { compose.onAllNodes(hasText("My profile & records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(30000) { compose.onAllNodes(hasTestTag("nav_records") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
     }
     private fun capture(name: String) {
         compose.waitForIdle()
         val file = File(context.getExternalFilesDir("screenshots"), name); file.parentFile!!.mkdirs()
         file.outputStream().use { check(compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)) }
     }
-    private fun profile() = compose.onNodeWithText("My profile & records").performScrollTo().performClick()
+    private fun profile() = compose.onNodeWithTag("nav_records").performClick()
     @Test fun anOlderDailyKeepsItsFinishDetailsAfterItsReviewBoardIsPruned() {
         launch(); profile()
         compose.onNodeWithTag("daily_history_$recentDate").performScrollTo().assertIsDisplayed()
