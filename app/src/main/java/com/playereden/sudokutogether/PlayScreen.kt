@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -42,30 +42,39 @@ import kotlinx.coroutines.delay
     fun tick() { if (state.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
     fun copyCode() { clipboard.setText(AnnotatedString(state.roomCode)); copied = true; tick() }
     LaunchedEffect(copied) { if (copied) { delay(1800); copied = false } }
-    Column(Modifier.fillMaxSize()) {
-        PlayTopBar(state, leave, help, ::copyCode, copied) { chatOpen = true; actions.chatVisible(true) }
-        val snapshot = state.snapshot
-        if (snapshot == null) {
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    CircularProgressIndicator(); Text("Opening your puzzle…", color = Muted)
+    val snapshot = state.snapshot
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val scale = LocalDensity.current.fontScale.coerceIn(1f, 2f)
+        val shortStack = maxHeight < 160.dp || (maxWidth < 520.dp && maxHeight < (380f + (scale - 1f) * 160f).dp)
+        if (shortStack) {
+            // A short window must be able to scroll the header and dock too;
+            // reserving their height would give the active grid no viewport.
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                PlayTopBar(state, leave, help, ::copyCode, copied) { chatOpen = true; actions.chatVisible(true) }
+                if (snapshot == null) OpeningPuzzle(Modifier.fillMaxWidth().height(160.dp))
+                else {
+                    PlayBoardPane(state, actions, new, replace, details, { details = !details },
+                        Modifier.fillMaxWidth(), roomStatus = true, scrollable = false)
+                    if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
                 }
             }
-        } else BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val wide = maxWidth >= 600.dp && maxWidth > maxHeight
-            if (wide) {
-                val railWidth = (maxWidth * .46f).coerceIn(288.dp, 352.dp)
-                Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PlayBoardPane(state, actions, new, replace, details, { details = !details },
-                        Modifier.weight(1f).fillMaxHeight(), roomStatus = false)
-                    Column(Modifier.width(railWidth).fillMaxHeight().verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (state.role != SOLO) RoomStatusCard(state, actions)
-                        if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
+        } else Column(Modifier.fillMaxSize()) {
+            PlayTopBar(state, leave, help, ::copyCode, copied) { chatOpen = true; actions.chatVisible(true) }
+            if (snapshot == null) OpeningPuzzle(Modifier.weight(1f).fillMaxWidth())
+            else BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val wide = maxWidth >= 520.dp && maxWidth > maxHeight && !snapshot.completed
+                if (wide) {
+                    val railWidth = (maxWidth * .46f).coerceIn(288.dp, 352.dp)
+                    Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        PlayBoardPane(state, actions, new, replace, details, { details = !details },
+                            Modifier.weight(1f).fillMaxHeight(), roomStatus = false)
+                        Column(Modifier.width(railWidth).fillMaxHeight().verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            if (state.role != SOLO) RoomStatusCard(state, actions)
+                            if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
+                        }
                     }
-                }
-            } else {
-                Column(Modifier.fillMaxSize()) {
+                } else Column(Modifier.fillMaxSize()) {
                     PlayBoardPane(state, actions, new, replace, details, { details = !details },
                         Modifier.weight(1f).fillMaxWidth(), roomStatus = true)
                     if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
@@ -76,72 +85,88 @@ import kotlinx.coroutines.delay
     HintAndChat(state, actions, chatOpen) { chatOpen = false; actions.chatVisible(false) }
 }
 
+@Composable private fun OpeningPuzzle(modifier: Modifier) {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            CircularProgressIndicator(); Text("Opening your puzzle…", color = Muted)
+        }
+    }
+}
+
 @Composable private fun PlayTopBar(state: GameUiState, home: () -> Unit, help: () -> Unit, copy: () -> Unit, copied: Boolean, chat: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        TextButton(home, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 6.dp)) {
-            GameIcon(GameSymbol.BACK, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("Home", fontSize = 12.sp)
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp)) {
+        val reflow = state.role != SOLO && (LocalDensity.current.fontScale > 1.15f || maxWidth < 340.dp)
+        if (reflow) Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                HomeControl(home)
+                PlayTitle(state, Modifier.weight(1f))
+                HelpControl(help)
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (state.role == HOST && state.roomCode.isNotBlank())
+                    CopyControl(copy, copied, Modifier.weight(1f))
+                ChatControl(state, chat, Modifier.weight(1f), compact = true)
+            }
+        } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            HomeControl(home)
+            PlayTitle(state, Modifier.weight(1f))
+            if (state.role == HOST && state.roomCode.isNotBlank()) CopyControl(copy, copied)
+            if (state.role != SOLO) ChatControl(state, chat)
+            HelpControl(help)
         }
-        Column(Modifier.weight(1f)) {
-            Text(when { state.dailyDate != null -> "Daily"; state.role == SOLO -> "Solo"; state.snapshot?.mode == VERSUS -> "Versus"; else -> "Co-op" },
-                color = Forest, fontSize = 22.sp, lineHeight = 25.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
-            Text(difficultyName(state.snapshot?.puzzle?.difficulty) + when {
-                state.dailyDate != null -> " · ${state.dailyDate}"
-                state.role == HOST && state.roomCode.isNotBlank() -> " · Room ${state.roomCode}"
-                else -> " · Classic 9×9"
-            }, color = Muted, fontSize = 10.sp, lineHeight = 14.sp,
-                modifier = if (state.role == HOST) Modifier.semantics { contentDescription = "Room code ${state.roomCode}" } else Modifier)
-        }
-        if (state.role == HOST && state.roomCode.isNotBlank()) TextButton(copy, contentPadding = PaddingValues(horizontal = 4.dp)) {
-            Text(if (copied) "Copied" else "Copy code", fontSize = 10.sp)
-        }
-        if (state.role != SOLO) TextButton(chat, contentPadding = PaddingValues(horizontal = 5.dp)) {
-            GameIcon(GameSymbol.CHAT, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
-            Text(if (state.unreadChat > 0) "Chat (${state.unreadChat})" else "Chat", fontSize = 12.sp)
-        }
-        IconButton(help, modifier = Modifier.size(48.dp).semantics { contentDescription = "How to play Sudoku" }) {
-            GameIcon(GameSymbol.HELP, modifier = Modifier.size(22.dp))
-        }
+    }
+}
+
+@Composable private fun HomeControl(home: () -> Unit) {
+    TextButton(home, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 6.dp)) {
+        GameIcon(GameSymbol.BACK, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("Home", fontSize = 12.sp)
+    }
+}
+
+@Composable private fun PlayTitle(state: GameUiState, modifier: Modifier) {
+    Column(modifier) {
+        Text(when { state.dailyDate != null -> "Daily"; state.role == SOLO -> "Solo"; state.snapshot?.mode == VERSUS -> "Versus"; else -> "Co-op" },
+            color = Forest, fontSize = 22.sp, lineHeight = 25.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
+        Text(difficultyName(if (state.snapshot == null) state.selectedDifficulty else state.snapshot.puzzle.difficulty) + when {
+            state.dailyDate != null -> " · ${state.dailyDate}"
+            state.role == HOST && state.roomCode.isNotBlank() -> " · Room ${state.roomCode}"
+            else -> " · Classic 9×9"
+        }, color = Muted, fontSize = 10.sp, lineHeight = 14.sp,
+            modifier = if (state.role == HOST) Modifier.semantics { contentDescription = "Room code ${state.roomCode}" } else Modifier)
+    }
+}
+
+@Composable private fun CopyControl(copy: () -> Unit, copied: Boolean, modifier: Modifier = Modifier) {
+    TextButton(copy, modifier = modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
+        Text(if (copied) "Copied" else "Copy code", fontSize = 10.sp, lineHeight = 14.sp)
+    }
+}
+
+@Composable private fun ChatControl(state: GameUiState, chat: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
+    TextButton(chat, modifier = modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
+        if (!compact) { GameIcon(GameSymbol.CHAT, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)) }
+        Text(if (state.unreadChat > 0) "Chat (${state.unreadChat})" else "Chat",
+            fontSize = if (compact) 10.sp else 12.sp, lineHeight = 14.sp)
+    }
+}
+
+@Composable private fun HelpControl(help: () -> Unit) {
+    IconButton(help, modifier = Modifier.size(48.dp).semantics { contentDescription = "How to play Sudoku" }) {
+        GameIcon(GameSymbol.HELP, modifier = Modifier.size(22.dp))
     }
 }
 
 @Composable private fun PlayBoardPane(state: GameUiState, actions: GameActions, new: () -> Unit,
     replace: () -> Unit, details: Boolean, toggleDetails: () -> Unit,
-    modifier: Modifier, roomStatus: Boolean) {
+    modifier: Modifier, roomStatus: Boolean, scrollable: Boolean = true) {
     val snapshot = state.snapshot ?: return
-    val density = LocalDensity.current
-    var metaPixels by remember { mutableIntStateOf(0) }
-    var captionPixels by remember { mutableIntStateOf(0) }
     BoxWithConstraints(modifier) {
-        // Measure the actual surrounding text, including system font scale.
-        // Short-height fallbacks retain a scrollable board instead of clipping it behind controls.
-        val overhead = with(density) { (metaPixels + captionPixels).toDp() } + 36.dp
-        val boardSize = minOf(maxWidth - 40.dp, maxHeight - overhead, 440.dp).coerceAtLeast(144.dp)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 10.dp, vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val viewportHeight = if (maxHeight.value.isFinite()) maxHeight else maxWidth + 160.dp
+        val contentModifier = if (scrollable) Modifier.fillMaxSize().verticalScroll(rememberScrollState()) else Modifier.fillMaxWidth()
+        Column(contentModifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (snapshot.completed) PuzzleFinishCard(state, actions, new)
-            Column(Modifier.fillMaxWidth().onSizeChanged { metaPixels = it.height },
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (roomStatus && state.role != SOLO) Text(roomStatusText(state), color = Forest, fontSize = 11.sp, lineHeight = 16.sp)
-                PuzzleMeta(state)
-            }
-            Surface(shape = RoundedCornerShape(16.dp), color = boardFillFor(state.appearance.board),
-                shadowElevation = 3.dp, border = BorderStroke(1.dp, Rule), modifier = Modifier.testTag("board_frame")) {
-                Box(Modifier.padding(8.dp)) {
-                    val haptics = LocalHapticFeedback.current
-                    SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
-                        boardSize, { if (state.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); actions.select(it) },
-                        state.appearance, state.role == SOLO, state.uniformNumbers)
-                }
-            }
-            Text(when {
-                snapshot.completed -> "Your finished grid"
-                state.selected !in 0..80 -> "Tap a square, then choose a number."
-                snapshot.puzzle.clues[state.selected] != 0 -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Starting clue"
-                state.notes -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Pencil marks"
-                else -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Enter a number"
-            }, modifier = Modifier.onSizeChanged { captionPixels = it.height }, color = Muted, fontSize = 11.sp,
-                lineHeight = 16.sp, textAlign = TextAlign.Center)
+            PlayGridViewport(state, actions, roomStatus, viewportHeight - 8.dp)
             if (state.role != SOLO) PartnerStrip(state)
             if (snapshot.mode == COOP && snapshot.completed && snapshot.guestName != null) {
                 GamePanel(Modifier.widthIn(max = 460.dp).fillMaxWidth()) {
@@ -168,6 +193,52 @@ import kotlinx.coroutines.delay
                 }
             } else Text(if (snapshot.mode == VERSUS) "Your answers are private. Your opponent sees progress only."
                 else "Every number and pencil mark is shared.", color = Muted, fontSize = 11.sp)
+        }
+    }
+}
+
+/** Measure related content in the same layout pass; no layout-to-state feedback. */
+@Composable private fun PlayGridViewport(state: GameUiState, actions: GameActions, roomStatus: Boolean, viewportHeight: Dp) {
+    val snapshot = state.snapshot ?: return
+    val caption = when {
+        snapshot.completed -> "Your finished grid"
+        state.selected !in 0..80 -> "Tap a square, then choose a number."
+        snapshot.puzzle.clues[state.selected] != 0 -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Starting clue"
+        state.notes -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Pencil marks"
+        else -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Enter a number"
+    }
+    SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val textConstraints = Constraints(minWidth = constraints.maxWidth, maxWidth = constraints.maxWidth, maxHeight = Constraints.Infinity)
+        val meta = subcompose("meta") {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (roomStatus && state.role != SOLO) Text(roomStatusText(state), color = Forest, fontSize = 11.sp, lineHeight = 16.sp)
+                PuzzleMeta(state)
+            }
+        }.single().measure(textConstraints)
+        val label = subcompose("caption") {
+            Text(caption, color = Muted, fontSize = 11.sp, lineHeight = 16.sp, textAlign = TextAlign.Center)
+        }.single().measure(textConstraints)
+        val gap = 8.dp.roundToPx()
+        val frame = gap * 2
+        val maxGrid = (constraints.maxWidth - frame).coerceAtLeast(1).coerceAtMost(440.dp.roundToPx())
+        val minGrid = minOf(144.dp.roundToPx(), maxGrid)
+        val gridPixels = (viewportHeight.roundToPx() - meta.height - label.height - frame - gap * 2).coerceIn(minGrid, maxGrid)
+        val gridSize = gridPixels.toDp()
+        val grid = subcompose("grid") {
+            Surface(shape = RoundedCornerShape(16.dp), color = boardFillFor(state.appearance.board), shadowElevation = 3.dp,
+                border = BorderStroke(1.dp, Rule), modifier = Modifier.testTag("board_frame")) {
+                Box(Modifier.padding(8.dp)) {
+                    val haptics = LocalHapticFeedback.current
+                    SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
+                        gridSize, { if (state.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); actions.select(it) },
+                        state.appearance, state.role == SOLO, state.uniformNumbers)
+                }
+            }
+        }.single().measure(Constraints.fixed(gridPixels + frame, gridPixels + frame))
+        layout(constraints.maxWidth, meta.height + gap + grid.height + gap + label.height) {
+            meta.placeRelative(0, 0)
+            grid.placeRelative((constraints.maxWidth - grid.width) / 2, meta.height + gap)
+            label.placeRelative(0, meta.height + gap + grid.height + gap)
         }
     }
 }

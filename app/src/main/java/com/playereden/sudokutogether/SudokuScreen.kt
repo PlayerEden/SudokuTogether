@@ -118,4 +118,11 @@ internal fun difficultyName(level: String?): String = when (level) {
     else -> "Legacy"
 }
 
-@Composable internal fun Notice(message: String) { Text(message, fontSize = 12.sp, lineHeight = 18.sp, color = Brick, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) }
+@Composable internal fun Notice(message: String) {
+    Surface(color = Color(0xFFF8E8E0), shape = RoundedCornerShape(13.dp), modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            GameIcon(GameSymbol.HELP, Brick, Modifier.size(19.dp))
+            Text(message, fontSize = 12.sp, lineHeight = 18.sp, color = Brick, modifier = Modifier.weight(1f))
+        }
+    }
+}

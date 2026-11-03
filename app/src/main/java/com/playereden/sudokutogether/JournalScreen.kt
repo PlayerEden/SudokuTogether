@@ -30,6 +30,7 @@ import com.playereden.sudokutogether.core.*
                     JournalTab.RECORDS -> {
                         PlayerIdentity(state.appearance, state.name, compact = false)
                         Text("Offline profile · saved only on this device", color = Muted, fontSize = 12.sp)
+                        RecordOverview(state)
                         RecordsContent(state, actions)
                     }
                     JournalTab.COLLECTION -> CollectionContent(state, actions)
@@ -102,7 +103,10 @@ import com.playereden.sudokutogether.core.*
 }
 
 @Composable private fun ColumnScope.CollectionContent(state: GameUiState, actions: GameActions) {
-    PlayerIdentity(state.appearance, state.name, compact = false)
+    GamePanel(color = GreenTint) {
+        PlayerIdentity(state.appearance, state.name, compact = false)
+        StylePreview(state.appearance)
+    }
     Text("Earned milestones " + Achievements.earnedCount(state.profile.records) + " of " + Achievements.progress(state.profile.records).size,
         color = Muted, fontSize = 13.sp)
     Text("YOUR COLLECTION", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Muted)
@@ -130,6 +134,28 @@ import com.playereden.sudokutogether.core.*
                     modifier = Modifier.fillMaxWidth(), color = Forest, trackColor = Rule)
             }
         }
+    }
+}
+
+@Composable private fun RecordOverview(state: GameUiState) {
+    val solo = PersonalPlay.stats(state.profile).soloWins
+    val daily = DailyChallenge.completedDays(state.profile.records)
+    if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            RecordTile("SOLO SOLVED", solo.toString(), GameSymbol.GRID, Modifier.fillMaxWidth())
+            RecordTile("DAILY FINISHES", daily.toString(), GameSymbol.CALENDAR, Modifier.fillMaxWidth())
+        }
+    } else Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        RecordTile("SOLO SOLVED", solo.toString(), GameSymbol.GRID, Modifier.weight(1f))
+        RecordTile("DAILY FINISHES", daily.toString(), GameSymbol.CALENDAR, Modifier.weight(1f))
+    }
+}
+
+@Composable private fun RecordTile(label: String, value: String, symbol: GameSymbol, modifier: Modifier) {
+    GamePanel(modifier, color = GreenTint.copy(alpha = .7f), padding = 14.dp) {
+        GameIcon(symbol, modifier = Modifier.size(21.dp))
+        Text(value, color = Forest, fontSize = 32.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold)
+        Eyebrow(label)
     }
 }
 

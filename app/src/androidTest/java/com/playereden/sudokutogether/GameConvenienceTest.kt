@@ -23,6 +23,7 @@ class GameConvenienceTest {
     }
 
     private fun newSolo() {
+        compose.onNodeWithTag("difficulty_EASY").performScrollTo().performClick()
         compose.onNodeWithText("New solo puzzle").performScrollTo().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty())
             compose.onNodeWithText("Start new").performClick()

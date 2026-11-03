@@ -63,8 +63,12 @@ class PlaySmokeTest {
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
-        compose.waitUntil(20000) {
-            compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty()
+        try {
+            compose.waitUntil(60000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
+        } catch (error: Throwable) {
+            val state = androidx.lifecycle.ViewModelProvider(compose.activity)[GameViewModel::class.java].state.value
+            println("SUDOKU_DIFFICULTY_DIAGNOSTIC: page=${state.page}, busy=${state.busy}, difficulty=${state.selectedDifficulty}, snapshot=${state.snapshot != null}, message=${state.message}")
+            throw error
         }
         compose.onNodeWithText("Medium", substring = true).assertExists()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()

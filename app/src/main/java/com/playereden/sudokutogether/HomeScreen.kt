@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.*
     help: () -> Unit, journal: (JournalTab) -> Unit
 ) {
     var mode by rememberSaveable { mutableStateOf("solo") }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Column(Modifier.widthIn(max = 480.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(Modifier.widthIn(max = 480.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GridMark(Modifier.size(40.dp))
@@ -60,21 +60,21 @@ import androidx.compose.ui.unit.*
                     }
                 }
             }
+            val active = state.profile.activeSolo
+            val unfinished = mode == "solo" && state.resumeSolo && active?.completed == false
             Surface(shape = RoundedCornerShape(25.dp), color = NightForest) {
-                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!unfinished) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Eyebrow(when (mode) { "together" -> "SOLVE TOGETHER"; "versus" -> "HEAD TO HEAD"; else -> "YOUR NEXT GOOD MOVE" }, OnForest.copy(alpha = .72f))
                         Spacer(Modifier.weight(1f)); GameIcon(GameSymbol.GRID, OnForest.copy(alpha = .45f), Modifier.size(23.dp))
                     }
-                    val active = state.profile.activeSolo
-                    val unfinished = mode == "solo" && state.resumeSolo && active?.completed == false
                     Text(when {
-                        unfinished -> "Pick up where you left off."
+                        unfinished -> "Welcome back."
                         mode == "together" -> "Two minds. One grid."
                         mode == "versus" -> "A friendly rivalry."
                         else -> "Find your flow."
                     }, color = OnForest, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-                        fontSize = 29.sp, lineHeight = 33.sp)
+                        fontSize = if (unfinished) 27.sp else 29.sp, lineHeight = if (unfinished) 31.sp else 33.sp)
                     Text(when (mode) {
                         "together" -> "Share every move on two phones over the same Wi-Fi."
                         "versus" -> "The same puzzle. Private boards. First valid finish wins."
@@ -113,31 +113,28 @@ import androidx.compose.ui.unit.*
                                 border = BorderStroke(1.dp, OnForest.copy(alpha = .4f))) { Text("Join a puzzle", color = OnForest) }
                         }
                     }
-                    Text("Difficulty applies to new games. Saved puzzles keep their own.",
-                        color = OnForest.copy(alpha = .68f), fontSize = 10.sp, lineHeight = 15.sp)
                     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth(), color = OnForest, trackColor = OnForest.copy(alpha = .15f))
                 }
             }
             val today = state.profile.dailyProgress.firstOrNull { it.date == state.todayDate }?.solo
-            GamePanel(color = GoldTint.copy(alpha = .6f)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            Surface(onClick = actions.daily, enabled = !state.busy && !state.localSaveBlocked,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 68.dp).testTag("daily_challenge"),
+                shape = RoundedCornerShape(19.dp), color = GoldTint.copy(alpha = .65f), border = BorderStroke(1.dp, Rule)) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.size(42.dp).background(Paper, RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(38.dp).background(Paper, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
                         GameIcon(GameSymbol.CALENDAR, Gold)
                     }
-                    Column(Modifier.weight(1f)) {
-                        Text("Daily Challenge", style = MaterialTheme.typography.titleMedium, color = Forest)
-                        Text(state.todayDate + " · Easy · Offline", color = Muted, style = MaterialTheme.typography.bodySmall)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Daily Challenge", color = Forest, fontSize = 15.sp, lineHeight = 19.sp, fontWeight = FontWeight.SemiBold)
+                        Text(when { today?.completed == true -> "Review today's challenge"; today != null -> "Continue today's challenge"; else -> "Play today's challenge" },
+                            color = Forest, fontSize = 11.sp, lineHeight = 15.sp)
+                        Text(state.todayDate + " · Easy · Offline", color = Muted, fontSize = 10.sp, lineHeight = 14.sp)
                     }
-                }
-                TextButton(actions.daily, enabled = !state.busy && !state.localSaveBlocked,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("daily_challenge"),
-                    contentPadding = PaddingValues(horizontal = 0.dp, vertical = 8.dp)) {
-                    Text(when { today?.completed == true -> "Review today's challenge"; today != null -> "Continue today's challenge"; else -> "Play today's challenge" },
-                        modifier = Modifier.weight(1f), textAlign = TextAlign.Start, fontWeight = FontWeight.SemiBold)
-                    GameIcon(if (today?.completed == true) GameSymbol.CHECK else GameSymbol.RIGHT)
+                    GameIcon(if (today?.completed == true) GameSymbol.CHECK else GameSymbol.RIGHT, modifier = Modifier.size(19.dp))
                 }
             }
+            Text("New puzzles use your selected difficulty. Saved puzzles keep theirs.", color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
             TextButton(share, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                 GameIcon(GameSymbol.SHARE, Muted, Modifier.size(17.dp)); Spacer(Modifier.width(9.dp))
                 Text("Share the game with a friend", color = Muted, fontSize = 12.sp)
@@ -153,7 +150,7 @@ import androidx.compose.ui.unit.*
         listOf("EASY", "MEDIUM", "HARD").forEach { id ->
             val chosen = state.selectedDifficulty == id
             OutlinedButton(onClick = { actions.difficulty(id) }, enabled = !state.busy,
-                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("difficulty_$id").semantics { selected = chosen },
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("difficulty_$id").semantics { selected = chosen; contentDescription = difficultyName(id) + " difficulty for new games" },
                 shape = RoundedCornerShape(11.dp), contentPadding = PaddingValues(horizontal = 3.dp, vertical = 10.dp),
                 border = BorderStroke(1.dp, if (chosen) OnForest else OnForest.copy(alpha = .3f)),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = if (chosen) OnForest.copy(alpha = .16f) else Color.Transparent,
