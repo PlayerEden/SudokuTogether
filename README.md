@@ -1,4 +1,6 @@
-# Sudoku Together
+# GridMates: Sudoku
+
+**Official intended public-facing name (approved November 3, 2026): GridMates: Sudoku.** This is the first game in the **GridMates** puzzle series; **GridMates: Crossword** is next. [Brand and series plan](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_BRAND_AND_SERIES.md). The existing repository name and Android identifiers are retained for safe migration until the branding implementation pass.
 
 Native Android Sudoku with offline solo, same-Wi-Fi co-op and head-to-head versus.
 
