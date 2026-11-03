@@ -70,6 +70,7 @@ class LocalPlayerStore(file: File) {
         val stream = file.startWrite()
         try {
             stream.write(bytes)
+            stream.fd.sync()
             file.finishWrite(stream)
             // Some framework versions log file failures instead of throwing.
             val verified = file.openRead().use { input ->

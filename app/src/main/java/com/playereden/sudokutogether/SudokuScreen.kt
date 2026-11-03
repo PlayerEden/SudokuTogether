@@ -346,7 +346,7 @@ private fun difficultyName(level: String?): String = when (level) {
             } else {
                 val partnerName = if (state.role == HOST) snapshot.guestName else snapshot.hostName
                 val statusText = when {
-                    state.dailyDate != null && snapshot.completed -> "Today's challenge complete! Your daily result is saved."
+                    state.dailyDate != null && snapshot.completed -> "Daily challenge complete. Your result is saved."
                     state.role == SOLO && snapshot.completed -> "Solved! Your finish time is saved in My profile."
                     state.role == SOLO -> snapshot.cells.count { it.value != 0 }.toString() + "/81 squares filled"
                     snapshot.mode == VERSUS && snapshot.completed && snapshot.winner == state.role -> "You won! The result is saved in your records."
@@ -383,7 +383,7 @@ private fun difficultyName(level: String?): String = when (level) {
                             color = Forest, fontSize = 11.sp)
                     } else if (state.role != SOLO) Text(if (state.partnerCell >= 0) "◇ Partner: R" + (state.partnerCell / 9 + 1) +
                         " C" + (state.partnerCell % 9 + 1) else "◇ Partner", color = Forest, fontSize = 10.sp)
-                    else Text("Time  " + formatElapsed(state.soloElapsedMs), color = Forest, fontSize = 10.sp)
+                    else SoloTimer(state.soloElapsedMs, state.soloClockStartedAt)
                 }
                 SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
                     boardSize, { cell -> tick(); actions.select(cell) }, state.appearance, state.role == SOLO, state.uniformNumbers)
@@ -443,7 +443,7 @@ private fun difficultyName(level: String?): String = when (level) {
                                     Text("Time  " + formatElapsed(finished.elapsedMs) + "   ·   " +
                                         difficultyName(finished.puzzle.difficulty),
                                         color = Forest, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                    Text("${finished.moves} moves   ·   " +
+                                    Text("${finished.moves} " + (if (finished.moves == 1) "move" else "moves") + "   ·   " +
                                         (if (assisted) "Assisted" else "Unassisted"),
                                         color = Ink, fontSize = 12.sp)
                                     if (finished.hintsUsed > 0)
@@ -454,7 +454,8 @@ private fun difficultyName(level: String?): String = when (level) {
                                 }
                             }
                             if (state.dailyDate != null) {
-                                Text("Come back tomorrow for a new challenge.", color = Muted, fontSize = 12.sp)
+                                Text(if (state.dailyDate == state.todayDate) "Come back tomorrow for a new challenge."
+                                    else "Find today's challenge on Home.", color = Muted, fontSize = 12.sp)
                                 Button(onClick = actions.home,
                                     modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
                                     Text("Back home")
@@ -668,7 +669,7 @@ private fun difficultyName(level: String?): String = when (level) {
 
 private fun snapshotMode(state: GameUiState): String = state.snapshot?.mode ?: COOP
 
-private fun formatElapsed(milliseconds: Long): String {
+internal fun formatElapsed(milliseconds: Long): String {
     val seconds = (milliseconds.coerceAtLeast(0) / 1000)
     return "%02d:%02d:%02d".format(seconds / 3600, (seconds / 60) % 60, seconds % 60)
 }
@@ -717,46 +718,7 @@ private fun formatElapsed(milliseconds: Long): String {
                 Text("Total solving time: " + formatElapsed(stats.soloTotalMs), color = Ink)
             }
         }
-        val savedDaily = state.profile.dailyProgress.sortedByDescending { it.date }
-        var showAllDaily by rememberSaveable { mutableStateOf(false) }
-        OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper),
-            modifier = Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("DAILY HISTORY", fontSize = 11.sp, letterSpacing = 1.5.sp,
-                        color = Forest, modifier = Modifier.weight(1f))
-                    if (savedDaily.size > 6) TextButton(onClick = { showAllDaily = !showAllDaily }) {
-                        Text(if (showAllDaily) "Show recent" else "Show all ${savedDaily.size}",
-                            fontSize = 12.sp)
-                    }
-                }
-                Text("Your previous daily boards stay separate from regular Solo games.",
-                    fontSize = 11.sp, color = Muted)
-                if (savedDaily.isEmpty()) {
-                    Text("No daily puzzles started yet.", fontSize = 12.sp, color = Muted)
-                }
-                savedDaily.take(if (showAllDaily) savedDaily.size else 6).forEach { day ->
-                    val completed = day.solo.completed
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Column(Modifier.weight(1f)) {
-                            Text(day.date, color = Ink, fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold)
-                            Text((if (completed) "Completed" else "In progress") +
-                                " · " + formatElapsed(day.solo.elapsedMs) +
-                                (if (completed && (day.solo.hintsUsed > 0 || day.solo.usedNoteAssist))
-                                    " · Assisted" else ""),
-                                color = Muted, fontSize = 11.sp)
-                        }
-                        OutlinedButton(onClick = { actions.openDaily(day.date) },
-                            modifier = Modifier.heightIn(min = 48.dp).testTag("daily_history_${day.date}")) {
-                            Text(if (completed) "Review" else "Continue")
-                        }
-                    }
-                    HorizontalDivider(color = Rule)
-                }
-            }
-        }
+        DailyHistoryCard(state.profile.dailyProgress, !state.busy && !state.localSaveBlocked, actions.openDaily)
         OutlinedCard(colors = CardDefaults.outlinedCardColors(containerColor = Paper), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("HEAD-TO-HEAD", fontSize = 11.sp, letterSpacing = 1.5.sp, color = Forest)
@@ -824,8 +786,8 @@ private fun formatElapsed(milliseconds: Long): String {
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty) +
                     (if (result.mode == SOLO) (if (result.assisted) " · Assisted" else " · Unassisted") else ""),
-                    fontSize = 12.sp, color = Ink)
-                Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest)
+                    fontSize = 12.sp, color = Ink, modifier = Modifier.weight(1f))
+                Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest, modifier = Modifier.padding(start = 8.dp))
             }
             HorizontalDivider(color = Rule)
         }

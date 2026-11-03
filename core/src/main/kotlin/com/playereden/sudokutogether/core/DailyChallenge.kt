@@ -15,7 +15,7 @@ object DailyChallenge {
     private const val SALT = "SudokuTogether/daily-v1/"
 
     fun today(zone: ZoneId = ZoneId.systemDefault(), instant: java.time.Instant = java.time.Instant.now()): String =
-        LocalDate.ofInstant(instant, zone).toString()
+        instant.atZone(zone).toLocalDate().toString()
 
     fun puzzle(date: String): Puzzle {
         // Exact ISO parsing makes date identity explicit, unambiguous and testable.

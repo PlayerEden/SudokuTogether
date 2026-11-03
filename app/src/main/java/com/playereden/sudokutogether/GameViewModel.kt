@@ -13,9 +13,6 @@ import java.io.File
 import java.security.SecureRandom
 import java.util.concurrent.atomic.AtomicLong
 import android.os.SystemClock
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 
 enum class Page { HOME, JOIN, PLAY, PROFILE }
 data class GameUiState(
@@ -36,6 +33,7 @@ data class GameUiState(
     val hint: SudokuAssistance.Hint? = null,
     val dailyDate: String? = null,
     val finishedSolo: SoloProgress? = null,
+    val soloClockStartedAt: Long? = null,
     val localSaveBlocked: Boolean = false,
     val todayDate: String = DailyChallenge.today()
 ) {
@@ -58,7 +56,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private lateinit var localPlayer: LocalPlayerStore
     private var soloStartedAt: Long? = null
     private var soloElapsedAnchor: Long = 0L
-    private var soloTick: Job? = null
     private val _state = MutableStateFlow(GameUiState(name = preferences.getString("name", "Player") ?: "Player", busy = true,
         uniformNumbers = preferences.getBoolean("uniformNumbers", false),
         touchFeedback = preferences.getBoolean("touchFeedback", true),
@@ -233,26 +230,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         withProgress(data, previous.dailyDate, PersonalPlay.withElapsed(solo, elapsed))
                     else data
                 }
-                _state.update { it.copy(profile = updated, soloElapsedMs = elapsed) }
+                _state.update { it.copy(profile = updated, soloElapsedMs = elapsed, soloClockStartedAt = null) }
             } catch (_: Exception) {
                 _state.update { it.copy(saveIssue = "The latest solo time could not be saved. Check phone storage.") }
             }
         }
         soloStartedAt = null
-        soloTick?.cancel()
-        soloTick = null
+        _state.update { it.copy(soloClockStartedAt = null) }
     }
 
     private fun startSoloClock(progress: SoloProgress) {
-        soloTick?.cancel()
         soloElapsedAnchor = progress.elapsedMs
         soloStartedAt = if (progress.completed || !visible) null else SystemClock.elapsedRealtime()
-        soloTick = viewModelScope.launch {
-            while (isActive && _state.value.role == SOLO && !_state.value.snapshot.let { it == null || it.completed }) {
-                _state.update { it.copy(soloElapsedMs = elapsedSolo()) }
-                delay(500)
-            }
-        }
+        _state.update { it.copy(soloElapsedMs = progress.elapsedMs, soloClockStartedAt = soloStartedAt) }
     }
 
     fun solo(resume: Boolean) {
@@ -499,13 +489,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         val progress = acceptedProgress ?: error("The saved puzzle changed before this move.")
                         if (progress.completed) {
                             soloStartedAt = null
-                            soloTick?.cancel()
                         } else {
                             soloElapsedAnchor = progress.elapsedMs
                             soloStartedAt = if (visible) SystemClock.elapsedRealtime() else null
                         }
                         _state.update { it.copy(snapshot = progress.snapshot(), profile = saved,
-                            soloElapsedMs = progress.elapsedMs, pendingId = null, finishedSolo = progress.takeIf { p -> p.completed }) }
+                            soloElapsedMs = progress.elapsedMs, soloClockStartedAt = soloStartedAt, pendingId = null, finishedSolo = progress.takeIf { p -> p.completed }) }
                     }
                 } catch (_: Exception) {
                     if (generation.get() == current) _state.update { it.copy(pendingId = null,
