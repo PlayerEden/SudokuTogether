@@ -5,6 +5,31 @@
 **Product:** GridMates: Sudoku, with possible future reuse of business patterns in other GridMates puzzle games.
 **Reference:** [GridMates Brand & Series](GRIDMATES_BRAND_AND_SERIES.md) · [Visual Identity Brief](GRIDMATES_VISUAL_IDENTITY_BRIEF.md) · [Project Handoff](PROJECT_HANDOFF.md)
 
+## New owner consideration (2026-11-03): $0.99 paid app and later cosmetic gacha — NOT locked
+
+The owner is now **considering charging around $0.99 up front** for GridMates: Sudoku, and eventually exploring **gacha-style cosmetic purchases**. **This is a proposed direction, not a final price, billing authorization, or change to the current app build.** It supersedes any assumption elsewhere in this document that free-to-download plus ads is the settled plan.
+
+### Decision required before any Play release or broad testing setup
+
+Google Play's current [app pricing policy](https://support.google.com/googleplay/android-developer/answer/6334373) says an app **offered for free cannot later become a paid listing**. A paid app can become free; changing a free app to paid requires a new listing/package. Therefore select the long-term installation price **before public free distribution** and verify implications for the planned test tracks in Play Console.
+
+Candidate approaches:
+- **A. Premium ($0.99 tentative, best fit if paid):** initial purchase includes the **ad-free core puzzle experience**; no forced interstitials; complete base Sudoku and local play. Any later cosmetic purchases are clearly optional. No separate "Remove Ads" purchase is needed.
+- **B. Free with rare ads:** keep the **previous occasional between-puzzle interstitial proposal** and optional permanent ad removal; reach is likely easier but experience/retention and revenue still need actual testing.
+- **C. Free with a permanent premium unlock:** single listing starts free but may sell an ad-free/full-content upgrade; the store listing remains free forever. Avoid intentionally frustrating users or gatekeeping basic hints.
+
+**Do not implement both a paid upfront charge and compulsory ads** by default; avoid feeling like players must pay twice to enjoy the app. Preserve the owner's earlier occasional-full-screen-ad preference as the fallback only **if the final chosen model remains free**.
+
+### Gacha / cosmetic collection — only a future design proposal
+
+- Make any random-reward offering **cosmetic-only**, such as avatar icons, profile frames, optional board styles and celebration themes; no solving assistance, hints, difficulty access or competitive advantages.
+- Best initial experiment: **earnable surprise cosmetic packs** through play, with an easy-to-understand collection and duplicate handling; explore **direct-purchase themed packs** before paid randomness.
+- If **paid randomized packs** are added later, Google Play requires **clearly disclosed item probabilities before and close to the purchase** ([Google Play Payments policy](https://support.google.com/googleplay/android-developer/answer/18265346)). Check applicable regional rules, content ratings, age/consumer safeguards and billing policies before release.
+- Keep fair progression without purchase; avoid intentionally manipulative FOMO, pressure prompts, gambling-like presentation, cash-out/trading or misleading odds.
+- Support receipt validation, offline save/reinstall restoration, refund/revocation, and collection-data migrations. No claim that a $0.99 paid game automatically provides cloud saves or Play Games sync.
+
+**Action for implementation Work chat:** This is a strategy note, **not authorization** to add Billing/AdMob/gacha code or alter Play listing pricing. Avoid advertising SDK work until the owner finalizes premium vs free. Continue core stability and Play readiness first.
+
 ## Owner decisions / positioning
 
 - The app should remain a calm, satisfying, paperback-puzzle-book-inspired game with rich but unobtrusive features.
