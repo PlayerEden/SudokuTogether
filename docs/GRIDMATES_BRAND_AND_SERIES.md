@@ -15,6 +15,8 @@ The owner specifically wants a recognizable **series of distinct puzzle games**,
 
 **Brand premise:** Familiar puzzles are fun alone and especially engaging with a friend. Offer true solo play plus genuinely thoughtful cooperative/competitive options, not forced connectivity.
 
+**Visual direction (proposed, not final art approval):** [GridMates Visual Identity & UI Design Brief](GRIDMATES_VISUAL_IDENTITY_BRIEF.md). This companion document captures logo concepts, a candidate shared palette and per-game accents, font and icon explorations, UI/accessibility principles, and a stepwise implementation checklist for the Work chat.
+
 **Tagline candidate, not approved:** “Two minds. One puzzle.” (Could undersell solo; evaluate during brand/design pass.)
 
 ## 2. Shared GridMates identity
