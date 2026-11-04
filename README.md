@@ -1,5 +1,7 @@
 # GridMates: Sudoku
 
+> **Current work: v0.11B** on [`feat/gridmates-coach-launcher`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md): launcher **Sudoku** and explicit Solo/Daily entry checks first, then coach guidance, result sharing, profile and calibrated scoring. [Current work log](docs/V0.11B_WORK_LOG.md). Candidate acceptance is in progress; the previous verified v0.11A details follow.
+
 [v0.11A GridMates identity and concise UI — draft PR26](https://github.com/PlayerEden/SudokuTogether/pull/26)
 
 > **Latest work: GridMates v0.11A**, on [`feat/gridmates-brand-copy`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-brand-copy). [Brand/copy audit](docs/V0.11A_GRIDMATES_QA.md). The approved public name is GridMates: Sudoku; logo concepts remain provisional. The earlier v0.10D source is preserved below.

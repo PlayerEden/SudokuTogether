@@ -376,24 +376,7 @@ private fun roomStatusText(state: GameUiState): String {
 }
 
 @Composable private fun HintAndChat(state: GameUiState, actions: GameActions, chatOpen: Boolean, close: () -> Unit) {
-    state.hint?.let { hint ->
-        AlertDialog(
-            onDismissRequest = actions.dismissHint,
-            title = { Text("Your next deduction", color = Forest, fontFamily = FontFamily.Serif) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Row ${hint.cell / 9 + 1}, column ${hint.cell % 9 + 1}",
-                        fontWeight = FontWeight.SemiBold, color = Forest)
-                    Text(hint.explanation, color = Ink)
-                    Text("Suggested number: ${hint.digit}. Nothing was entered for you.",
-                        color = Muted, fontSize = 12.sp)
-                    Text("Hints are marked as assisted in your personal records.",
-                        color = Muted, fontSize = 11.sp)
-                }
-            },
-            confirmButton = { TextButton(onClick = actions.dismissHint) { Text("Back to puzzle") } }
-        )
-    }
+    PuzzleCoachDialog(state,actions)
     if (chatOpen && state.role != SOLO) RoomChatSheet(state, actions, close)
 }
 

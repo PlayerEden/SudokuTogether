@@ -3,12 +3,14 @@ package com.playereden.sudokutogether
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.lifecycle.ViewModelProvider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import androidx.compose.ui.text.TextLayoutResult
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 
 @RunWith(AndroidJUnit4::class)
 class PlaySmokeTest {
@@ -109,12 +111,17 @@ class PlaySmokeTest {
             compose.onNodeWithText("Start new").performClick()
         }
         compose.waitUntil(20000) { compose.onAllNodesWithText("Hint").fetchSemanticsNodes().isNotEmpty() }
+        lateinit var model: GameViewModel
+        compose.runOnUiThread { model = ViewModelProvider(compose.activity)[GameViewModel::class.java] }
+        val before = model.state.value.snapshot!!.cells.map { it.copy() }
+        val hintsBefore = model.state.value.profile.activeSolo!!.hintsUsed
         compose.onNodeWithText("Hint").performClick()
         compose.waitUntil(20000) {
             compose.onAllNodesWithText("Your next deduction").fetchSemanticsNodes().isNotEmpty()
         }
-        compose.onNodeWithText("Suggested number:", substring = true).assertExists()
-        compose.onNodeWithText("Nothing was entered for you.", substring = true).assertExists()
+        compose.onNodeWithText(model.state.value.hint!!.explanation).assertExists()
+        assertEquals(before,model.state.value.snapshot!!.cells)
+        assertEquals(hintsBefore+1,model.state.value.profile.activeSolo!!.hintsUsed)
         compose.onNodeWithText("Back to puzzle").performClick()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
     }

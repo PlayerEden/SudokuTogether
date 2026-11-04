@@ -33,9 +33,9 @@
 
 **Interfaces:** `launcher_name` is consumed only by MainActivity's manifest label. Existing app_name stays intact in main/debug resources.
 
-- [ ] Verify clean source at92ebc3b and run `:core:test :app:testDebugUnitTest`; Expected:87 passes.
-- [ ] Carry planning content without replacing the newer application source, and commit the staged design/plan.
-- [ ] Add launcher_name=Sudoku and Activity label; increment code18/dev2. This resource/configuration edit is verified through the compiled/installed artifact rather than a string-mirroring unit test.
+- [x] Verify clean source at92ebc3b and run `:core:test :app:testDebugUnitTest`; Expected:87 passes.
+- [x] Carry planning content without replacing the newer application source, and commit the staged design/plan.
+- [x] Add launcher_name=Sudoku and Activity label; increment code18/dev2. This resource/configuration edit is verified through the compiled/installed artifact rather than a string-mirroring unit test.
 - [ ] Inspect APK badging/ActivityInfo label, installed launcher text and full in-game/app branding; Expected: launcher Sudoku, full brand retained, same icon/component/package/certificate.
 
 ### Task 2: Pure entry checking and fair saved metadata
@@ -44,12 +44,12 @@
 
 **Interfaces:** SudokuAssistance gains `enum class CheckKind { CONFLICT, INCORRECT_ENTRY, CORRECT_SO_FAR, NO_ENTRIES }`, `data class EntryCheck(val kind: CheckKind, val cell: Int = -1, val conflicts: Set<Int> = emptySet())`, computed `usesSolution: Boolean`, and `fun checkEntries(puzzle: Puzzle, visible: List<Int>): EntryCheck?`. SoloProgress/GameRecord append checksUsed default0; SoloProgress exposes computed assisted. `PersonalPlay.recordCheck(s: SoloProgress): SoloProgress` increments only unfinished progress.
 
-- [ ] Write tests from a hand-checked standard puzzle/solution: non-duplicate wrong1 atR1C3 returns INCORRECT_ENTRY/cell2 without editing input; duplicate5 returns CONFLICT including0/2; correct4 returns CORRECT_SO_FAR; untouched board NO_ENTRIES; malformed/changed-given/ambiguous originals return null. Add late one/two-cell logical-hint characterizations.
-- [ ] Run `:core:test --tests '*EntryCheckTest'`; Expected: missing contract/then assertion RED against minimal null-return API shapes, not an SDK error.
-- [ ] Implement checkEntries using existing conflicts and solutionCount, checking a player's entry against original clues for explicit solution comparisons. Run core tests; Expected: all GREEN.
-- [ ] Write record tests: a checked completed Solo and Daily retain checksUsed=1 and assisted=true; logical hints stay0; Undo retains count; old JSON defaults0; completed progress does not acquire another check. Observe RED before record implementation.
-- [ ] Implement metadata/record propagation and store bounds/assisted consistency validation. Run `:core:test :app:testDebugUnitTest`; Expected: full suite GREEN, no legacy record changes.
-- [ ] Commit the core deliverable and record test results.
+- [x] Write tests from a hand-checked standard puzzle/solution: non-duplicate wrong1 atR1C3 returns INCORRECT_ENTRY/cell2 without editing input; duplicate5 returns CONFLICT including0/2; correct4 returns CORRECT_SO_FAR; untouched board NO_ENTRIES; malformed/changed-given/ambiguous originals return null. Add late one/two-cell logical-hint characterizations.
+- [x] Run `:core:test --tests '*EntryCheckTest'`; Expected: missing contract/then assertion RED against minimal null-return API shapes, not an SDK error.
+- [x] Implement checkEntries using existing conflicts and solutionCount, checking a player's entry against original clues for explicit solution comparisons. Run core tests; Expected: all GREEN.
+- [x] Write record tests: a checked completed Solo and Daily retain checksUsed=1 and assisted=true; logical hints stay0; Undo retains count; old JSON defaults0; completed progress does not acquire another check. Observe RED before record implementation.
+- [x] Implement metadata/record propagation and store bounds/assisted consistency validation. Run `:core:test :app:testDebugUnitTest`; Expected: full suite GREEN, no legacy record changes.
+- [x] Commit the core deliverable and record test results.
 
 ### Task 3: Guarded coach UI and native regression coverage
 
@@ -68,7 +68,7 @@
 
 **Files:** Update README, PROJECT_HANDOFF, roadmap, delivery plan and new V0.11B QA/work log. No merge or promotion of previous drafts.
 
-- [ ] Run `:core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`; Expected: build/tests pass, report actual lint counts.
+- [x] Run `:core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`; Expected: build/tests pass, report actual lint counts.
 - [ ] Obtain one fresh whole-branch review against92ebc3b and the spec/Review Focus. Resolve material findings once with observed RED→GREEN and a green suite; document deferred minors and scope limits.
 - [ ] Freeze final APK; verify signature/icon/package/label, exact17→18 update and final native checks against those bytes. Inspect actual screenshots and package public evidence without keys or profile payloads.
 - [ ] Preserve exact source/tree in a draft stacked on feat/gridmates-brand-copy and a QA checkpoint; save APK/evidence/preview, then complete the plan and handoff.
