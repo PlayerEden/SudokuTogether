@@ -30,6 +30,8 @@ class UpgradeContinuityTest {
     private fun profileHash(): String = MessageDigest.getInstance("SHA-256")
         .digest(File(context.filesDir, "local-player.json").readBytes()).joinToString("") { "%02x".format(it) }
     @Test fun seedSavedPuzzleAndPreferencesBeforeUpgrade() {
+        assertFalse("Seed requires an original-version fixture: " + model.state.value.saveIssue,
+            model.state.value.localSaveBlocked)
         compose.runOnUiThread {
             model.setName("Upgrade player"); model.setUniformNumbers(true); model.setTouchFeedback(false)
             model.setAutoCleanNotes(true); model.setDifficulty("EASY"); model.solo(false)

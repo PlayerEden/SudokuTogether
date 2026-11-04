@@ -71,12 +71,27 @@ class EntryCheckUiTest {
         compose.waitUntil(30000) { model.state.value.canEdit }
     }
     private fun capture(name: String, dialog: Boolean = true) {
+        EmulatorSystemDialogs.dismiss()
+        compose.waitForIdle()
+        val title = when (name) {
+            "hint-unavailable" -> "No logical step"
+            "entry-to-review" -> "Entry to review"
+            "entries-checked" -> "No errors found"
+            else -> null
+        }
+        if (title != null) compose.onNodeWithText(title).assertIsDisplayed()
+        EmulatorSystemDialogs.dismiss()
         val target = File(context.getExternalFilesDir("screenshots"), "v011b-$prefix-$name.png")
         if (dialog) {
-            compose.waitForIdle();instrumentation.uiAutomation.waitForIdle(200, 5000)
+            compose.waitForIdle();instrumentation.uiAutomation.waitForIdle(300, 5000)
             val bitmap = requireNotNull(instrumentation.uiAutomation.takeScreenshot())
             target.parentFile!!.mkdirs();target.outputStream().use { check(bitmap.compress(Bitmap.CompressFormat.PNG,100,it)) };bitmap.recycle()
-        } else NativeWindowCapture.save(requireNotNull(activity),target)
+        } else {
+            val warmFrame = File(context.cacheDir, "coach-capture-frame.png")
+            NativeWindowCapture.save(requireNotNull(activity),warmFrame)
+            NativeWindowCapture.save(requireNotNull(activity),target)
+            check(warmFrame.delete())
+        }
     }
     private fun tap(text: String) {
         val node = compose.onNodeWithText(text)
@@ -119,6 +134,8 @@ class EntryCheckUiTest {
         compose.waitUntil(15000) { model.state.value.canEdit }
         assertEquals(1,model.state.value.snapshot!!.cells[2].value)
         assertEquals(1,model.state.value.profile.activeSolo!!.checksUsed)
+        compose.waitUntil(20000) { compose.onAllNodesWithTag("input_dock").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("input_dock").assertIsDisplayed()
         capture("checked-puzzle-resumed",dialog=false)
     }
     @Test fun aCheckedFinishDisplaysItsSavedCountAndAssistedStatus() {

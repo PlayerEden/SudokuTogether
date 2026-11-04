@@ -36,7 +36,7 @@
 - [x] Verify clean source at92ebc3b and run `:core:test :app:testDebugUnitTest`; Expected:87 passes.
 - [x] Carry planning content without replacing the newer application source, and commit the staged design/plan.
 - [x] Add launcher_name=Sudoku and Activity label; increment code18/dev2. This resource/configuration edit is verified through the compiled/installed artifact rather than a string-mirroring unit test.
-- [ ] Inspect APK badging/ActivityInfo label, installed launcher text and full in-game/app branding; Expected: launcher Sudoku, full brand retained, same icon/component/package/certificate.
+- [x] Inspect APK badging/ActivityInfo label, installed launcher text and full in-game/app branding; Expected: launcher Sudoku, full brand retained, same icon/component/package/certificate.
 
 ### Task 2: Pure entry checking and fair saved metadata
 
@@ -57,20 +57,20 @@
 
 **Interfaces:** GameUiState adds hintUnavailable=false and entryCheck=null. `GameViewModel.checkWork()` computes/persists before publishing, honors generation/session/revision and rejects rooms, completed/busy/blocked saves. GameActions appends default `checkWork: () -> Unit = {}`; MainActivity wires model::checkWork. `PuzzleCoachDialog(state: GameUiState, actions: GameActions)` replaces only the existing hint dialog; chat remains separate.
 
-- [ ] Add a native case: wrong non-duplicate entry → Hint unavailable without count → explicit Check my work → count1, unchanged value, selected suspect → Erase entry → Undo restores it and count remains1. Observe RED before wiring.
-- [ ] Implement normal/unavailable/result dialogs with the explicit disclosure and existing erase/Undo callbacks; clear feedback on edits, selection and room/navigation transitions. Use bounded scroll content at200%.
-- [ ] Add/run real ViewModel/store cases for a positive check, persistence/recreation, save failure with no result/count, stale navigation and rejected room/completed requests; Expected: RED→GREEN for missing behavior, full native set GREEN.
-- [ ] Extend the original-APK upgrade seed with an entered answer and nonempty history alongside its note/preferences. Verify complete saved bytes and resumed values before/after17→18.
-- [ ] Run relevant gameplay/convenience/Daily regressions and normal/large coach screenshots; Expected: accepted input/Undo/history unchanged, no stale/check information in rooms, all dialog actions reachable.
-- [ ] Commit the UI deliverable and record evidence.
+- [x] Add a native case: wrong non-duplicate entry → Hint unavailable without count → explicit Check my work → count1, unchanged value, selected suspect → Erase entry → Undo restores it and count remains1. Observe RED before wiring.
+- [x] Implement normal/unavailable/result dialogs with the explicit disclosure and existing erase/Undo callbacks; clear feedback on edits, selection and room/navigation transitions. Use bounded scroll content at200%.
+- [x] Add/run real ViewModel/store cases for a positive check, persistence/recreation, save failure with no result/count, stale navigation and rejected room/completed requests; Expected: RED→GREEN for missing behavior, full native set GREEN.
+- [x] Extend the original-APK upgrade seed with an entered answer and nonempty history alongside its note/preferences. Verify complete saved bytes and resumed values before/after17→18.
+- [x] Run relevant gameplay/convenience/Daily regressions and normal/large coach screenshots; Expected: accepted input/Undo/history unchanged, no stale/check information in rooms, all dialog actions reachable.
+- [x] Commit the UI deliverable and record evidence.
 
 ### Task 4: Reviewed QA APK and durable handoff
 
 **Files:** Update README, PROJECT_HANDOFF, roadmap, delivery plan and new V0.11B QA/work log. No merge or promotion of previous drafts.
 
 - [x] Run `:core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`; Expected: build/tests pass, report actual lint counts.
-- [ ] Obtain one fresh whole-branch review against92ebc3b and the spec/Review Focus. Resolve material findings once with observed RED→GREEN and a green suite; document deferred minors and scope limits.
-- [ ] Freeze final APK; verify signature/icon/package/label, exact17→18 update and final native checks against those bytes. Inspect actual screenshots and package public evidence without keys or profile payloads.
+- [x] Obtain one fresh whole-branch review against92ebc3b and the spec/Review Focus. Resolve material findings once with observed RED→GREEN and a green suite; document deferred minors and scope limits.
+- [x] Freeze final APK; verify signature/icon/package/label, exact17→18 update and final native checks against those bytes. Inspect actual screenshots and package public evidence without keys or profile payloads.
 - [ ] Preserve exact source/tree in a draft stacked on feat/gridmates-brand-copy and a QA checkpoint; save APK/evidence/preview, then complete the plan and handoff.
 
 Pre-flight: Task2's EntryCheck is consumed by Task3's state/dialog; checksUsed and assisted feed both Solo/Daily records and their presentation. Task1 label resource has no dependency on assistance. Appending defaulted fields/callbacks preserves existing positional constructor call sites. No interface conflict found.

@@ -1,6 +1,6 @@
 # GridMates: Sudoku
 
-> **Current work: v0.11B** on [`feat/gridmates-coach-launcher`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md): launcher **Sudoku** and explicit Solo/Daily entry checks first, then coach guidance, result sharing, profile and calibrated scoring. [Current work log](docs/V0.11B_WORK_LOG.md). Candidate acceptance is in progress; the previous verified v0.11A details follow.
+> **Latest verified QA: v0.11B** on [feat/gridmates-coach-launcher](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. Launcher **Sudoku**, full **GridMates: Sudoku** brand retained; explicit Solo/Daily entry checks with saved assistance. **103 JVM +46 API26 native cases passed**, lint0 errors/14 warnings, exact17→18 update verified. [QA audit](docs/V0.11B_COACH_LAUNCHER_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md) · [Recovery log](docs/V0.11B_RECOVERY_LOG.md). Main/development and earlier checkpoints remain unchanged.
 
 [v0.11A GridMates identity and concise UI — draft PR26](https://github.com/PlayerEden/SudokuTogether/pull/26)
 

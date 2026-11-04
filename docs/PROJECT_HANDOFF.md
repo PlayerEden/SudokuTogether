@@ -2,11 +2,21 @@
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
-> Last reconciled: **2026-11-03 UTC**.
+> Last reconciled: **2026-11-03 America/Chicago**.
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
+
+## v0.11B — latest verified launcher/entry-check source
+
+Continue from [feat/gridmates-coach-launcher](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A; do not restart from older development or discard the previous drafts. Production source0f640aaa is unchanged by recovery/test fixes. [Exact QA](V0.11B_COACH_LAUNCHER_QA.md), [delivery plan](GRIDMATES_DELIVERY_PLAN.md), [recovery](V0.11B_RECOVERY_LOG.md), [work log](V0.11B_WORK_LOG.md).
+
+Android launcher **Sudoku**; full **GridMates: Sudoku** brand remains. Optional Solo/Daily Check my work is honest solution comparison, read-only until explicit Erase, with Undo/resume and separately saved Assisted metadata. Logical hints remain deductions and assistance stays unlimited. No local checks in rooms, new score, art replacement, release publication or package/signing/save reset.
+
+Version18 /0.11.0-dev2-qa, min26/target35, schema1/protocol5, original QA certificate. Fresh103 JVM +46 API26 native cases pass; lint0 errors/14 warnings. Exact original17→18 update preserves complete profile bytes, nonempty history, entered answer, pencil note, ID and preferences. Runtime launcher/application labels and compiled icon equality verified. APK SHA-256 `87bb39b735745856f790bc4987e368f76e78cd70edea0c084ac52b0ff3870615`. Prior transient candidate953e6b9 was not delivered and its cleared raw logs are historical only.
+
+Next: stage2 coach proof/highlights/progressive explanation, then optional result sharing, profile/cards and calibrated scoring. Keep physical LAN deferred; release API/signing/AAB, modern-device/TalkBack/tablet and final art gates remain. Resolve the deferred historical brand-document source-metadata Minor during the next documentation pass. Main/development are not promoted.
 
 ## v0.11A — latest GridMates branding/copy candidate
 
