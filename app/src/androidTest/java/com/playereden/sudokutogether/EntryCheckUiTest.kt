@@ -51,7 +51,7 @@ class EntryCheckUiTest {
         originals.forEach { it.copyTo(File(context.filesDir, it.name), overwrite = true) }
         check(backup.deleteRecursively())
     }
-    @After fun restore() { scenario?.close();restoreOriginal() }
+    @After fun restore() { compose.mainClock.autoAdvance = true;scenario?.close();restoreOriginal() }
     private fun launch() {
         scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario!!.onActivity { activity = it;model = ViewModelProvider(it)[GameViewModel::class.java] }
@@ -83,16 +83,27 @@ class EntryCheckUiTest {
         if (!node.isDisplayed()) node.performScrollTo()
         node.assertIsDisplayed().performClick()
     }
-    private fun hint() {
-        tap("Hint");compose.waitUntil(20000) { !model.state.value.busy }
+    private fun coachAction(text: String) {
+        val button = compose.onNodeWithText(text)
+        if (!button.isDisplayed()) button.performScrollTo()
+        button.assertIsDisplayed()
+        // Keep production IO intact, then deliver the test frame on Main.
+        compose.mainClock.autoAdvance = false
+        try {
+            button.performClick()
+            compose.waitUntil(20000) { !model.state.value.busy }
+            compose.runOnUiThread { compose.mainClock.advanceTimeByFrame() }
+        } finally { compose.mainClock.autoAdvance = true }
+        compose.waitForIdle()
     }
+    private fun hint() = coachAction("Hint")
     @Test fun anExplicitCheckFindsTheEntryAndEraseUndoAndResumePreserveIt() {
         launch();hint()
         compose.onNodeWithText("Check my work").assertIsDisplayed()
         assertEquals(0,model.state.value.profile.activeSolo!!.checksUsed)
         assertEquals(0,model.state.value.profile.activeSolo!!.hintsUsed)
         capture("hint-unavailable")
-        tap("Check my work")
+        coachAction("Check my work")
         compose.waitUntil(20000) { model.state.value.entryCheck != null }
         assertEquals(SudokuAssistance.CheckKind.INCORRECT_ENTRY,model.state.value.entryCheck!!.kind)
         assertEquals(1,model.state.value.snapshot!!.cells[2].value)
@@ -114,7 +125,7 @@ class EntryCheckUiTest {
         val digits = "123456789456789123789123456234567891567891234891234567345678912678912345912345678".map { it.digitToInt() }
         val puzzle = Puzzle("coach-finish",digits.mapIndexed { i,n -> if (i in listOf(0,1,9,10)) 0 else n },"EASY")
         writeProgress(PersonalPlay.edit(PersonalPlay.newSolo(puzzle,1000L),0,Kind.VALUE,1,elapsedMs=1000L,nowMs=2000L)!!)
-        launch();hint();tap("Check my work")
+        launch();hint();coachAction("Check my work")
         compose.waitUntil(20000) { model.state.value.entryCheck != null }
         assertEquals(SudokuAssistance.CheckKind.CORRECT_SO_FAR,model.state.value.entryCheck!!.kind)
         assertEquals(1,model.state.value.profile.activeSolo!!.checksUsed)

@@ -2,6 +2,7 @@ package com.playereden.sudokutogether
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.lifecycle.ViewModelProvider
 import org.junit.Before
@@ -139,6 +140,11 @@ class PlaySmokeTest {
         compose.onNodeWithText("Room chat").assertExists()
         compose.onNodeWithText("Message your partner").assertExists()
         compose.onNodeWithText("Send").assertExists()
+        compose.waitForIdle()
+        compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss), useUnmergedTree = true)
+            .onFirst().performSemanticsAction(SemanticsActions.Dismiss) { it() }
+        compose.waitUntil(20000) { compose.onAllNodesWithText("Room chat").fetchSemanticsNodes().isEmpty() }
+        compose.waitForIdle()
     }
 
     @Test fun soloPlayCanResumeAndOpenLocalProfile() {
