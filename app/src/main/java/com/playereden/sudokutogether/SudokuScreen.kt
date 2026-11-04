@@ -51,7 +51,8 @@ data class GameActions(
     val autoCleanNotes: (Boolean) -> Unit,
     val daily: () -> Unit,
     val openDaily: (String) -> Unit,
-    val checkWork: () -> Unit = {}
+    val checkWork: () -> Unit = {},
+    val requireRoomCode: (Boolean) -> Unit = {}
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {

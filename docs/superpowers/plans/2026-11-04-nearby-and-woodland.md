@@ -31,9 +31,9 @@
 ### Task2: Simple nearby joining
 **Files:** RoomDiscovery.kt, JoinScreen.kt, HomeScreen.kt, GameViewModel.kt, SudokuScreen.kt/MainActivity.kt actions; NearbyJoinUiTest.kt/model cases.
 **Interfaces:** NearbyRoom.requiresCode:Boolean=true; startHosting(...,requiresCode:Boolean=true); GameUiState.requireRoomCode:Boolean=false; GameActions.requireRoomCode:(Boolean)->Unit default no-op; model.setRequireRoomCode(Boolean).
-- [ ] Native RED: open room taps endpoint and blank code callback immediately; protected needs6digits; manual fallback; fresh host defaults open; restored protected policy independent of preference.
-- [ ] Implement NSD flag, persisted new-game choice, actual saved host policy and truthful code display. Run focused native/model and full JVM GREEN.
-- [ ] Commit and ledger.
+- [x] Native RED: open room taps endpoint and blank code callback immediately; protected needs6digits; manual fallback; fresh host defaults open; restored protected policy independent of preference.
+- [x] Implement NSD flag, persisted new-game choice, actual saved host policy and truthful code display. Run focused native/model and full JVM GREEN.
+- [x] Commit and ledger.
 
 ### Task3: Header and chat
 **Files:** PlayScreen.kt, CosmeticUi.kt; MultiplayerPolishUiTest.kt.
