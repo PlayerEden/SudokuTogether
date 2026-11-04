@@ -1,10 +1,14 @@
 # GridMates: Sudoku
 
-> **Latest verified QA: v0.11B** on [feat/gridmates-coach-launcher](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. Launcher **Sudoku**, full **GridMates: Sudoku** brand retained; explicit Solo/Daily entry checks with saved assistance. **103 JVM +46 API26 native cases passed**, lint0 errors/14 warnings, exact17→18 update verified. [QA audit](docs/V0.11B_COACH_LAUNCHER_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md) · [Recovery log](docs/V0.11B_RECOVERY_LOG.md). Main/development and earlier checkpoints remain unchanged.
+> **Latest verified QA: v0.11C** on [feat/gridmates-nearby-animals](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-nearby-animals), stacked on the accepted v0.11B. Open nearby joining with optional remembered code protection, clearer room/chat controls and12 earned Woodland portraits. **117 JVM tests and78 accepted Android executions passed**; lint0 errors/17 warnings. Original18→19 in-place update and installed APK bytes/signing/icon verified. [QA audit](docs/V0.11C_NEARBY_WOODLAND_QA.md) · [Draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md). Both phones need the new APK; renewed physical two-phone testing remains open. No main/development promotion or Play publication.
+
+## Earlier QA milestones
+
+> **v0.11B rollback QA** on [feat/gridmates-coach-launcher](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. Launcher **Sudoku**, full **GridMates: Sudoku** brand retained; explicit Solo/Daily entry checks with saved assistance. **103 JVM +46 API26 native cases passed**, lint0 errors/14 warnings, exact17→18 update verified. [QA audit](docs/V0.11B_COACH_LAUNCHER_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md) · [Recovery log](docs/V0.11B_RECOVERY_LOG.md). Main/development and earlier checkpoints remain unchanged.
 
 [v0.11A GridMates identity and concise UI — draft PR26](https://github.com/PlayerEden/SudokuTogether/pull/26)
 
-> **Latest work: GridMates v0.11A**, on [`feat/gridmates-brand-copy`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-brand-copy). [Brand/copy audit](docs/V0.11A_GRIDMATES_QA.md). The approved public name is GridMates: Sudoku; logo concepts remain provisional. The earlier v0.10D source is preserved below.
+> **Earlier identity milestone: GridMates v0.11A**, on [`feat/gridmates-brand-copy`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-brand-copy). [Brand/copy audit](docs/V0.11A_GRIDMATES_QA.md). The approved public name is GridMates: Sudoku; logo concepts remain provisional. The earlier v0.10D source is preserved below.
 
 > **v0.11A QA:** version17 / `0.11.0-dev1-qa`; 87 JVM tests and 31 accepted API26 native cases passed, lint0 errors/20 warnings. The exact APK updated v0.10D while preserving the seeded profile, active puzzle/note, identity and preferences. [QA checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11a-gridmates-qa-green). Two-phone/device release gates remain open.
 

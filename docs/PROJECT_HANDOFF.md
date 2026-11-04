@@ -6,6 +6,18 @@
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
+## Current verified milestone — v0.11C
+
+Start from [`feat/gridmates-nearby-animals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-nearby-animals), [draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28), stacked on the locked v0.11B source. Read the [v0.11C audit](V0.11C_NEARBY_WOODLAND_QA.md) and [delivery plan](GRIDMATES_DELIVERY_PLAN.md). The QA APK is version19 /0.11.0-dev3-qa, launcher Sudoku, unchanged package/icon/signing and schema1, protocol6 on both phones.
+
+Open nearby rooms join on tap; Require a code is optional and remembered through Home/new-room creation. Old saved rooms keep their policy. Header/chat are refined; the optional12-animal Woodland collection preserves all earlier emblems and unlocks.117 JVM tests and78 accepted native executions pass, lint0 errors/17 warnings; original18→19 data continuity and installed APK hash are verified. One source review's two Important findings have pre-fix reproductions and passing regressions. The audit records remaining minor wrapping/old-client message limits.
+
+Owner physical v0.11B two-phone success remains recorded; renew the physical test for v0.11C. Newer Android/TalkBack, source consolidation, release signing/AAB and store work remain open. Do not merge/delete the stacked older branches out of order. Preserve v0.11B rollback. Clearer coach explanations are the next larger product slice; sharing/profile/scoring plans remain later stages.
+
+Recovery note: use a full JDK17 (the base environment may have only a JRE), pinned Gradle8.11.1 and the declared Android35 toolchain; native verification used API26 x86_64. Restore the original private QA debug keystore into the task's Android user directory and compare the certificate before packaging. Keep signing material outside git. Do not infer interrupted checks passed after an environment reset.
+
+Earlier handoff records follow for traceability; the v0.11C audit takes precedence for this branch.
+
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
 
 ## November 4 — owner acceptance and successful two-phone smoke test

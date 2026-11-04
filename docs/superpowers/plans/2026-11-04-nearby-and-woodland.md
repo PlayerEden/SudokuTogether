@@ -1,6 +1,6 @@
 # Easy Nearby Play and Woodland Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Easy nearby multiplayer by default and one coherent, earned animal portrait collection.
 **Architecture:** Extend existing session admission policy/NSD metadata; add curated portrait IDs and packaged resources to the current native framework.
@@ -38,21 +38,24 @@
 ### Task3: Header and chat
 **Files:** PlayScreen.kt, CosmeticUi.kt; MultiplayerPolishUiTest.kt.
 **Interfaces:** existing details state houses code/copy/address. Stable primary title row, secondary Chat/Game details; no action API changes.
-- [ ] Native RED for unread0/1/99 at320dp and200% text, title geometry,48dp actions, local You/partner names and reachable wrapping replies.
-- [ ] Implement native rows/details/chat; run new layout/chat and gameplay convenience GREEN.
-- [ ] Commit and ledger.
+- [x] Native RED for unread0/1/99 at320dp and200% text, title geometry,48dp actions, local You/partner names and reachable wrapping replies.
+- [x] Implement native rows/details/chat; run new layout/chat and gameplay convenience GREEN.
+- [x] Commit and ledger.
 
 ### Task4: Woodland assets and selection
 **Files:** design/woodland originals/manifest; drawable-nodpi; AnimalPortraits.kt; CosmeticUi.kt, HomeScreen.kt, JournalScreen.kt, GameViewModel.kt; WoodlandUiTest.kt/store case.
 **Interfaces:** AnimalPortrait(appearance:Appearance,modifier:Modifier=Modifier); curated ID→drawable map and emblem fallback. portrait cosmetic group, cosmeticPortrait preference. Selecting an emblem clears portrait.
-- [ ] Generate/inspect12 matching individual portraits, preserve exact originals/prompts and optimize package resources without repainting art.
-- [ ] Native RED for optional collection, equipped/locked choice, legacy fallback and restored selection.
-- [ ] Implement adaptive collection and home/profile/chat identity, retain emblem selector. Native/catalog/store GREEN.
-- [ ] Commit and ledger.
+- [x] Generate/inspect12 matching individual portraits, preserve exact originals/prompts and optimize package resources without repainting art.
+- [x] Native RED for optional collection, equipped/locked choice, legacy fallback and restored selection.
+- [x] Implement adaptive collection and home/profile/chat identity, retain emblem selector. Native/catalog/store GREEN.
+- [x] Commit and ledger.
 
 ### Task5: Reviewed APK and durable delivery
 **Files:** app/build.gradle.kts version, README/handoff/delivery plan, QA/work log and upgrade fixture.
-- [ ] Run :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest; affected native new/save/assistance/navigation/Daily/gameplay flows. Record actual counts/warnings.
-- [ ] Actual18→19 update with nonempty profile/history/notes/preferences/emblem; verify preservation and default/resumed access. Inspect real normal/large screenshots.
-- [ ] One fresh whole-branch review; resolve material findings once with regression evidence and green suite; record limits/minors.
-- [ ] Freeze/signature/icon/installed-byte proof; save APK promptly, then preview/evidence. Publish exact own-branch source/draft stacked on feat/gridmates-coach-launcher/checkpoint. Complete plan/handoff; no main/development merge.
+- [x] Run :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest; affected native new/save/assistance/navigation/Daily/gameplay flows. Record actual counts/warnings.
+- [x] Actual18→19 update with nonempty profile/history/notes/preferences/emblem; verify preservation and default/resumed access. Inspect real normal/large screenshots.
+- [x] One fresh whole-branch review; resolve material findings once with regression evidence and green suite; record limits/minors.
+- [x] Freeze/signature/icon/installed-byte proof; save APK promptly, then preview/evidence. Publish exact own-branch source/draft stacked on feat/gridmates-coach-launcher/checkpoint. Complete plan/handoff; no main/development merge.
+
+
+Acceptance completed November4, 2026; see V0.11C_NEARBY_WOODLAND_QA.md and the work log. Integration remains a draft PR, not a source promotion.
