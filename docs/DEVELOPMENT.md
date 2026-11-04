@@ -39,3 +39,7 @@ The presentation milestone keeps the `.qa` package and protocol5/schema1. To bui
 ## v0.11A GridMates QA updates
 
 The GridMates display-name change keeps `com.playereden.sudokutogether.qa` and reuses the v0.10D debug certificate above. The delivered version17 / `0.11.0-dev1-qa` APK passed an actual in-place update from the original version16 APK with saved puzzle/note, identity and preferences retained. Use the existing private v0.10D backup for subsequent QA updates; do not generate a replacement key. No new signing backup is needed for this pass. The public name does not change the application ID, schema1, protocol5 or private-file locations. See [the exact audit and coverage limits](V0.11A_GRIDMATES_QA.md).
+
+## v0.11B verified QA update
+
+Version18 /0.11.0-dev2-qa retains the same package/component, QA certificate, icon and private-file paths. MainActivity alone uses launcher_name=Sudoku; application/in-game branding retains GridMates. Optional checksUsed defaults0 in legacy local data; schema1/protocol5 remain. Fresh103 JVM and46 API26 native cases pass; original17→18 continuity includes complete profile hash, nonempty history and entered value/note. [Exact artifact/coverage](V0.11B_COACH_LAUNCHER_QA.md). Keep the existing private QA backup; no replacement key is needed.

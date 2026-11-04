@@ -97,7 +97,8 @@ class LocalPlayerStore(file: File) {
         fun validateProgress(solo: SoloProgress) {
             require(solo.id.isNotBlank() && solo.cells.size == 81 && solo.puzzle.clues.size == 81 && solo.elapsedMs >= 0 && solo.moves >= 0)
             require(solo.puzzle.clues.all { it in 0..9 } && Sudoku.conflicts(solo.puzzle.clues).isEmpty())
-            require(solo.history.size <= 128 && solo.cells.all { validCell(it) && it.revision <= solo.moves } && solo.hintsUsed in 0..9999)
+            require(solo.history.size <= 128 && solo.cells.all { validCell(it) && it.revision <= solo.moves } &&
+                solo.hintsUsed in 0..9999 && solo.checksUsed in 0..9999)
             require(solo.history.all { undo ->
                 undo.cell in 0..80 && solo.puzzle.clues[undo.cell] == 0 && validCell(undo.before) &&
                     undo.before.revision < solo.moves && undo.relatedBefore.size <= 20 &&
@@ -118,7 +119,8 @@ class LocalPlayerStore(file: File) {
             require(daily.solo.puzzle.difficulty == DailyChallenge.DIFFICULTY)
             validateProgress(daily.solo)
         }
-        require(saved.records.all { it.id.isNotBlank() && it.elapsedMs >= 0 && it.moves >= 0 && it.hintsUsed in 0..9999 })
+        require(saved.records.all { it.id.isNotBlank() && it.elapsedMs >= 0 && it.moves >= 0 &&
+            it.hintsUsed in 0..9999 && it.checksUsed in 0..9999 && (it.checksUsed == 0 || it.assisted) })
     }
 
     @Synchronized fun current(): LocalPlayerData = data

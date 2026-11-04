@@ -71,8 +71,8 @@ object DailyChallenge {
         if (existing != null) return updated
         val record = GameRecord(progress.id, DAILY, "SOLVED", progress.puzzle.id,
             progress.elapsedMs, progress.moves, progress.finishedAtMs!!,
-            progress.puzzle.difficulty, assisted = progress.hintsUsed > 0 || progress.usedNoteAssist,
-            hintsUsed = progress.hintsUsed, dailyDate = date)
+            progress.puzzle.difficulty, assisted = progress.assisted,
+            hintsUsed = progress.hintsUsed, dailyDate = date, checksUsed = progress.checksUsed)
         return updated.copy(records = (updated.records + record).takeLast(MAX_RECORDS))
     }
 

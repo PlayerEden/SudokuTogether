@@ -50,7 +50,8 @@ data class GameActions(
     val dismissHint: () -> Unit,
     val autoCleanNotes: (Boolean) -> Unit,
     val daily: () -> Unit,
-    val openDaily: (String) -> Unit
+    val openDaily: (String) -> Unit,
+    val checkWork: () -> Unit = {}
 )
 
 @Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
@@ -84,9 +85,9 @@ data class GameActions(
                 Text("Fill each row, column and 3×3 box with the numbers 1 through 9. Each number appears only once in each.", color = Ink)
                 Text("Tap a square, then a number. The small counter under each number shows how many of that digit are still missing. Notes lets you pencil in candidates.", color = Ink)
                 Text("Erase clears a square. Undo reverses your most recent safe move.", color = Ink)
-                Text("Solo Hint shows a logical next step without entering a number. An incorrect entry can prevent hints.", color = Ink)
+                Text("Solo Hint explains a logical next step. Check my work can identify an earlier mistake without filling in an answer. Erase entry is optional; Undo restores it.", color = Ink)
                 Text("Optional Clean pencil marks is in Settings. It removes matching notes near a placed number; Undo restores them. It's off by default.", color = Ink)
-                Text("Solo records distinguish assisted and unassisted puzzles. Hints or automatic note cleanup mark a finish Assisted.", color = Ink)
+                Text("Hints, solution checks or automatic note cleanup mark a finish Assisted. Unassisted best times stay separate.", color = Ink)
                 Text("Daily Challenge: one offline Easy puzzle per local calendar date. It saves separately from regular Solo and you can return throughout the day.", color = Ink)
                 Text("Co-op: share one board over the same Wi-Fi. Versus: race on private boards. Assistance is Solo-only.", color = Ink)
             }

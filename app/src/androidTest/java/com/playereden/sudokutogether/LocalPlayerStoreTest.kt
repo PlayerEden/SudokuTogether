@@ -160,4 +160,19 @@ class LocalPlayerStoreTest {
         assertEquals(4, LocalPlayerStore(file).current().activeSolo!!.cells[0].notes)
         assertEquals("legacy-player", LocalPlayerStore(file).current().playerId)
     }
+    @Test fun invalidCheckCountersCannotReplaceExistingProgress() {
+        for (count in listOf(-1,10000)) {
+            val original=saved();val invalid=original.copy(activeSolo=original.activeSolo!!.copy(checksUsed=count))
+            val text=Json.encodeToString(invalid);val file=File(root,"checks-$count.json").also { it.writeText(text) }
+            assertFalse(LocalPlayerStore(file).canSave)
+            assertEquals(text,file.readText())
+        }
+    }
+    @Test fun recordedSolutionChecksCannotMasqueradeAsUnassisted() {
+        val original=saved();val record=GameRecord("inconsistent-check",SOLO,"SOLVED","record",1000L,1,2000L,
+            assisted=false,checksUsed=1)
+        val text=Json.encodeToString(original.copy(records=listOf(record)));val file=target().also { it.writeText(text) }
+        assertFalse(LocalPlayerStore(file).canSave)
+        assertEquals(text,file.readText())
+    }
 }

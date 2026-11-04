@@ -36,7 +36,9 @@ data class GameUiState(
     val finishedSolo: SoloProgress? = null,
     val soloClockStartedAt: Long? = null,
     val localSaveBlocked: Boolean = false,
-    val todayDate: String = DailyChallenge.today()
+    val todayDate: String = DailyChallenge.today(),
+    val hintUnavailable: Boolean = false,
+    val entryCheck: SudokuAssistance.EntryCheck? = null
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && ((role == SOLO && !localSaveBlocked) || (role != SOLO && !status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -133,46 +135,112 @@ class GameViewModel @JvmOverloads constructor(
         preferences.edit().putBoolean("autoCleanNotes", enabled).apply()
         _state.update { it.copy(autoCleanNotes = enabled) }
     }
-    fun dismissHint() { _state.update { it.copy(hint = null) } }
+    fun dismissHint() { _state.update { it.copy(hint = null, hintUnavailable = false, entryCheck = null) } }
     private fun progressFor(data: LocalPlayerData, date: String?): SoloProgress? =
         if (date == null) data.activeSolo else DailyChallenge.find(data, date)
 
     private fun withProgress(data: LocalPlayerData, date: String?, progress: SoloProgress): LocalPlayerData =
         if (date == null) data.copy(activeSolo = progress) else DailyChallenge.update(data, date, progress)
 
+    private fun isAssistanceTarget(ui: GameUiState, before: GameUiState, token: Long): Boolean =
+        generation.get() == token && ui.role == SOLO && ui.page == Page.PLAY &&
+            ui.dailyDate == before.dailyDate && ui.snapshot?.sessionId == before.snapshot?.sessionId &&
+            ui.snapshot?.revision == before.snapshot?.revision && ui.snapshot?.completed == false
+
+    /** Recheck inside the CAS loop too: another state update can force a retry. */
+    private fun publishAssistance(token: Long, before: GameUiState, change: (GameUiState) -> GameUiState) {
+        synchronized(localStartLock) {
+            _state.update { ui -> if (isAssistanceTarget(ui, before, token)) change(ui) else ui }
+        }
+    }
+
     fun requestHint() {
         val before = _state.value
         if (before.role != SOLO || before.page != Page.PLAY || !before.canEdit ||
-            before.snapshot == null || before.hint != null) return
+            before.snapshot == null || before.hint != null || before.hintUnavailable || before.entryCheck != null) return
         val token = generation.get()
         val expectedId = before.snapshot.sessionId
         val expectedMoves = before.snapshot.revision
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch(workDispatcher) {
             try {
+                if (generation.get() != token) return@launch
                 val progress = progressFor(localPlayer.current(), before.dailyDate)
                 val hint = if (progress != null && progress.id == expectedId &&
                     progress.moves.toLong() == expectedMoves && !progress.completed)
                     SudokuAssistance.nextHint(progress.puzzle, progress.cells.map { it.value }) else null
                 if (hint == null) {
-                    if (generation.get() == token) _state.update { it.copy(busy = false,
-                        message = "No safe logical hint is available. Check for incorrect numbers or use Undo.") }
+                    publishAssistance(token, before) { it.copy(busy = false,
+                        hintUnavailable = true, message = null) }
                     return@launch
                 }
-                val updated = localPlayer.update { data ->
-                    val current = progressFor(data, before.dailyDate)
-                    if (current != null && current.id == expectedId &&
-                        current.moves.toLong() == expectedMoves && !current.completed)
-                        withProgress(data, before.dailyDate, PersonalPlay.recordHint(current)) else data
+                synchronized(localStartLock) {
+                    if (!isAssistanceTarget(_state.value, before, token)) return@launch
+                    var accepted = false
+                    val updated = localPlayer.update { data ->
+                        val current = progressFor(data, before.dailyDate)
+                        if (current != null && current.id == expectedId &&
+                            current.moves.toLong() == expectedMoves && !current.completed) {
+                            accepted = true
+                            withProgress(data, before.dailyDate, PersonalPlay.recordHint(current))
+                        } else data
+                    }
+                    val confirmed = progressFor(updated, before.dailyDate)
+                    if (accepted && confirmed?.id == expectedId && confirmed.moves.toLong() == expectedMoves) {
+                        publishAssistance(token, before) { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
+                    } else publishAssistance(token, before) { it.copy(busy = false) }
                 }
-                val confirmed = progressFor(updated, before.dailyDate)
-                if (generation.get() == token && confirmed?.id == expectedId &&
-                    confirmed.moves.toLong() == expectedMoves) {
-                    _state.update { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
-                } else if (generation.get() == token) _state.update { it.copy(busy = false) }
             } catch (_: Exception) {
-                if (generation.get() == token) _state.update { it.copy(busy = false,
+                publishAssistance(token, before) { it.copy(busy = false,
                     message = "Could not save hint usage. Your puzzle is unchanged.") }
+            }
+        }
+    }
+    fun checkWork() {
+        val before = _state.value
+        if (before.role != SOLO || before.page != Page.PLAY || !before.canEdit ||
+            before.snapshot == null || before.entryCheck != null) return
+        val token = generation.get()
+        val expectedId = before.snapshot.sessionId
+        val expectedMoves = before.snapshot.revision
+        _state.update { it.copy(busy = true, message = null, hint = null, hintUnavailable = false) }
+        viewModelScope.launch(workDispatcher) {
+            try {
+                if (generation.get() != token) return@launch
+                val progress = progressFor(localPlayer.current(), before.dailyDate)
+                if (progress == null || progress.id != expectedId || progress.moves.toLong() != expectedMoves || progress.completed) {
+                    publishAssistance(token, before) { it.copy(busy = false, message = "Your puzzle changed. Try again.") }
+                    return@launch
+                }
+                val check = SudokuAssistance.checkEntries(progress.puzzle, progress.cells.map { it.value })
+                if (check == null) {
+                    publishAssistance(token, before) { it.copy(busy = false,
+                        message = "Couldn't check this puzzle. Your entries are unchanged.") }
+                    return@launch
+                }
+                synchronized(localStartLock) {
+                    if (!isAssistanceTarget(_state.value, before, token)) return@launch
+                    var accepted: SoloProgress? = null
+                    val updated = if (check.usesSolution) localPlayer.update { data ->
+                        val current = progressFor(data, before.dailyDate)
+                        if (current != null && current.id == expectedId && current.moves.toLong() == expectedMoves && !current.completed) {
+                            val counted = PersonalPlay.recordCheck(current)
+                            accepted = counted
+                            withProgress(data, before.dailyDate, counted)
+                        } else data
+                    } else localPlayer.current().also { data ->
+                        accepted = progressFor(data, before.dailyDate)?.takeIf {
+                            it.id == expectedId && it.moves.toLong() == expectedMoves && !it.completed
+                        }
+                    }
+                    if (accepted != null) publishAssistance(token, before) { ui ->
+                        ui.copy(profile = updated, busy = false, entryCheck = check,
+                            selected = if (check.cell in 0..80) check.cell else ui.selected)
+                    } else publishAssistance(token, before) { it.copy(busy = false) }
+                }
+            } catch (_: Exception) {
+                publishAssistance(token, before) { it.copy(busy = false,
+                    message = "Could not save the check. Your entries are unchanged.") }
             }
         }
     }
@@ -333,7 +401,11 @@ class GameViewModel @JvmOverloads constructor(
     }
 
     private fun closeRoom(): Long {
-        val current = synchronized(localStartLock) { generation.incrementAndGet() }
+        val current = synchronized(localStartLock) {
+            generation.incrementAndGet().also {
+                _state.update { ui -> ui.copy(hint = null, hintUnavailable = false, entryCheck = null) }
+            }
+        }
         guest?.close(); guest = null; server?.close(); server = null; discovery.stop()
         return current
     }
@@ -474,7 +546,7 @@ class GameViewModel @JvmOverloads constructor(
     }
     fun select(cell: Int) {
         if (cell !in 0..80) return
-        _state.update { it.copy(selected = cell, hint = null) }
+        _state.update { it.copy(selected = cell, hint = null, hintUnavailable = false, entryCheck = null) }
         if (_state.value.role == HOST) server?.select(cell) else if (_state.value.role == GUEST) guest?.select(cell)
     }
     fun toggleNotes() { _state.update { it.copy(notes = !it.notes) } }
@@ -490,7 +562,8 @@ class GameViewModel @JvmOverloads constructor(
         val value = _state.value; val snapshot = value.snapshot ?: return
         if (!value.canEdit || cell !in 0..80) return
         val operation = Operation(snapshot.sessionId, snapshot.epoch, cell, snapshot.cells[cell].revision, kind, number, enabled)
-        val current = generation.get(); _state.update { it.copy(pendingId = operation.id, message = null, hint = null) }
+        val current = generation.get(); _state.update { it.copy(pendingId = operation.id, message = null,
+            hint = null, hintUnavailable = false, entryCheck = null) }
         if (value.role == SOLO) {
             val elapsed = elapsedSolo()
             viewModelScope.launch(workDispatcher) {

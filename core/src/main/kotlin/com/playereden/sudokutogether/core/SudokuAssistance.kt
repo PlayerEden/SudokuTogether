@@ -1,13 +1,39 @@
 package com.playereden.sudokutogether.core
 
 /**
- * Read-only hints based on the player's currently visible Sudoku grid.
- * Never looks up the original solved board or edits a cell.
+ * Read-only assistance. Logical hints use the visible grid; explicit entry
+ * checks compare player entries with the original uniquely-solvable puzzle.
+ * Neither path edits a cell.
  * Restricted to solo by the Android presentation layer; later hidden-clue
  * and competitive modes will need their own explicit assistance policy.
  */
 object SudokuAssistance {
     data class Hint(val cell: Int, val digit: Int, val technique: HumanSudoku.Technique, val explanation: String)
+
+    enum class CheckKind { CONFLICT, INCORRECT_ENTRY, CORRECT_SO_FAR, NO_ENTRIES }
+    data class EntryCheck(val kind: CheckKind, val cell: Int = -1, val conflicts: Set<Int> = emptySet()) {
+        val usesSolution: Boolean get() = kind == CheckKind.INCORRECT_ENTRY || kind == CheckKind.CORRECT_SO_FAR
+    }
+
+    /** Called only after the player explicitly requests a solution check. */
+    fun checkEntries(puzzle: Puzzle, visible: List<Int>): EntryCheck? {
+        if (puzzle.clues.size != 81 || visible.size != 81 || visible.any { it !in 0..9 }) return null
+        if ((0..80).any { puzzle.clues[it] != 0 && puzzle.clues[it] != visible[it] }) return null
+        if (Sudoku.solutionCount(puzzle.clues) != 1) return null
+        val entries = (0..80).filter { puzzle.clues[it] == 0 && visible[it] != 0 }
+        if (entries.isEmpty()) return EntryCheck(CheckKind.NO_ENTRIES)
+        val conflicts = Sudoku.conflicts(visible)
+        if (conflicts.isNotEmpty()) {
+            val target = entries.firstOrNull { it in conflicts } ?: return null
+            return EntryCheck(CheckKind.CONFLICT, target, conflicts)
+        }
+        for (cell in entries) {
+            val trial = puzzle.clues.toMutableList().also { it[cell] = visible[cell] }
+            if (Sudoku.solutionCount(trial, limit = 1) == 0)
+                return EntryCheck(CheckKind.INCORRECT_ENTRY, cell)
+        }
+        return EntryCheck(CheckKind.CORRECT_SO_FAR)
+    }
 
     fun nextHint(puzzle: Puzzle, visible: List<Int>): Hint? {
         if (visible.size != 81 || puzzle.clues.size != 81) return null

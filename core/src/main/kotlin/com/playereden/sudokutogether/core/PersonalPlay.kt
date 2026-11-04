@@ -19,9 +19,11 @@ const val MAX_RECORDS = 10_000
     val history: List<SoloUndo> = emptyList(),
     val finishedAtMs: Long? = null,
     val hintsUsed: Int = 0,
-    val usedNoteAssist: Boolean = false
+    val usedNoteAssist: Boolean = false,
+    val checksUsed: Int = 0
 ) {
     val completed: Boolean get() = finishedAtMs != null
+    val assisted: Boolean get() = hintsUsed > 0 || usedNoteAssist || checksUsed > 0
     fun snapshot(): Snapshot = Snapshot(
         sessionId = id, epoch = id, puzzle = puzzle, cells = cells,
         revision = moves.toLong(), completed = completed,
@@ -42,7 +44,8 @@ const val MAX_RECORDS = 10_000
     val difficulty: String? = null,
     val assisted: Boolean = false,
     val hintsUsed: Int = 0,
-    val dailyDate: String? = null
+    val dailyDate: String? = null,
+    val checksUsed: Int = 0
 )
 
 @Serializable data class LocalPlayerData(
@@ -169,6 +172,9 @@ object PersonalPlay {
     fun recordHint(s: SoloProgress): SoloProgress =
         if (s.completed) s else s.copy(hintsUsed = (s.hintsUsed + 1).coerceAtMost(9999))
 
+    fun recordCheck(s: SoloProgress): SoloProgress =
+        if (s.completed) s else s.copy(checksUsed = (s.checksUsed + 1).coerceAtMost(9999))
+
     fun withElapsed(s: SoloProgress, elapsedMs: Long): SoloProgress =
         if (s.completed) s else s.copy(elapsedMs = maxOf(elapsedMs, s.elapsedMs))
 
@@ -177,7 +183,7 @@ object PersonalPlay {
         if (data.records.any { it.id == finished.id }) return data.copy(activeSolo = finished)
         val record = GameRecord(finished.id, SOLO, "SOLVED", finished.puzzle.id,
             finished.elapsedMs, finished.moves, finished.finishedAtMs!!, finished.puzzle.difficulty,
-            assisted = finished.hintsUsed > 0 || finished.usedNoteAssist, hintsUsed = finished.hintsUsed)
+            assisted = finished.assisted, hintsUsed = finished.hintsUsed, checksUsed = finished.checksUsed)
         return data.copy(activeSolo = finished, records = (data.records + record).takeLast(MAX_RECORDS))
     }
 

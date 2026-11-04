@@ -90,10 +90,12 @@ import com.playereden.sudokutogether.core.*
     recent.forEach { result ->
         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(result.mode.uppercase() + " · " + result.result + " · " + difficultyName(result.difficulty) +
-                (if (result.mode == SOLO) (if (result.assisted) " · Assisted" else " · Unassisted") else ""),
+                (if (result.mode == SOLO || result.mode == DAILY) (if (result.assisted) " · Assisted" else " · Unassisted") else ""),
                 fontSize = 12.sp, color = Ink, modifier = Modifier.weight(1f))
             Text(if (result.mode == COOP) "Finished" else formatElapsed(result.elapsedMs), fontSize = 12.sp, color = Forest, modifier = Modifier.padding(start = 8.dp))
         }
+        if (result.checksUsed > 0) Text("${if (result.checksUsed == 9999) "9999+" else result.checksUsed} entry check" +
+            (if (result.checksUsed == 1) "" else "s"),fontSize=11.sp,color=Muted)
         HorizontalDivider(color = Rule)
     }
 }

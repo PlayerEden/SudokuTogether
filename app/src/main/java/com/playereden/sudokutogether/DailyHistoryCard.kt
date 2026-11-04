@@ -51,7 +51,7 @@ import com.playereden.sudokutogether.core.DailyProgress
 @Composable private fun DailyDetails(day: DailyProgress) {
     Text(day.date, color = Ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
     Text((if (day.solo.completed) "Completed" else "In progress") + " · " + formatElapsed(day.solo.elapsedMs) +
-        (if (day.solo.completed && (day.solo.hintsUsed > 0 || day.solo.usedNoteAssist)) " · Assisted" else ""),
+        (if (day.solo.completed && day.solo.assisted) " · Assisted" else ""),
         color = Muted, fontSize = 11.sp)
 }
 
