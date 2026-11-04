@@ -142,6 +142,18 @@ class GameViewModel @JvmOverloads constructor(
     private fun withProgress(data: LocalPlayerData, date: String?, progress: SoloProgress): LocalPlayerData =
         if (date == null) data.copy(activeSolo = progress) else DailyChallenge.update(data, date, progress)
 
+    private fun isAssistanceTarget(ui: GameUiState, before: GameUiState, token: Long): Boolean =
+        generation.get() == token && ui.role == SOLO && ui.page == Page.PLAY &&
+            ui.dailyDate == before.dailyDate && ui.snapshot?.sessionId == before.snapshot?.sessionId &&
+            ui.snapshot?.revision == before.snapshot?.revision && ui.snapshot?.completed == false
+
+    /** Recheck inside the CAS loop too: another state update can force a retry. */
+    private fun publishAssistance(token: Long, before: GameUiState, change: (GameUiState) -> GameUiState) {
+        synchronized(localStartLock) {
+            _state.update { ui -> if (isAssistanceTarget(ui, before, token)) change(ui) else ui }
+        }
+    }
+
     fun requestHint() {
         val before = _state.value
         if (before.role != SOLO || before.page != Page.PLAY || !before.canEdit ||
@@ -152,31 +164,34 @@ class GameViewModel @JvmOverloads constructor(
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch(workDispatcher) {
             try {
+                if (generation.get() != token) return@launch
                 val progress = progressFor(localPlayer.current(), before.dailyDate)
                 val hint = if (progress != null && progress.id == expectedId &&
                     progress.moves.toLong() == expectedMoves && !progress.completed)
                     SudokuAssistance.nextHint(progress.puzzle, progress.cells.map { it.value }) else null
                 if (hint == null) {
-                    if (generation.get() == token) _state.update { it.copy(busy = false,
+                    publishAssistance(token, before) { it.copy(busy = false,
                         hintUnavailable = true, message = null) }
                     return@launch
                 }
-                var accepted = false
-                val updated = localPlayer.update { data ->
-                    val current = progressFor(data, before.dailyDate)
-                    if (generation.get() == token && current != null && current.id == expectedId &&
-                        current.moves.toLong() == expectedMoves && !current.completed) {
-                        accepted = true
-                        withProgress(data, before.dailyDate, PersonalPlay.recordHint(current))
-                    } else data
+                synchronized(localStartLock) {
+                    if (!isAssistanceTarget(_state.value, before, token)) return@launch
+                    var accepted = false
+                    val updated = localPlayer.update { data ->
+                        val current = progressFor(data, before.dailyDate)
+                        if (current != null && current.id == expectedId &&
+                            current.moves.toLong() == expectedMoves && !current.completed) {
+                            accepted = true
+                            withProgress(data, before.dailyDate, PersonalPlay.recordHint(current))
+                        } else data
+                    }
+                    val confirmed = progressFor(updated, before.dailyDate)
+                    if (accepted && confirmed?.id == expectedId && confirmed.moves.toLong() == expectedMoves) {
+                        publishAssistance(token, before) { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
+                    } else publishAssistance(token, before) { it.copy(busy = false) }
                 }
-                val confirmed = progressFor(updated, before.dailyDate)
-                if (accepted && generation.get() == token && confirmed?.id == expectedId &&
-                    confirmed.moves.toLong() == expectedMoves) {
-                    _state.update { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
-                } else if (generation.get() == token) _state.update { it.copy(busy = false) }
             } catch (_: Exception) {
-                if (generation.get() == token) _state.update { it.copy(busy = false,
+                publishAssistance(token, before) { it.copy(busy = false,
                     message = "Could not save hint usage. Your puzzle is unchanged.") }
             }
         }
@@ -194,17 +209,17 @@ class GameViewModel @JvmOverloads constructor(
                 if (generation.get() != token) return@launch
                 val progress = progressFor(localPlayer.current(), before.dailyDate)
                 if (progress == null || progress.id != expectedId || progress.moves.toLong() != expectedMoves || progress.completed) {
-                    if (generation.get() == token) _state.update { it.copy(busy = false, message = "Your puzzle changed. Try again.") }
+                    publishAssistance(token, before) { it.copy(busy = false, message = "Your puzzle changed. Try again.") }
                     return@launch
                 }
                 val check = SudokuAssistance.checkEntries(progress.puzzle, progress.cells.map { it.value })
                 if (check == null) {
-                    if (generation.get() == token) _state.update { it.copy(busy = false,
+                    publishAssistance(token, before) { it.copy(busy = false,
                         message = "Couldn't check this puzzle. Your entries are unchanged.") }
                     return@launch
                 }
                 synchronized(localStartLock) {
-                    if (generation.get() != token) return@launch
+                    if (!isAssistanceTarget(_state.value, before, token)) return@launch
                     var accepted: SoloProgress? = null
                     val updated = if (check.usesSolution) localPlayer.update { data ->
                         val current = progressFor(data, before.dailyDate)
@@ -218,16 +233,13 @@ class GameViewModel @JvmOverloads constructor(
                             it.id == expectedId && it.moves.toLong() == expectedMoves && !it.completed
                         }
                     }
-                    if (accepted != null) _state.update { ui ->
-                        if (ui.role == SOLO && ui.page == Page.PLAY && ui.snapshot?.sessionId == expectedId &&
-                            ui.snapshot?.revision == expectedMoves)
-                            ui.copy(profile = updated, busy = false, entryCheck = check,
-                                selected = if (check.cell in 0..80) check.cell else ui.selected)
-                        else ui.copy(busy = false)
-                    } else _state.update { it.copy(busy = false) }
+                    if (accepted != null) publishAssistance(token, before) { ui ->
+                        ui.copy(profile = updated, busy = false, entryCheck = check,
+                            selected = if (check.cell in 0..80) check.cell else ui.selected)
+                    } else publishAssistance(token, before) { it.copy(busy = false) }
                 }
             } catch (_: Exception) {
-                if (generation.get() == token) _state.update { it.copy(busy = false,
+                publishAssistance(token, before) { it.copy(busy = false,
                     message = "Could not save the check. Your entries are unchanged.") }
             }
         }

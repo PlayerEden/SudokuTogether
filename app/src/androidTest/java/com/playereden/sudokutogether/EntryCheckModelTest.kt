@@ -3,15 +3,21 @@ package com.playereden.sudokutogether
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.playereden.sudokutogether.core.*
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.CoroutineContext
 
 /** Real persistence and ViewModel; the dispatcher exposes cancellation/save boundaries. */
@@ -132,5 +138,95 @@ class EntryCheckModelTest {
         assertEquals(SudokuAssistance.CheckKind.NO_ENTRIES,model.state.value.entryCheck!!.kind)
         assertEquals(0,saved().activeSolo!!.checksUsed)
         assertFalse(saved().activeSolo!!.assisted)
+    }
+
+    /** Pause the real StateFlow CAS after the worker has built its result. */
+    @OptIn(kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi::class)
+    private class PublicationGate(
+        private val delegate: MutableStateFlow<GameUiState>,
+        private val matches: (GameUiState) -> Boolean
+    ) : MutableStateFlow<GameUiState> by delegate {
+        val paused = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        private val armed = AtomicBoolean(true)
+        override fun compareAndSet(expect: GameUiState, update: GameUiState): Boolean {
+            if (matches(update) && armed.compareAndSet(true, false)) {
+                paused.countDown()
+                check(release.await(30, TimeUnit.SECONDS)) { "Publication gate was not released" }
+            }
+            return delegate.compareAndSet(expect, update)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun navigateDuringPublication(
+        matches: (GameUiState) -> Boolean,
+        beforeNavigate: () -> Unit = {},
+        request: () -> Unit
+    ) {
+        val field = GameViewModel::class.java.getDeclaredField("_state").apply { isAccessible = true }
+        val original = field.get(model) as MutableStateFlow<GameUiState>
+        val gate = PublicationGate(original, matches)
+        field.set(model, gate)
+        main(request)
+        val failure = AtomicReference<Throwable?>(null)
+        val worker = Thread({ try { queue.first() } catch (error: Throwable) { failure.set(error) } }, "coach-publication")
+        val navigated = CountDownLatch(1)
+        val navigator = Thread({
+            try { main { model.home();model.solo(false) } }
+            catch (error: Throwable) { failure.set(error) }
+            finally { navigated.countDown() }
+        }, "coach-navigation")
+        worker.start()
+        try {
+            assertTrue("The old result reached publication", gate.paused.await(25, TimeUnit.SECONDS))
+            beforeNavigate()
+            navigator.start()
+            // Old code finishes navigation while its result is paused. Correct
+            // code serializes closeRoom behind publication. Recognize either
+            // boundary, without a timing sleep deciding whether the test passes.
+            val mainThread = Looper.getMainLooper().thread
+            val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(20)
+            while (navigated.count != 0L && !(mainThread.state == Thread.State.BLOCKED &&
+                    mainThread.stackTrace.any { it.className == GameViewModel::class.java.name && it.methodName == "closeRoom" })) {
+                check(System.nanoTime() < deadline) { "Navigation did not reach its publication boundary" }
+                Thread.sleep(10)
+            }
+        } finally {
+            gate.release.countDown()
+            worker.join(30000)
+            if (navigator.state != Thread.State.NEW) navigator.join(30000)
+            field.set(model, original)
+        }
+        failure.get()?.let { throw it }
+        assertFalse("Old publication worker completed", worker.isAlive)
+        assertEquals("New puzzle request is still pending", 0L, navigated.count)
+        val state = model.state.value
+        assertEquals(Page.PLAY, state.page)
+        assertTrue("Old feedback must not clear the new puzzle's busy state", state.busy)
+        assertNull(state.snapshot)
+        assertNull(state.hint)
+        assertFalse(state.hintUnavailable)
+        assertNull(state.entryCheck)
+        assertNull(state.message)
+        assertEquals(-1, state.selected)
+    }
+
+    @Test fun aComputedHintCannotPublishIntoANewerPuzzle() {
+        launch(LocalPlayerData(activeSolo = progress(4)))
+        navigateDuringPublication(matches = { it.hint != null }) { model.requestHint() }
+    }
+
+    @Test fun anUnavailableHintCannotClearANewerPuzzlesBusyState() {
+        launch()
+        navigateDuringPublication(matches = { it.hintUnavailable }) { model.requestHint() }
+    }
+
+    @Test fun aFailedCheckCannotPublishItsErrorIntoANewerPuzzle() {
+        launch()
+        val backup = File(root, "local-player.json.recovery")
+        check(backup.delete());check(backup.mkdir());File(backup, "blocker").writeText("keep")
+        navigateDuringPublication(matches = { it.message?.startsWith("Could not save the check") == true },
+            beforeNavigate = { check(backup.deleteRecursively()) }) { model.checkWork() }
     }
 }
