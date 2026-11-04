@@ -12,7 +12,9 @@
 
 The owner reports that the game and a two-phone test work, and asks to lock the current baseline. [Playtest record, screenshot findings and remaining work](V0.11B_OWNER_PLAYTEST_2026-11-04.md). Preserve v0.11B at [checkpoint/v0.11b-two-phone-smoke](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11b-two-phone-smoke), source77f900f73f21dcb5a02cdae01fab71f00514b898 and the already delivered APK. The current visual direction is retained. Basic physical co-op is owner-reported successful; the full reconnect/kill/complete-game/versus checklist is not individually established. Do not keep reporting physical LAN as wholly untested or claim the full checklist passed.
 
-Recommended next pass: simpler nearby hosting/joining with optional-code design, stable multiplayer header and clearer chat. This recommendation is recorded for discussion; no room admission/protocol behavior is changed. Then continue the existing coach/sharing/profile stages. No new APK, main/development promotion or Play publication accompanies this documentation update.
+The owner has now chosen the easiest default for older/less technically confident players: open nearby joining, with Require a code optional for the host. Plain labels, readable device-scaled text, generous targets and clear connection states guide the next design. A stable multiplayer header and clearer chat remain the next refinement recommendation. Admission/compatibility details still need a contained implementation plan; current room/protocol behavior is unchanged.
+
+Generated decorative assets and a larger unlockable profile-icon collection were raised as possibilities. Preserve current native UI and all existing emblems/unlocks; art theme/count remain proposals. [Audience/artwork discussion](V0.11B_OWNER_PLAYTEST_2026-11-04.md) and [visual brief](GRIDMATES_VISUAL_IDENTITY_BRIEF.md). Continue coach/sharing/profile stages after the usability pass. No new APK, main/development promotion or Play publication accompanies this documentation update.
 
 ## v0.11B — latest verified launcher/entry-check source
 

@@ -7,6 +7,14 @@
 **Audience:** Implementation/Work chat, UI designers, Android developers, QA  
 **Related decisions:** [GridMates brand and series vision](GRIDMATES_BRAND_AND_SERIES.md) · [Current project handoff](PROJECT_HANDOFF.md) · [Release roadmap](ROADMAP_V08_TO_LAUNCH.md)
 
+## November 4 follow-up — approachable play and original cosmetic art
+
+The owner wants the easiest path as the default, especially for older and less technically confident players. Open nearby joining is the chosen default; an optional Require a code setting remains available in the planned host flow. This is product direction, not implemented behavior. Prefer plain language, readable labels, generous touch targets, visible connection states and support for larger device text. See the [owner playtest and decision record](V0.11B_OWNER_PLAYTEST_2026-11-04.md).
+
+The current cream/forest/gold native game style and connected-tiles baseline are retained. Older palette/logo exploration below is historical reference rather than a request to replace this accepted presentation.
+
+The owner also raised generated artwork/sprites and additional unlockable profile icons as possibilities. Recommended uses are coordinated avatars, earned badge art and small decorative moments. Keep board digits, text, controls and layout native/scalable. Preserve the existing six emblems, cosmetic ownership and unlock identifiers. A small coordinated animal/nature/puzzle portrait collection is proposed for later visual exploration; no final theme, asset set or new unlock rules have been approved or generated.
+
 ## 1. What has actually been approved
 
 - **Locked umbrella brand:** **GridMates**.

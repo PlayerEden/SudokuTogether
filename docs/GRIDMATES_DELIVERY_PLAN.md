@@ -2,7 +2,7 @@
 
 Updated November 4, 2026 (America/Chicago). The owner authorized planning and starting this work after reviewing the new proposals. Latest verified and owner-accepted baseline: v0.11B, `feat/gridmates-coach-launcher` at `77f900f73f21dcb5a02cdae01fab71f00514b898`, stacked on v0.11A. Continue from that source and preserve the existing drafts/checkpoints. The older development app is not the implementation baseline.
 
-The owner reports a successful two-phone test and asks to lock the current game. [Playtest findings and next-pass recommendation](V0.11B_OWNER_PLAYTEST_2026-11-04.md) propose simpler hosting/joining and room header/chat refinement before the next larger product stage. Optional room-code policy is a proposal, not implemented behavior. Basic physical co-op is now reported successful; the remaining detailed physical checklist is still open.
+The owner reports a successful two-phone test and asks to lock the current game. [Playtest findings and next-pass recommendation](V0.11B_OWNER_PLAYTEST_2026-11-04.md) cover simpler hosting/joining and room header/chat refinement before the next larger product stage. Open nearby joining is now the chosen easiest default, with Require a code optional; it is not implemented yet. Design especially for older/less technically confident players. Generated cosmetic artwork is exploratory and retains existing emblems/unlocks. Basic physical co-op is now reported successful; the remaining detailed physical checklist is still open.
 
 ## Product direction
 
