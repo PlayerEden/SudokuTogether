@@ -53,7 +53,8 @@ class WoodlandUiTest {
         compose.onNodeWithTag("portrait_woodland_rabbit").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("portrait:woodland_rabbit", selected) }
         compose.onNodeWithText("Player emblems").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("First Sprout").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithTag("cosmetic_emblem").performScrollTo()
+        compose.onNodeWithTag("cosmetic_emblem_leaf").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
         compose.runOnIdle { assertEquals("emblem:leaf", selected) }
     }
 }

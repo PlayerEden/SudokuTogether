@@ -53,10 +53,12 @@ internal fun identityStyleName(appearance: Appearance): String =
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable internal fun WoodlandCollection(state: GameUiState, actions: GameActions) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("Woodland", color = Forest, fontFamily = FontFamily.Serif, fontSize = 22.sp, modifier = Modifier.weight(1f))
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Woodland", color = Forest, fontFamily = FontFamily.Serif, fontSize = 22.sp)
             if (state.appearance.portrait.isNotEmpty()) TextButton({ actions.cosmetic("emblem", state.appearance.emblem) },
                 modifier = Modifier.heightIn(min = 48.dp)) { Text("Use basic icon", fontSize = 13.sp) }
         }
