@@ -427,7 +427,7 @@ class GameViewModel @JvmOverloads constructor(
             resumeGuest = guestResume != null, saveIssue = localPlayer.recoveryWarning ?: it.saveIssue, profile = saved, localSaveBlocked = !localPlayer.canSave,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
             uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback,
-            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty,
+            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty, requireRoomCode = it.requireRoomCode,
             todayDate = DailyChallenge.today()) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)

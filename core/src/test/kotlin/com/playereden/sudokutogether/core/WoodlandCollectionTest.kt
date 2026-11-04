@@ -7,6 +7,16 @@ import org.junit.Test
 class WoodlandCollectionTest {
     private fun record(id: String, mode: String = SOLO, result: String = "SOLVED", assisted: Boolean = false) =
         GameRecord(id, mode, result, "puzzle", 1000, 1, 1000, assisted = assisted)
+    @Test fun aDifferentCosmeticGroupCannotBecomeARestoredPortrait() {
+        val records = listOf(record("earned"))
+        for (id in listOf("forest", "tile", "leaf", "not-an-asset-path")) {
+            val restored = Cosmetics.accessible(Appearance(ink = "cobalt", emblem = "leaf", portrait = id), records)
+            assertEquals("Unknown portrait $id must use the existing emblem", "", restored.portrait)
+            assertEquals("leaf", restored.emblem)
+            assertEquals("cobalt", restored.ink)
+            assertTrue("Restoring an unknown portrait must not block joining", Cosmetics.valid(restored))
+        }
+    }
     @Test fun legacyIdentityKeepsSixEmblemsAndNoPortrait() {
         val old = Json.decodeFromString<Appearance>("""{"ink":"cobalt","board":"linen","font":"serif","emblem":"leaf"}""")
         assertEquals("", old.portrait);assertEquals("leaf", old.emblem);assertTrue(Cosmetics.valid(old))

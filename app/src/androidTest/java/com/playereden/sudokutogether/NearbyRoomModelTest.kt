@@ -45,6 +45,25 @@ class NearbyRoomModelTest {
         main { first.setRequireRoomCode(true) };assertTrue(first.state.value.requireRoomCode)
         val (restored, _) = model();assertTrue(restored.state.value.requireRoomCode)
     }
+    @Test fun theChosenCodePolicySurvivesHomeAndTheNextFreshRoom() {
+        val (value, queue) = model()
+        main { value.setRequireRoomCode(true);value.home() }
+        assertTrue("Going Home must keep the chosen code policy", value.state.value.requireRoomCode)
+        main { value.host(false) };queue.drain()
+        assertTrue(value.state.value.roomCode.isNotBlank())
+        assertTrue((AtomicSessionStore(File(root,"host-session.json")).load() as LoadResult.Loaded).data.requireCode)
+        main { value.home();value.host(false) };queue.drain()
+        assertTrue("The next new room must remain protected", value.state.value.roomCode.isNotBlank())
+        assertTrue((AtomicSessionStore(File(root,"host-session.json")).load() as LoadResult.Loaded).data.requireCode)
+    }
+    @Test fun anUnknownRestoredPortraitDoesNotBlockHosting() {
+        app.getSharedPreferences("settings",0).edit().putString("cosmeticPortrait","forest").commit()
+        val (value, queue) = model()
+        assertEquals("", value.state.value.appearance.portrait)
+        main { value.host(false) };queue.drain()
+        assertEquals(Page.PLAY, value.state.value.page)
+        assertNotNull(value.state.value.snapshot)
+    }
     @Test fun resumingRestoresActualAccessInsteadOfTheNewGamePreference() {
         val digits = "123456789456789123789123456234567891567891234891234567345678912678912345912345678".map { it.digitToInt() }
         val puzzle = Puzzle("saved-access", digits.mapIndexed { i, n -> if (i == 0) 0 else n }, "EASY")

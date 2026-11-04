@@ -86,7 +86,7 @@ object Cosmetics {
         board = a.board.takeIf { allowed(it, records) } ?: "classic",
         font = a.font.takeIf { allowed(it, records) } ?: "clear",
         emblem = a.emblem.takeIf { allowed(it, records) } ?: "tile",
-        portrait = a.portrait.takeIf { it.isEmpty() || allowed(it, records) } ?: ""
+        portrait = a.portrait.takeIf { it.isEmpty() || (portraits.any { item -> item.id == it } && allowed(it, records)) } ?: ""
     )
 }
 
