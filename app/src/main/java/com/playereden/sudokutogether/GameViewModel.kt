@@ -53,7 +53,8 @@ class GameViewModel @JvmOverloads constructor(
             preferences.getString("cosmeticInk", "forest") ?: "forest",
             preferences.getString("cosmeticBoard", "classic") ?: "classic",
             preferences.getString("cosmeticFont", "clear") ?: "clear",
-            preferences.getString("cosmeticEmblem", "tile") ?: "tile"
+            preferences.getString("cosmeticEmblem", "tile") ?: "tile",
+            preferences.getString("cosmeticPortrait", "") ?: ""
         ), localPlayer.current().records
     )
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
@@ -113,13 +114,14 @@ class GameViewModel @JvmOverloads constructor(
             "ink" -> state.appearance.copy(ink = id)
             "board" -> state.appearance.copy(board = id)
             "font" -> state.appearance.copy(font = id)
-            "emblem" -> state.appearance.copy(emblem = id)
+            "emblem" -> state.appearance.copy(emblem = id, portrait = "")
+            "portrait" -> state.appearance.copy(portrait = id)
             else -> return
         }
         if (!Cosmetics.valid(next)) return
         preferences.edit().putString("cosmeticInk", next.ink)
             .putString("cosmeticBoard", next.board).putString("cosmeticFont", next.font)
-            .putString("cosmeticEmblem", next.emblem).apply()
+            .putString("cosmeticEmblem", next.emblem).putString("cosmeticPortrait", next.portrait).apply()
         _state.update { it.copy(appearance = next) }
         val current = generation.get()
         viewModelScope.launch(workDispatcher) {

@@ -159,7 +159,7 @@ import androidx.compose.ui.unit.*
         IconButton(profile, enabled = !state.busy,
             modifier = Modifier.size(48.dp).background(GreenTint, RoundedCornerShape(16.dp))
                 .semantics { contentDescription = "My profile & records" }) {
-            Text(emblemSymbol(state.appearance.emblem), color = inkFor(state.appearance.ink, false), fontSize = 23.sp)
+            AnimalPortrait(state.appearance, Modifier.size(40.dp))
         }
     }
 }

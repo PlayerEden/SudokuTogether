@@ -52,9 +52,9 @@ class PlaySmokeTest {
         compose.onNodeWithText("Fill each row", substring = true).assertExists()
         compose.onNodeWithText("Got it").performClick()
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Join room").assertExists()
+        compose.onNodeWithText("Join a game").assertExists()
         compose.onNodeWithText("Versus", substring = false).performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Host race").assertExists()
+        compose.onNodeWithText("Start a race").assertExists()
         compose.onNodeWithText("Solo").performScrollTo().assertIsDisplayed().performClick()
         compose.onNodeWithText("New puzzle").assertExists()
     }
@@ -128,13 +128,17 @@ class PlaySmokeTest {
     }
 
     @Test fun hostedRoomHasCompactChatSheet() {
+        compose.runOnUiThread { ViewModelProvider(compose.activity)[GameViewModel::class.java].setRequireRoomCode(false) }
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Host room").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Start a game").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
         }
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Copy code").assertExists()
+        compose.onNodeWithText("Copy code").assertDoesNotExist()
+        compose.onNodeWithText("Game details").performClick()
+        compose.onNodeWithText("Open nearby game").assertIsDisplayed()
+        compose.onNodeWithText("Done").performClick()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
         compose.onNodeWithText("Chat").performClick()
         compose.onNodeWithText("Room chat").assertExists()
@@ -169,7 +173,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Versus", substring = false).performScrollTo().performClick()
         // Keep this pause-rule test independent of another test's difficulty preference.
         compose.onNodeWithTag("difficulty_EASY").performScrollTo().assertIsEnabled().performClick()
-        compose.onNodeWithText("Host race").performScrollTo().assertIsEnabled().performClick()
+        compose.onNodeWithText("Start a race").performScrollTo().assertIsEnabled().performClick()
         // Like co-op, a prior run can leave a saved race that needs explicit replacement.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
@@ -181,8 +185,9 @@ class PlaySmokeTest {
     }
 
     @Test fun hostCanEnterUndoAndSharePencilMarksWithoutInternet() {
+        compose.runOnUiThread { ViewModelProvider(compose.activity)[GameViewModel::class.java].setRequireRoomCode(true) }
         compose.onNodeWithText("Co-op").performScrollTo().assertIsDisplayed().performClick()
-        compose.onNodeWithText("Host room").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Start a game").performScrollTo().assertIsDisplayed().performClick()
         // A prior emulator test may leave a saved host room on this device.
         // The expected confirmation is part of the real user flow.
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
@@ -210,6 +215,8 @@ class PlaySmokeTest {
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.contains("notes 3") } }
         compose.onNodeWithText("Erase").performClick()
         compose.waitUntil(10000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.ContentDescription].any { it.endsWith("empty") } }
+        compose.onNodeWithText("Game details").performClick()
         compose.onNodeWithContentDescription("Room code", substring = true).assertExists()
+        compose.onNodeWithText("Done").performClick()
     }
 }

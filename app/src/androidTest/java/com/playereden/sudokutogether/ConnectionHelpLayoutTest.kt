@@ -62,7 +62,7 @@ class ConnectionHelpLayoutTest {
     @Test fun compactLargeTextConnectionHelpKeepsAllGuidanceReachable() {
         launch()
         compose.onNodeWithText("Co-op").performScrollTo().performClick()
-        compose.onNodeWithText("Join room").performScrollTo().performClick()
+        compose.onNodeWithText("Join a game").performScrollTo().performClick()
         for (landscape in listOf(false, true)) {
             if (landscape) {
                 scenario!!.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
