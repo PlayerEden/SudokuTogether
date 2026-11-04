@@ -10,12 +10,26 @@ import kotlinx.serialization.Serializable
     val ink: String = "forest",
     val board: String = "classic",
     val font: String = "clear",
-    val emblem: String = "tile"
+    val emblem: String = "tile",
+    val portrait: String = ""
 )
 
 data class Cosmetic(val id: String, val name: String, val requirement: String)
 
 object Cosmetics {
+    private val portraitMilestones = linkedMapOf(
+        "owl" to 0, "fox" to 0, "rabbit" to 1, "bear" to 2,
+        "badger" to 3, "hedgehog" to 4, "robin" to 5, "deer" to 6,
+        "squirrel" to 8, "otter" to 10, "tortoise" to 12, "cat" to 15
+    ).mapKeys { "woodland_${it.key}" }
+    val portraits: List<Cosmetic> = portraitMilestones.map { (id, count) ->
+        Cosmetic(id, id.removePrefix("woodland_").replaceFirstChar { it.uppercase() },
+            when (count) { 0 -> "Starter"; 1 -> "Complete 1 puzzle"; else -> "Complete $count puzzles" })
+    }
+    fun completedPuzzles(records: List<GameRecord>): Int = records.distinctBy { it.id }.count {
+        (it.mode in listOf(SOLO, DAILY, COOP) && it.result == "SOLVED") ||
+            (it.mode == VERSUS && it.result == "WIN")
+    }
     val inks = listOf(
         Cosmetic("forest", "Forest", "Starter"),
         Cosmetic("cobalt", "Cobalt", "Solve 1 solo puzzle"),
@@ -44,8 +58,9 @@ object Cosmetics {
     )
     fun valid(a: Appearance): Boolean = inks.any { it.id == a.ink } &&
         boards.any { it.id == a.board } && fonts.any { it.id == a.font } &&
-        emblems.any { it.id == a.emblem }
+        emblems.any { it.id == a.emblem } && (a.portrait.isEmpty() || portraits.any { it.id == a.portrait })
     fun allowed(id: String, records: List<GameRecord>): Boolean {
+        portraitMilestones[id]?.let { return completedPuzzles(records) >= it }
         val unique = records.distinctBy { it.id }
         val solo = unique.count { it.mode == SOLO && it.result == "SOLVED" }
         val wins = unique.count { it.mode == VERSUS && it.result == "WIN" }
@@ -70,7 +85,8 @@ object Cosmetics {
         ink = a.ink.takeIf { allowed(it, records) } ?: "forest",
         board = a.board.takeIf { allowed(it, records) } ?: "classic",
         font = a.font.takeIf { allowed(it, records) } ?: "clear",
-        emblem = a.emblem.takeIf { allowed(it, records) } ?: "tile"
+        emblem = a.emblem.takeIf { allowed(it, records) } ?: "tile",
+        portrait = a.portrait.takeIf { it.isEmpty() || allowed(it, records) } ?: ""
     )
 }
 

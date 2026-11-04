@@ -6,6 +6,7 @@ import java.util.UUID
 fun cleanName(name: String, fallback: String): String = name.filterNot { it.isISOControl() }.trim().take(24).ifBlank { fallback }
 
 class GameSession(initial: SavedSession, private val persist: (SavedSession) -> Unit = {}) {
+    val requiresCode: Boolean get() = synchronized(this) { state.requireCode }
     private var state = initial
     private var hostPresent = true
     private var guestPresent = false
@@ -138,13 +139,13 @@ class GameSession(initial: SavedSession, private val persist: (SavedSession) -> 
             hostProgress = 0, guestProgress = 0, revision = 0, completed = false), history = emptyList(), recent = emptyList()))
     }
     companion object {
-        fun create(puzzle: Puzzle, hostName: String = "Host", persist: (SavedSession) -> Unit = {}, mode: String = COOP, hostAppearance: Appearance = Appearance()): GameSession {
+        fun create(puzzle: Puzzle, hostName: String = "Host", persist: (SavedSession) -> Unit = {}, mode: String = COOP, hostAppearance: Appearance = Appearance(), requireCode: Boolean = true): GameSession {
             require(Cosmetics.valid(hostAppearance))
             require(Sudoku.solutionCount(puzzle.clues) == 1) { "Puzzle must have exactly one solution." }
             require(mode == COOP || mode == VERSUS)
             val initial = SavedSession(snapshot = Snapshot(UUID.randomUUID().toString(), UUID.randomUUID().toString(), puzzle,
                 puzzle.clues.map { Cell(it) }, hostName = cleanName(hostName, "Host"), hostAppearance = hostAppearance, mode = mode,
-                guestCells = if (mode == VERSUS) puzzle.clues.map { Cell(it) } else emptyList()))
+                guestCells = if (mode == VERSUS) puzzle.clues.map { Cell(it) } else emptyList()), requireCode = requireCode)
             val session = GameSession(initial, persist)
             persist(session.saved()); return session
         }

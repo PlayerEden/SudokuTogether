@@ -24,9 +24,9 @@
 ### Task1: Admission and cosmetic domain
 **Files:** core Model.kt, GameSession.kt, HostServer.kt, Protocol.kt, Cosmetics.kt; NearbyAdmissionTest.kt, WoodlandCollectionTest.kt.
 **Interfaces:** SavedSession.requireCode:Boolean=true; GameSession.create(...,requireCode:Boolean=true); session.requiresCode:Boolean; Appearance.portrait:String=""; Cosmetics.portraits:List<Cosmetic> and completedPuzzles(records):Int.
-- [ ] Write actual-socket open/protected/reserved/rejoin/persisted-policy/version tests and catalog legacy/default/unknown/assisted/dedup tests. Run :core:test, observe intended RED.
-- [ ] Implement compatible fields, policy, curated catalog and protocol6. Full core/app JVM GREEN.
-- [ ] Commit and ledger actual evidence.
+- [x] Write actual-socket open/protected/reserved/rejoin/persisted-policy/version tests and catalog legacy/default/unknown/assisted/dedup tests. Run :core:test, observe intended RED.
+- [x] Implement compatible fields, policy, curated catalog and protocol6. Full core/app JVM GREEN.
+- [x] Commit and ledger actual evidence.
 
 ### Task2: Simple nearby joining
 **Files:** RoomDiscovery.kt, JoinScreen.kt, HomeScreen.kt, GameViewModel.kt, SudokuScreen.kt/MainActivity.kt actions; NearbyJoinUiTest.kt/model cases.
