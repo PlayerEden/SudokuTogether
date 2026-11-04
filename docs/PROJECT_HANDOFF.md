@@ -2,11 +2,17 @@
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
-> Last reconciled: **2026-11-03 America/Chicago**.
+> Last reconciled: **2026-11-04 America/Chicago**.
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 **Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
+
+## November 4 — owner acceptance and successful two-phone smoke test
+
+The owner reports that the game and a two-phone test work, and asks to lock the current baseline. [Playtest record, screenshot findings and remaining work](V0.11B_OWNER_PLAYTEST_2026-11-04.md). Preserve v0.11B at [checkpoint/v0.11b-two-phone-smoke](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11b-two-phone-smoke), source77f900f73f21dcb5a02cdae01fab71f00514b898 and the already delivered APK. The current visual direction is retained. Basic physical co-op is owner-reported successful; the full reconnect/kill/complete-game/versus checklist is not individually established. Do not keep reporting physical LAN as wholly untested or claim the full checklist passed.
+
+Recommended next pass: simpler nearby hosting/joining with optional-code design, stable multiplayer header and clearer chat. This recommendation is recorded for discussion; no room admission/protocol behavior is changed. Then continue the existing coach/sharing/profile stages. No new APK, main/development promotion or Play publication accompanies this documentation update.
 
 ## v0.11B — latest verified launcher/entry-check source
 
@@ -18,7 +24,7 @@ Version18 /0.11.0-dev2-qa, min26/target35, schema1/protocol5, original QA certif
 
 Delivery complete: [draft PR27](https://github.com/PlayerEden/SudokuTogether/pull/27) targets feat/gridmates-brand-copy; [v0.11B checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11b-coach-qa-green) preserves this stage. APK, inspected preview and public QA evidence are saved. [Exact artifact hashes and source preservation receipt](V0.11B_DELIVERY_RECEIPT.md). The final delivery commit only updates documentation; it does not change the verified APK.
 
-Next: stage2 coach proof/highlights/progressive explanation, then optional result sharing, profile/cards and calibrated scoring. Keep physical LAN deferred; release API/signing/AAB, modern-device/TalkBack/tablet and final art gates remain. Resolve the deferred historical brand-document source-metadata Minor during the next documentation pass. Main/development are not promoted.
+Existing next product stage: stage2 coach proof/highlights/progressive explanation, then optional result sharing, profile/cards and calibrated scoring. The November4 playtest recommends a contained multiplayer usability pass first. Remaining physical LAN subcases, release API/signing/AAB, modern-device/TalkBack/tablet and final art gates remain. Resolve the deferred historical brand-document source-metadata Minor during the next documentation pass. Main/development are not promoted.
 
 ## v0.11A — latest GridMates branding/copy candidate
 
