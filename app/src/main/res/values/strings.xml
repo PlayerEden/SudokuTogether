@@ -1,1 +1,4 @@
-<resources><string name="app_name">GridMates: Sudoku</string></resources>
+<resources>
+    <string name="app_name">GridMates: Sudoku</string>
+    <string name="launcher_name">Sudoku</string>
+</resources>

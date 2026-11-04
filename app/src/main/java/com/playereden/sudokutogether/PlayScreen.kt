@@ -336,7 +336,7 @@ private fun roomStatusText(state: GameUiState): String {
                         ?: if (state.dailyDate == null) state.profile.activeSolo
                         else state.profile.dailyProgress.firstOrNull { it.date == state.dailyDate }?.solo
                     if (finished?.id == snapshot.sessionId && finished.completed) {
-                        val assisted = finished.hintsUsed > 0 || finished.usedNoteAssist
+                        val assisted = finished.assisted
                         Text("Time  " + formatElapsed(finished.elapsedMs) + "   ·   " +
                             difficultyName(finished.puzzle.difficulty),
                             color = Forest, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
@@ -346,6 +346,10 @@ private fun roomStatusText(state: GameUiState): String {
                         if (finished.hintsUsed > 0)
                             Text("${finished.hintsUsed} logical hint" +
                                 (if (finished.hintsUsed == 1) "" else "s") + " used",
+                                color = Muted, fontSize = 11.sp)
+                        if (finished.checksUsed > 0)
+                            Text("${if (finished.checksUsed == 9999) "9999+" else finished.checksUsed} entry check" +
+                                (if (finished.checksUsed == 1) "" else "s") + " used",
                                 color = Muted, fontSize = 11.sp)
                     }
                 }
