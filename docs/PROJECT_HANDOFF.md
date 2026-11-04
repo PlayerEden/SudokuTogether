@@ -16,6 +16,8 @@ Android launcher **Sudoku**; full **GridMates: Sudoku** brand remains. Optional 
 
 Version18 /0.11.0-dev2-qa, min26/target35, schema1/protocol5, original QA certificate. Fresh103 JVM +46 API26 native cases pass; lint0 errors/14 warnings. Exact original17→18 update preserves complete profile bytes, nonempty history, entered answer, pencil note, ID and preferences. Runtime launcher/application labels and compiled icon equality verified. APK SHA-256 `87bb39b735745856f790bc4987e368f76e78cd70edea0c084ac52b0ff3870615`. Prior transient candidate953e6b9 was not delivered and its cleared raw logs are historical only.
 
+Delivery complete: [draft PR27](https://github.com/PlayerEden/SudokuTogether/pull/27) targets feat/gridmates-brand-copy; [v0.11B checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11b-coach-qa-green) preserves this stage. APK, inspected preview and public QA evidence are saved. [Exact artifact hashes and source preservation receipt](V0.11B_DELIVERY_RECEIPT.md). The final delivery commit only updates documentation; it does not change the verified APK.
+
 Next: stage2 coach proof/highlights/progressive explanation, then optional result sharing, profile/cards and calibrated scoring. Keep physical LAN deferred; release API/signing/AAB, modern-device/TalkBack/tablet and final art gates remain. Resolve the deferred historical brand-document source-metadata Minor during the next documentation pass. Main/development are not promoted.
 
 ## v0.11A — latest GridMates branding/copy candidate

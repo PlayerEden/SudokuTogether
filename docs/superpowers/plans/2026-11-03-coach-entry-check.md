@@ -71,6 +71,6 @@
 - [x] Run `:core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`; Expected: build/tests pass, report actual lint counts.
 - [x] Obtain one fresh whole-branch review against92ebc3b and the spec/Review Focus. Resolve material findings once with observed RED→GREEN and a green suite; document deferred minors and scope limits.
 - [x] Freeze final APK; verify signature/icon/package/label, exact17→18 update and final native checks against those bytes. Inspect actual screenshots and package public evidence without keys or profile payloads.
-- [ ] Preserve exact source/tree in a draft stacked on feat/gridmates-brand-copy and a QA checkpoint; save APK/evidence/preview, then complete the plan and handoff.
+- [x] Preserve exact source/tree in a draft stacked on feat/gridmates-brand-copy and a QA checkpoint; save APK/evidence/preview, then complete the plan and handoff. [Delivery receipt](../../V0.11B_DELIVERY_RECEIPT.md).
 
 Pre-flight: Task2's EntryCheck is consumed by Task3's state/dialog; checksUsed and assisted feed both Solo/Daily records and their presentation. Task1 label resource has no dependency on assistance. Appending defaulted fields/callbacks preserves existing positional constructor call sites. No interface conflict found.
