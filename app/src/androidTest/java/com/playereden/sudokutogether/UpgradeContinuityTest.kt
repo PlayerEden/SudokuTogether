@@ -63,7 +63,7 @@ class UpgradeContinuityTest {
         compose.runOnUiThread { model.home() }
         compose.waitUntil(15000) { model.state.value.page == Page.HOME && !model.state.value.busy }
         compose.runOnUiThread { model.host(false) }
-        compose.waitUntil(60000) { model.state.value.page == Page.PLAY && model.state.value.role == com.playereden.sudokutogether.core.HOST && model.state.value.snapshot != null }
+        compose.waitUntil(60000) { model.state.value.page == Page.PLAY && model.state.value.role == com.playereden.sudokutogether.core.HOST && model.state.value.snapshot != null && !model.state.value.busy }
         val hostId = model.state.value.snapshot!!.sessionId
         compose.runOnUiThread { model.home() }
         compose.waitUntil(15000) { model.state.value.page == Page.HOME && !model.state.value.busy }
@@ -104,7 +104,7 @@ class UpgradeContinuityTest {
         assertEquals(old.getInt("notes"), model.state.value.snapshot!!.cells[old.getInt("cell")].notes)
         assertEquals(old.getInt("entryValue"),model.state.value.snapshot!!.cells[old.getInt("entryCell")].value)
         compose.runOnUiThread { model.home();model.host(true) }
-        compose.waitUntil(30000) { model.state.value.page == Page.PLAY && model.state.value.snapshot != null }
+        compose.waitUntil(30000) { model.state.value.page == Page.PLAY && model.state.value.snapshot != null && !model.state.value.busy }
         assertEquals(old.getString("hostId"), model.state.value.snapshot!!.sessionId)
         assertTrue("A legacy saved room keeps its code", model.state.value.roomCode.isNotBlank())
         compose.runOnUiThread {
