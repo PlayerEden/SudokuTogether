@@ -12,6 +12,8 @@
 >
 > **Share Result UX placement (2026-11-03):** owner wants a straightforward, optional **Share result** button on the completed puzzle results screen, not a pop-up or interruption; design includes previewed offline PNG and native Android Sharesheet. [Focused UX brief](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md) · [broader social card concept](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md). Proposal for Work review, not yet implemented or a release gate.
 >
+> **Nov 5 two-phone playtest feedback — new planning brief:** [Ocean/Bug portrait collections, Daily reward options, and bundled-font consistency](GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md). In the newer v0.11C [draft PR #28](https://github.com/PlayerEden/SudokuTogether/pull/28), Woodland has 12 shipped-in-QA portraits, but current font styles are generic system fonts, so one phone may render them differently. Owner wants Ocean and Bug collections, rewarding Daily completions without creating new exclusive artwork every day, and cross-device reliable fonts. **These remain discussion/QA tasks, not code already merged or authorization for a new in-game currency.** Preserve v0.11C branch/checkpoint; prioritize reproducing font issue, then small art pilots and reward-design decision.
+>
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
 > Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
