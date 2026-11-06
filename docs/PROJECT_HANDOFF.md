@@ -16,6 +16,8 @@
 >
 > **Nov 6 additional future ideas:** [Simple offline Gift Codes](GRIDMATES_GIFT_CODES_SIMPLE_DESIGN.md) for free portraits/special gifts (including a personal surprise for spouse; owner does **not** require globally single-use enforcement), and [No-router nearby/Bluetooth multiplayer feasibility](GRIDMATES_OFFLINE_NEARBY_BLUETOOTH_DESIGN.md). Bluetooth Classic, Google Nearby Connections and Wi-Fi Direct are possible, with **Nearby Connections prototype** suggested as an accessible offline no-router option. Neither feature is implemented/approved for an immediate build; preserve v0.11C stability and existing LAN.
 >
+> **Sudoku deep research (Nov 6):** [Sudoku — Deep Research, Solving Techniques & GridMates Development Reference](SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md) contains researched rules/math/history, beginner-to-expert deduction catalog, the current HumanSudoku/PuzzleSupply/assistance audit, difficulty-calibration lessons, candidate visual-coaching ideas, an optional in-game Sudoku Guide outline and engineering experiments. **Research only, not an instruction to alter current rating definitions, implement all techniques or interrupt active v0.11C QA.** Review before further generator/coach/scoring changes.
+>
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
 > Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
