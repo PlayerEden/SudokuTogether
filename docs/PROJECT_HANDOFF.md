@@ -6,6 +6,8 @@
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
+> **New planning reference (Nov 6):** [Sudoku Deep Research & Game Design Reference](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md) is a source-backed 16-section study of Sudoku rules, technique strategies, real difficulty, generated puzzle grading, coaching, scoring and possible in-game lessons. The research file lives on the **development** branch and should inform future implementation **without changing current v0.11C game code or its saved grade definitions**. This is design/research, not a completed feature or QA pass.
+
 ## Current verified milestone — v0.11C
 
 Start from [`feat/gridmates-nearby-animals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-nearby-animals), [draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28), stacked on the locked v0.11B source. Read the [v0.11C audit](V0.11C_NEARBY_WOODLAND_QA.md) and [delivery plan](GRIDMATES_DELIVERY_PLAN.md). The QA APK is version19 /0.11.0-dev3-qa, launcher Sudoku, unchanged package/icon/signing and schema1, protocol6 on both phones.
