@@ -14,6 +14,8 @@
 >
 > **Nov 5 two-phone playtest feedback — new planning brief:** [Ocean/Bug portrait collections, Daily reward options, and bundled-font consistency](GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md). In the newer v0.11C [draft PR #28](https://github.com/PlayerEden/SudokuTogether/pull/28), Woodland has 12 shipped-in-QA portraits, but current font styles are generic system fonts, so one phone may render them differently. Owner wants Ocean and Bug collections, rewarding Daily completions without creating new exclusive artwork every day, and cross-device reliable fonts. **These remain discussion/QA tasks, not code already merged or authorization for a new in-game currency.** Preserve v0.11C branch/checkpoint; prioritize reproducing font issue, then small art pilots and reward-design decision.
 >
+> **Nov 6 additional future ideas:** [Simple offline Gift Codes](GRIDMATES_GIFT_CODES_SIMPLE_DESIGN.md) for free portraits/special gifts (including a personal surprise for spouse; owner does **not** require globally single-use enforcement), and [No-router nearby/Bluetooth multiplayer feasibility](GRIDMATES_OFFLINE_NEARBY_BLUETOOTH_DESIGN.md). Bluetooth Classic, Google Nearby Connections and Wi-Fi Direct are possible, with **Nearby Connections prototype** suggested as an accessible offline no-router option. Neither feature is implemented/approved for an immediate build; preserve v0.11C stability and existing LAN.
+>
 > Last reconciled: **2026-10-27 US Eastern / 2026-10-28 UTC**.
 > Game priority: **finish GridMates: Sudoku before building any other GridMates game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
