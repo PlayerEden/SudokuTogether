@@ -2,6 +2,8 @@
 
 > **Read this first in a new ChatGPT conversation or after a context reset.**
 >
+> **Versus post-match comparison idea (Nov 6):** [Compare Puzzles UX and QA proposal](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md). Same starting Sudoku, independent boards, first valid finish wins and freezes rival board. Optional Compare Puzzles after completion; no opponent-answer leakage during live race. Existing progress counts are **entries**, not proven correct digits, and full side-by-side reveal needs explicit post-match consent/new safe protocol. **Design only; do not interrupt current Work-chat feature gates.**
+>
 > Last reconciled: **2026-11-04 America/Chicago**.
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
