@@ -4,6 +4,8 @@
 >
 > **Versus post-match comparison idea (Nov 6):** [Compare Puzzles UX and QA proposal](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md). Same starting Sudoku, independent boards, first valid finish wins and freezes rival board. Optional Compare Puzzles after completion; no opponent-answer leakage during live race. Existing progress counts are **entries**, not proven correct digits, and full side-by-side reveal needs explicit post-match consent/new safe protocol. **Design only; do not interrupt current Work-chat feature gates.**
 >
+> **Co-op shared board themes (Nov 7):** [Design and QA brief](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md). The owner wants **both players' puzzle board to show the higher-ranked equipped board theme**, particularly when one uses Classic and the other has an unlocked theme, while **each person's authored number ink/font stays their own**. Current v0.11C renderer uses local `state.appearance.board` for board colors and host/guest appearances for authored digits. The brief proposes a deterministic resolver and contrast/ownership/LAN tests; exact rank order, mid-round theme changes and possible local accessibility override remain open. **Documentation only, not code implemented.**
+>
 > Last reconciled: **2026-11-04 America/Chicago**.
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
