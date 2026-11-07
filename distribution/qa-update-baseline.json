@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "channel": "qa",
+  "application_id": "com.playereden.sudokutogether.qa",
+  "signer_sha256": "949731a60cb187405282efc8233d6e68ab5b46e9bf6765f70aa2b60dcc543b2c",
+  "version_code": 19,
+  "minimum_sdk": 26,
+  "apk_sha256": "4ca53d52b24d537372c407d17a31a8c293c27bc0dd060a1fd8b97b2e43f260f4",
+  "product_source_commit": "dbaaed221bdf0ffe4710d64d0455f301df7dbe6a",
+  "evidence": "docs/V0.11C_DELIVERY_RECEIPT.md",
+  "purpose": "Last verified QA install; not a public release or a current-download URL."
+}

@@ -6,11 +6,17 @@
 >
 > **Co-op shared board themes (Nov 7):** [Design and QA brief](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md). The owner wants **both players' puzzle board to show the higher-ranked equipped board theme**, particularly when one uses Classic and the other has an unlocked theme, while **each person's authored number ink/font stays their own**. Current v0.11C renderer uses local `state.appearance.board` for board colors and host/guest appearances for authored digits. The brief proposes a deterministic resolver and contrast/ownership/LAN tests; exact rank order, mid-round theme changes and possible local accessibility override remain open. **Documentation only, not code implemented.**
 >
-> Last reconciled: **2026-11-04 America/Chicago**.
+> Last reconciled: **2026-11-07 America/Chicago**.
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
 
 > **New planning reference (Nov 6):** [Sudoku Deep Research & Game Design Reference](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md) is a source-backed 16-section study of Sudoku rules, technique strategies, real difficulty, generated puzzle grading, coaching, scoring and possible in-game lessons. The research file lives on the **development** branch and should inform future implementation **without changing current v0.11C game code or its saved grade definitions**. This is design/research, not a completed feature or QA pass.
+
+## November 7 — player interface and update preparation
+
+The [player presence and menu design](superpowers/specs/2026-11-04-player-presence-and-menu-design.md) now has a clickable prototype using the existing Woodland art. The [APK update and save preparation](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) records the Operation PHOSPHOR and Sector Rebound comparison, a QA identity check and the future portable backup flow. Use the original QA key and a fresh install-over rehearsal before offering another APK. The verified Android baseline remains v0.11C.
+
+The [November 5 cosmetics and font playtest brief](https://github.com/PlayerEden/SudokuTogether/blob/1818cd54e2fc5c5eaecf37389295ae3d55b898c9/docs/GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md) is incorporated in the delivery plan. Verify the reported font difference on the same app version and settings, then use bundled, licensed fonts under the existing cosmetic IDs. Ocean and Bug art will use the same icon browser. Daily reward rules remain a design decision.
 
 ## Current verified milestone — v0.11C
 

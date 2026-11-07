@@ -1,5 +1,7 @@
 # GridMates delivery plan
 
+November 7 follow-up. The [player presence and menu design](superpowers/specs/2026-11-04-player-presence-and-menu-design.md) and [APK update and save preparation](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) are ready to review against v0.11C. The latest Android build evidence remains the original v0.11C delivery.
+
 Updated November4, 2026 (America/Chicago). Current verified QA milestone: v0.11C, `feat/gridmates-nearby-animals` ([draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28)), stacked on the owner-accepted v0.11B.117 JVM tests and78 accepted native executions; original18→19 update verified. Preserve the earlier drafts/checkpoints and v0.11B rollback. [Current audit and exact source/artifact evidence](V0.11C_NEARBY_WOODLAND_QA.md). The older development app is not the implementation baseline.
 
 The owner reports a successful two-phone test and asks to lock the current game. [Playtest findings and next-pass recommendation](V0.11B_OWNER_PLAYTEST_2026-11-04.md) cover simpler hosting/joining and room header/chat refinement before the next larger product stage. Open nearby joining is now the chosen easiest default, with Require a code optional; it is implemented and verified in v0.11C. Design especially for older/less technically confident players. The Woodland portrait collection is implemented and retains existing emblems/unlocks. Basic physical co-op is now reported successful; the remaining detailed physical checklist is still open.
@@ -7,6 +9,20 @@ The owner reports a successful two-phone test and asks to lock the current game.
 ## Product direction
 
 Keep classic Sudoku, quick offline play, thoughtful nearby multiplayer and a profile worth keeping. Use short visible labels and disclose detail when requested. “Good puzzles. Good company.” is the favored tagline candidate, suitable for share cards/store exploration; final artwork remains open. Preserve the current native palette and icon. Crossword follows Sudoku completion.
+
+## November 5–7 playtest follow-up
+
+The [new design notes on development](https://github.com/PlayerEden/SudokuTogether/tree/1818cd54e2fc5c5eaecf37389295ae3d55b898c9/docs) supplement the active v0.11C source. Keep each feature independently testable.
+
+| Work | Direction | Evidence needed |
+| --- | --- | --- |
+| QA updates | Use the original QA identity, verify the candidate package and increase the build number. Keep a verified current download once a release asset is approved. | Install the exact original v0.11C APK, create progress, install over it and verify the saved data through the app. |
+| Font consistency | Compare the same unlocks, equipped font and Classic number setting on both phones. Replace generic Android family mappings with licensed bundled faces under `clear`, `serif` and `mono` when the design is selected. | The same digit style in preview and gameplay after reopening on both phones. |
+| Player interface | Bring both identities and progress above the Versus board. Give achievements a Profile entry and bring every player icon into one Collection browser. Ocean and Bug sets can use its family filters. | Small-screen and large-text layouts, readable progress, and old icon selections retained. |
+| Versus results | Start with the result and progress already known to both clients. A later full board comparison requires an authoritatively finished race and consent from both players. | The race still keeps opponent entries private. Declining or disconnecting leaves the results usable. |
+| Co-op board themes | Resolve a common board from the players' equipped themes. Keep authored digits in each player's personal ink/font. | Both phones agree on the board and show legible numbers across themes and reconnects. Final ranking, timing and an accessibility override are open choices. |
+| Coach | Use the Sudoku research for visible proofs of the four supported techniques and helpful endgame guidance. | Verified examples with candidate eliminations, 1–2 cells left, and an earlier incorrect entry. Preserve existing difficulty grades. |
+| Later design work | Choose a small Daily reward model, consider reusable offline gift codes, and evaluate router-free nearby play separately. | Clear unlock and restore behavior for rewards. Physical connectivity checks before changing the multiplayer transport. |
 
 ## Stages
 
@@ -33,3 +49,4 @@ Stage1 acceptance:103 JVM +46 API26 native cases; original17→18 continuity and
 
 
 The contained multiplayer/collection pass before Stage2 is now delivered as v0.11C. Native/source evidence and its limited physical-device coverage are recorded in the current audit; no later-stage implementation or source promotion is implied.
+

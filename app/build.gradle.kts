@@ -3,12 +3,27 @@ import java.util.Properties
 plugins { id("com.android.application"); kotlin("android"); kotlin("plugin.compose"); kotlin("plugin.serialization") }
 val signingFile = System.getenv("SUDOKU_SIGNING_FILE")?.let { file(it) }
 val privateSigning = Properties().apply { if (signingFile?.isFile == true) signingFile.inputStream().use(::load) }
+// Downloadable QA updates opt in to the original private debug identity.
+// Ordinary developer builds may still use their own local debug key.
+val qaUpdateFlag = providers.gradleProperty("gridmatesQaUpdate").orNull
+require(qaUpdateFlag == null || qaUpdateFlag == "true") { "gridmatesQaUpdate must be true when supplied" }
+val qaVersion = providers.gradleProperty("gridmatesQaVersionCode").orNull?.let { value ->
+    require(value.matches(Regex("[1-9][0-9]{0,9}"))) { "QA version code must be a positive integer" }
+    val number = value.toLong()
+    require(number in 20..2100000000L) { "QA updates must be newer than version 19 and within Android's range" }
+    number.toInt()
+}
+require((qaUpdateFlag == "true") == (qaVersion != null)) { "QA update mode and version code must be supplied together" }
+val qaKeystore = System.getenv("SUDOKU_QA_KEYSTORE_FILE")?.let { file(it) }
+if (qaUpdateFlag == "true") require(qaKeystore?.isFile == true) {
+    "Restore the existing private QA keystore before building an update; do not generate a replacement key"
+}
 android {
     namespace = "com.playereden.sudokutogether"
     compileSdk = 35
     defaultConfig {
         applicationId = "com.playereden.sudokutogether"
-        minSdk = 26; targetSdk = 35; versionCode = 19; versionName = "0.11.0-dev3"
+        minSdk = 26; targetSdk = 35; versionCode = qaVersion ?: 19; versionName = "0.11.0-dev3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     if (privateSigning.isNotEmpty()) signingConfigs.create("privateKey") {
@@ -17,12 +32,19 @@ android {
         keyAlias = privateSigning.getProperty("keyAlias")
         keyPassword = privateSigning.getProperty("keyPassword")
     }
+    if (qaVersion != null) signingConfigs.create("qaContinuity") {
+        storeFile = qaKeystore
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+    }
     buildTypes {
         debug {
             // QA uses a separate install so updating a test APK never
             // threatens the existing signed app's offline records.
             applicationIdSuffix = ".qa"
-            versionNameSuffix = "-qa"
+            versionNameSuffix = if (qaVersion != null) "-qa.$qaVersion" else "-qa"
+            if (qaVersion != null) signingConfig = signingConfigs.getByName("qaContinuity")
         }
         release {
             isMinifyEnabled = false
@@ -54,3 +76,4 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
 }
+
