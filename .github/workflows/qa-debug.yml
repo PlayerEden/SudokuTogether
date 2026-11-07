@@ -15,8 +15,6 @@ jobs:
   test-and-assemble:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      SUDOKU_QA_KEYSTORE_FILE: ${{ runner.temp }}/gridmates-qa-signing/debug.keystore
     steps:
       - name: Checkout the exact selected source
         uses: actions/checkout@v4
@@ -47,6 +45,7 @@ jobs:
             echo 'Missing original QA signing backup. Restore SUDOKU_QA_KEYSTORE_BASE64; do not create a replacement key or uninstall the existing app.' >&2
             exit 1
           fi
+          SUDOKU_QA_KEYSTORE_FILE="$RUNNER_TEMP/gridmates-qa-signing/debug.keystore"
           umask 077
           mkdir -p "$(dirname "$SUDOKU_QA_KEYSTORE_FILE")"
           printf '%s' "$QA_KEYSTORE_BASE64" | base64 --decode > "$SUDOKU_QA_KEYSTORE_FILE"
@@ -60,6 +59,7 @@ jobs:
               raise SystemExit('Wrong QA certificate: refusing to build an incompatible update.')
           print('Original QA certificate confirmed.')
           PY
+          printf 'SUDOKU_QA_KEYSTORE_FILE=%s\n' "$SUDOKU_QA_KEYSTORE_FILE" >> "$GITHUB_ENV"
       - name: Configure Gradle cache
         uses: gradle/actions/setup-gradle@v4
       - name: Install the declared Android build tools

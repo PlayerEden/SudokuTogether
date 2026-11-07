@@ -103,7 +103,7 @@ import com.playereden.sudokutogether.core.*
 @Composable private fun ColumnScope.CollectionContent(state: GameUiState, actions: GameActions) {
     GamePanel(color = GreenTint) {
         PlayerIdentity(state.appearance, state.name, compact = false)
-        StylePreview(state.appearance)
+        StylePreview(state.appearance, state.uniformNumbers)
     }
     Text("Earned milestones " + Achievements.earnedCount(state.profile.records) + " of " + Achievements.progress(state.profile.records).size,
         color = Muted, fontSize = 13.sp)
@@ -167,7 +167,7 @@ import com.playereden.sudokutogether.core.*
     }
     GamePanel {
         SectionTitle("Comfort & display")
-        SettingToggle("Classic number display", "One style for all entries.", state.uniformNumbers, actions.uniformNumbers)
+        SettingToggle("Classic number display", "Use the Clear font for entries and notes, and the default entry color.", state.uniformNumbers, actions.uniformNumbers)
         HorizontalDivider(color = Rule)
         SettingToggle("Touch feedback", "Board and keypad vibration.", state.touchFeedback, actions.touchFeedback)
     }

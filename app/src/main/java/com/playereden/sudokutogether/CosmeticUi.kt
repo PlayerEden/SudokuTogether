@@ -24,12 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.playereden.sudokutogether.core.*
 
-fun fontFor(id: String): FontFamily = when (id) {
-    "serif" -> FontFamily.Serif
-    "mono" -> FontFamily.Monospace
-    else -> FontFamily.SansSerif
-}
-
 fun inkFor(id: String, darkBoard: Boolean): Color = when (id) {
     "cobalt" -> if (darkBoard) Color(0xFF97D6FF) else Color(0xFF205BAC)
     "amber" -> if (darkBoard) Color(0xFFFFD386) else Color(0xFF986018)
@@ -129,7 +123,10 @@ fun styleLabel(a: Appearance): String = listOf(
 }
 
 /** A labeled visual sample, never a generated or scored game board. */
-@Composable internal fun StylePreview(look: Appearance) {
+@Composable internal fun StylePreview(look: Appearance, uniformNumbers: Boolean) {
+    val numberLook = look.withNumberDisplay(uniformNumbers)
+    val entryFont = fontFor(numberLook.font)
+    val clueFont = fontFor(Appearance().font)
     val dark = look.board in listOf("midnight", "circuit")
     val scale = LocalDensity.current.fontScale.coerceAtLeast(1f)
     val edge = if (dark) Color(0xFF789690) else Rule
@@ -146,13 +143,17 @@ fun styleLabel(a: Appearance): String = listOf(
             for (r in 0..2) Row(Modifier.weight(1f).fillMaxWidth()) {
                 for (c in 0..2) Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                     val entered = (r + c) % 2 == 0
-                    Text((r * 3 + c + 1).toString(), fontFamily = if (entered) fontFor(look.font) else FontFamily.SansSerif,
-                        fontSize = (25f / scale).sp, fontWeight = if (entered) FontWeight.Normal else FontWeight.SemiBold,
-                        color = if (entered) inkFor(look.ink, dark) else if (dark) OnForest else Ink)
+                    Text((r * 3 + c + 1).toString(), fontFamily = if (entered) entryFont else clueFont,
+                        fontSize = (25f / scale).sp, fontWeight = if (entered) FontWeight.Normal else FontWeight.Bold,
+                        color = if (entered) inkFor(numberLook.ink, dark) else if (dark) OnForest else Ink)
                 }
             }
         }
-        Text(styleLabel(look), color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        Text(styleLabel(numberLook), color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        if (uniformNumbers) {
+            Text("Classic number display is on. Turn it off in Settings to use your equipped font and ink.",
+                color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        }
     }
 }
 

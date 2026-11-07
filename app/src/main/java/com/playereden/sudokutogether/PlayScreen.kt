@@ -439,6 +439,10 @@ private fun roomStatusText(state: GameUiState): String {
     val conflicts = remember(snapshot.cells) { Sudoku.conflicts(snapshot.cells.map { it.value }) }
     val selectedValue = snapshot.cells.getOrNull(selected)?.value ?: 0
     val darkBoard = localStyle.board == "midnight" || localStyle.board == "circuit"
+    val defaultStyle = Appearance()
+    val soloNumbers = localStyle.withNumberDisplay(uniformNumbers)
+    val hostNumbers = snapshot.hostAppearance.withNumberDisplay(uniformNumbers)
+    val guestNumbers = snapshot.guestAppearance.withNumberDisplay(uniformNumbers)
     val boardPaper = when (localStyle.board) {
         "linen" -> Color(0xFFFFF6DF)
         "midnight" -> Color(0xFF152A36)
@@ -463,10 +467,12 @@ private fun roomStatusText(state: GameUiState): String {
                 val i = row * 9 + col; val cell = snapshot.cells[i]; val given = snapshot.puzzle.clues[i] != 0
                 val noteNumbers = (1..9).filter { cell.notes and (1 shl (it - 1)) != 0 }
                 val content = "Row ${row + 1} column ${col + 1}, " + when { given -> "clue ${cell.value}"; cell.value != 0 -> "value ${cell.value}"; noteNumbers.isNotEmpty() -> "empty, notes ${noteNumbers.joinToString(" ")}"; else -> "empty" }
-                val authored = if (uniformNumbers && !given) Appearance() else if (solo && !given) localStyle else when (cell.owner) {
-                    HOST -> snapshot.hostAppearance
-                    GUEST -> snapshot.guestAppearance
-                    else -> Appearance()
+                val authored = when {
+                    given -> defaultStyle
+                    solo -> soloNumbers
+                    cell.owner == HOST -> hostNumbers
+                    cell.owner == GUEST -> guestNumbers
+                    else -> defaultStyle
                 }
                 val authoredFont = fontFor(authored.font)
                 val authoredInk = inkFor(authored.ink, darkBoard)
@@ -493,8 +499,8 @@ private fun roomStatusText(state: GameUiState): String {
                              else -> "Puzzle square"
                          }
                      }, contentAlignment = Alignment.Center) {
-                    if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = if (given) FontFamily.SansSerif else authoredFont),
-                        maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.SemiBold else FontWeight.Normal,
+                    if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = authoredFont),
+                        maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.Bold else FontWeight.Normal,
                         color = if (i in conflicts) (if (darkBoard) Color(0xFFFFB7A6) else Brick) else if (given) neutralInk else authoredInk)
                     else if (cell.notes != 0) Column(Modifier.fillMaxSize().padding(1.dp)) {
                         for (r in 0..2) Row(Modifier.weight(1f).fillMaxWidth()) {
