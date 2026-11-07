@@ -17,7 +17,10 @@ class GuestClient(private val socketFactory: () -> Socket = { Socket() }, privat
         try {
             socket.connect(InetSocketAddress(host, port), 5000); socket.soTimeout = 8000; socket.tcpNoDelay = true
             Protocol.write(socket.getOutputStream(), Message("hello", code = code, name = cleanName(name, "Partner"), token = resumeToken, appearance = appearance))
-            val welcome = Protocol.read(socket.getInputStream())
+            val welcome = try { Protocol.read(socket.getInputStream()) }
+                catch (e: java.io.EOFException) {
+                    throw IOException("Connection closed. Check that both phones use the same app version, then try again.", e)
+                }
             if (welcome.type == "error") throw IOException(welcome.text.take(300))
             if (welcome.type != "welcome" || welcome.version != WIRE_PROTOCOL_VERSION || welcome.snapshot == null || welcome.status == null || welcome.token == null) throw IOException("The host is running an incompatible app version.")
             validateSnapshot(welcome.snapshot)

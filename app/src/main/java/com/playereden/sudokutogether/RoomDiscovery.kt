@@ -15,7 +15,14 @@ import java.net.Socket
 import java.io.IOException
 import java.util.ArrayDeque
 
-data class NearbyRoom(val name: String, val host: String, val port: Int, val sessionId: String = "")
+data class NearbyRoom(val name: String, val host: String, val port: Int, val sessionId: String = "", val requiresCode: Boolean = true)
+
+internal fun decodeNearbyRoom(name: String, host: String?, port: Int, attributes: Map<String, ByteArray>): NearbyRoom? {
+    if (host.isNullOrBlank() || port !in 1..65535 ||
+        attributes["v"]?.toString(Charsets.UTF_8) != WIRE_PROTOCOL_VERSION.toString()) return null
+    return NearbyRoom(name, host, port, attributes["session"]?.toString(Charsets.UTF_8) ?: "",
+        attributes["locked"]?.toString(Charsets.UTF_8) != "0")
+}
 
 class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
     private val app = context.applicationContext
@@ -31,7 +38,7 @@ class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
     private var callback: ((List<NearbyRoom>) -> Unit)? = null
     private val type = "_sudokut._tcp."
 
-    fun startHosting(name: String, port: Int, sessionId: String) = handler.post {
+    fun startHosting(name: String, port: Int, sessionId: String, requiresCode: Boolean = true) = handler.post {
         stopInternal()
         try {
             multicast.acquire()
@@ -45,6 +52,7 @@ class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
             manager.registerService(NsdServiceInfo().apply {
                 serviceName = "${name.take(20)}'s puzzle"; serviceType = type; setPort(port)
                 setAttribute("v", WIRE_PROTOCOL_VERSION.toString()); setAttribute("session", sessionId)
+                setAttribute("locked", if (requiresCode) "1" else "0")
             }, NsdManager.PROTOCOL_DNS_SD, listener)
         } catch (_: Exception) { onError("Nearby discovery is unavailable. Your partner can use the manual address.") }
     }
@@ -81,10 +89,9 @@ class RoomDiscovery(context: Context, private val onError: (String) -> Unit) {
                 override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) { handler.post { finished() } }
                 override fun onServiceResolved(serviceInfo: NsdServiceInfo) { handler.post {
                     if (current == generation) {
-                        val host = serviceInfo.host?.hostAddress
-                        val version = serviceInfo.attributes["v"]?.toString(Charsets.UTF_8)
-                        if (host != null && serviceInfo.port in 1..65535 && version == WIRE_PROTOCOL_VERSION.toString()) {
-                            rooms[serviceInfo.serviceName] = NearbyRoom(serviceInfo.serviceName, host, serviceInfo.port, serviceInfo.attributes["session"]?.toString(Charsets.UTF_8) ?: "")
+                        val room = decodeNearbyRoom(serviceInfo.serviceName, serviceInfo.host?.hostAddress, serviceInfo.port, serviceInfo.attributes)
+                        if (room != null) {
+                            rooms[serviceInfo.serviceName] = room
                             callback?.invoke(rooms.values.toList())
                         }
                         finished()

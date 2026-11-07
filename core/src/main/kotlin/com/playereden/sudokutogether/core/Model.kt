@@ -30,5 +30,6 @@ const val VERSUS = "versus"
 @Serializable data class GuestIdentity(val name: String, val token: String)
 @Serializable data class SavedSession(
     val schema: Int = 1, val snapshot: Snapshot, val history: List<EditRecord> = emptyList(),
-    val recent: List<AcceptedOperation> = emptyList(), val guest: GuestIdentity? = null
+    val recent: List<AcceptedOperation> = emptyList(), val guest: GuestIdentity? = null,
+    val requireCode: Boolean = true
 )

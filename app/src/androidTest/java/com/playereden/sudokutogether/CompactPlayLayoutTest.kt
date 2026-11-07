@@ -79,7 +79,7 @@ class CompactPlayLayoutTest {
             compose.runOnIdle { shown.value = fixture(HOST, mode) }
             compose.onNodeWithTag("input_dock").assertExists(); capture("$mode-header")
             val bounds = compose.onRoot().getUnclippedBoundsInRoot()
-            for (node in listOf(compose.onNodeWithContentDescription("Room code 123456"), compose.onNodeWithText("Copy code"),
+            for (node in listOf(compose.onNodeWithText("Game details"),
                 compose.onNodeWithText("Chat (999)"), compose.onNodeWithContentDescription("How to play Sudoku"))) {
                 node.assertIsDisplayed()
                 val rect = node.getUnclippedBoundsInRoot()

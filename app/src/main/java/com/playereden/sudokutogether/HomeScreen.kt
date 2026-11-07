@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -66,6 +67,15 @@ import androidx.compose.ui.unit.*
                     if (unfinished) GamePrimaryButton("Continue", { actions.solo(true) },
                         !state.busy && !state.localSaveBlocked, light = true)
                     DifficultyPicker(state, actions)
+                    if (mode != "solo") Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .toggleable(state.requireRoomCode, enabled = !state.busy, role = Role.Switch, onValueChange = actions.requireRoomCode)
+                        .semantics { contentDescription = "Require a code for a new game" }.testTag("require_code"),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Require a code", color = OnForest, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        Switch(state.requireRoomCode, onCheckedChange = null, enabled = !state.busy,
+                            colors = SwitchDefaults.colors(checkedThumbColor = Forest, checkedTrackColor = OnForest,
+                                uncheckedThumbColor = OnForest, uncheckedTrackColor = NightForest, uncheckedBorderColor = OnForest.copy(alpha = .6f)))
+                    }
                     when (mode) {
                         "solo" -> {
                             if (unfinished) OutlinedButton(freshSolo, enabled = !state.busy && !state.localSaveBlocked,
@@ -79,19 +89,19 @@ import androidx.compose.ui.unit.*
                         }
                         "together" -> {
                             if (state.resumeHost) GamePrimaryButton("Resume room", { actions.host(true) }, !state.busy, light = true)
-                            GamePrimaryButton("Host room", fresh, !state.busy, light = true)
+                            GamePrimaryButton("Start a game", fresh, !state.busy, light = true)
                             OutlinedButton(onClick = { actions.showJoin(false) }, enabled = !state.busy,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, OnForest.copy(alpha = .4f))) { Text("Join room", color = OnForest) }
+                                border = BorderStroke(1.dp, OnForest.copy(alpha = .4f))) { Text("Join a game", color = OnForest) }
                             if (state.resumeGuest) TextButton(onClick = { actions.showJoin(true) }, enabled = !state.busy,
                                 modifier = Modifier.fillMaxWidth()) { Text("Rejoin room", color = OnForest) }
                         }
                         else -> {
                             if (state.resumeRace) GamePrimaryButton("Resume race", { actions.hostRace(true) }, !state.busy, light = true)
-                            GamePrimaryButton("Host race", freshRace, !state.busy, light = true)
+                            GamePrimaryButton("Start a race", freshRace, !state.busy, light = true)
                             OutlinedButton(onClick = { actions.showJoin(false) }, enabled = !state.busy,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(14.dp),
-                                border = BorderStroke(1.dp, OnForest.copy(alpha = .4f))) { Text("Join room", color = OnForest) }
+                                border = BorderStroke(1.dp, OnForest.copy(alpha = .4f))) { Text("Join a game", color = OnForest) }
                         }
                     }
                     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth(), color = OnForest, trackColor = OnForest.copy(alpha = .15f))
@@ -149,7 +159,7 @@ import androidx.compose.ui.unit.*
         IconButton(profile, enabled = !state.busy,
             modifier = Modifier.size(48.dp).background(GreenTint, RoundedCornerShape(16.dp))
                 .semantics { contentDescription = "My profile & records" }) {
-            Text(emblemSymbol(state.appearance.emblem), color = inkFor(state.appearance.ink, false), fontSize = 23.sp)
+            AnimalPortrait(state.appearance, Modifier.size(40.dp))
         }
     }
 }

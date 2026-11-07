@@ -38,7 +38,8 @@ data class GameUiState(
     val localSaveBlocked: Boolean = false,
     val todayDate: String = DailyChallenge.today(),
     val hintUnavailable: Boolean = false,
-    val entryCheck: SudokuAssistance.EntryCheck? = null
+    val entryCheck: SudokuAssistance.EntryCheck? = null,
+    val requireRoomCode: Boolean = false
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && ((role == SOLO && !localSaveBlocked) || (role != SOLO && !status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
 }
@@ -52,7 +53,8 @@ class GameViewModel @JvmOverloads constructor(
             preferences.getString("cosmeticInk", "forest") ?: "forest",
             preferences.getString("cosmeticBoard", "classic") ?: "classic",
             preferences.getString("cosmeticFont", "clear") ?: "clear",
-            preferences.getString("cosmeticEmblem", "tile") ?: "tile"
+            preferences.getString("cosmeticEmblem", "tile") ?: "tile",
+            preferences.getString("cosmeticPortrait", "") ?: ""
         ), localPlayer.current().records
     )
     private val hostStore = AtomicSessionStore(File(application.filesDir, "host-session.json"))
@@ -65,6 +67,7 @@ class GameViewModel @JvmOverloads constructor(
         uniformNumbers = preferences.getBoolean("uniformNumbers", false),
         touchFeedback = preferences.getBoolean("touchFeedback", true),
         autoCleanNotes = preferences.getBoolean("autoCleanNotes", false),
+        requireRoomCode = preferences.getBoolean("requireRoomCode", false),
         selectedDifficulty = preferences.getString("difficulty", "EASY")
             .let { if (it in listOf("EASY", "MEDIUM", "HARD")) it!! else "EASY" }))
     val state = _state.asStateFlow()
@@ -99,6 +102,11 @@ class GameViewModel @JvmOverloads constructor(
         val value = name.filterNot { it.isISOControl() }.take(24)
         _state.update { it.copy(name = value) }; preferences.edit().putString("name", value).apply()
     }
+    fun setRequireRoomCode(enabled: Boolean) {
+        if (_state.value.busy) return
+        preferences.edit().putBoolean("requireRoomCode", enabled).apply()
+        _state.update { it.copy(requireRoomCode = enabled) }
+    }
     fun chooseCosmetic(group: String, id: String) {
         val state = _state.value
         if (!Cosmetics.allowed(id, state.profile.records)) return
@@ -106,13 +114,14 @@ class GameViewModel @JvmOverloads constructor(
             "ink" -> state.appearance.copy(ink = id)
             "board" -> state.appearance.copy(board = id)
             "font" -> state.appearance.copy(font = id)
-            "emblem" -> state.appearance.copy(emblem = id)
+            "emblem" -> state.appearance.copy(emblem = id, portrait = "")
+            "portrait" -> state.appearance.copy(portrait = id)
             else -> return
         }
         if (!Cosmetics.valid(next)) return
         preferences.edit().putString("cosmeticInk", next.ink)
             .putString("cosmeticBoard", next.board).putString("cosmeticFont", next.font)
-            .putString("cosmeticEmblem", next.emblem).apply()
+            .putString("cosmeticEmblem", next.emblem).putString("cosmeticPortrait", next.portrait).apply()
         _state.update { it.copy(appearance = next) }
         val current = generation.get()
         viewModelScope.launch(workDispatcher) {
@@ -418,7 +427,7 @@ class GameViewModel @JvmOverloads constructor(
             resumeGuest = guestResume != null, saveIssue = localPlayer.recoveryWarning ?: it.saveIssue, profile = saved, localSaveBlocked = !localPlayer.canSave,
             resumeSolo = saved.activeSolo != null, resumeRace = it.resumeRace, appearance = it.appearance,
             uniformNumbers = it.uniformNumbers, touchFeedback = it.touchFeedback,
-            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty,
+            autoCleanNotes = it.autoCleanNotes, selectedDifficulty = it.selectedDifficulty, requireRoomCode = it.requireRoomCode,
             todayDate = DailyChallenge.today()) }
     }
     fun host(resume: Boolean) = hostInternal(resume, versus = false)
@@ -457,13 +466,14 @@ class GameViewModel @JvmOverloads constructor(
         val current = closeRoom(); val name = cleanName(_state.value.name, "Player")
         val store = if (versus) raceStore else hostStore
         val selectedStyle = _state.value.appearance
+        val requireCode = _state.value.requireRoomCode
         _state.update { it.copy(page = Page.PLAY, role = HOST, snapshot = null, busy = true, pendingId = null, selected = -1, partnerCell = -1, message = null) }
         viewModelScope.launch(workDispatcher) {
             try {
                 val session = if (resume) {
                     val saved = when (val loaded = store.load()) { is LoadResult.Loaded -> loaded.data; is LoadResult.Recovered -> loaded.data; else -> error("The saved puzzle is unavailable. It has not been replaced.") }
                     GameSession(saved, store::save).also { it.setAppearance(HOST, selectedStyle) }
-                } else GameSession.create(nextPuzzle(_state.value.selectedDifficulty), name, store::save, if (versus) VERSUS else COOP, selectedStyle)
+                } else GameSession.create(nextPuzzle(_state.value.selectedDifficulty), name, store::save, if (versus) VERSUS else COOP, selectedStyle, requireCode)
                 if (generation.get() != current) return@launch
                 val hosted = HostServer(session) { event -> if (generation.get() == current) {
                     recordMultiplayer(event.snapshot, HOST)
@@ -481,8 +491,8 @@ class GameViewModel @JvmOverloads constructor(
                 server = hosted; val port = hosted.start(); hosted.setForeground(visible)
                 if (generation.get() != current) { hosted.close(); return@launch }
                 val address = discovery.localAddresses().firstOrNull()?.let { "$it:$port" } ?: "Connect this phone to home Wi-Fi"
-                _state.update { it.copy(busy = false, roomCode = hosted.code, address = address, resumeHost = if (versus) it.resumeHost else true, resumeRace = if (versus) true else it.resumeRace, saveIssue = null) }
-                discovery.startHosting(session.snapshot().hostName, port, session.snapshot().sessionId)
+                _state.update { it.copy(busy = false, roomCode = if (session.requiresCode) hosted.code else "", address = address, resumeHost = if (versus) it.resumeHost else true, resumeRace = if (versus) true else it.resumeRace, saveIssue = null) }
+                discovery.startHosting(session.snapshot().hostName, port, session.snapshot().sessionId, session.requiresCode)
             } catch (e: Exception) { if (generation.get() == current) _state.update { it.copy(page = Page.HOME, busy = false, message = e.message ?: "Couldn't open the saved puzzle.") } }
         }
     }
@@ -492,7 +502,11 @@ class GameViewModel @JvmOverloads constructor(
         val current = closeRoom()
         _state.update { it.copy(page = Page.JOIN, role = GUEST, snapshot = null, busy = false, rooms = emptyList(), pendingId = null,
             resumingGuest = resume && guestResume != null, address = if (resume) preferences.getString("lastAddress", "") ?: "" else "", message = null) }
-        discovery.discover { found -> if (generation.get() == current) _state.update { it.copy(rooms = found) } }
+        val expectedSession = if (resume) guestResume?.snapshot?.sessionId else null
+        discovery.discover { found ->
+            val rooms = if (expectedSession == null) found else found.filter { it.sessionId == expectedSession }
+            _state.update { if (generation.get() == current && it.page == Page.JOIN) it.copy(rooms = rooms) else it }
+        }
     }
     fun join(endpoint: Endpoint, code: String) {
         val resume = _state.value.resumingGuest

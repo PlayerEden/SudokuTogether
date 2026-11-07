@@ -50,23 +50,23 @@ import kotlinx.coroutines.delay
             // A short window must be able to scroll the header and dock too;
             // reserving their height would give the active grid no viewport.
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                PlayTopBar(state, leave, help, ::copyCode, copied) { chatOpen = true; actions.chatVisible(true) }
+                PlayTopBar(state, leave, help, { details = true }) { chatOpen = true; actions.chatVisible(true) }
                 if (snapshot == null) OpeningPuzzle(Modifier.fillMaxWidth().height(160.dp))
                 else {
-                    PlayBoardPane(state, actions, new, replace, details, { details = !details },
+                    PlayBoardPane(state, actions, new,
                         Modifier.fillMaxWidth(), roomStatus = true, scrollable = false)
                     if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
                 }
             }
         } else Column(Modifier.fillMaxSize()) {
-            PlayTopBar(state, leave, help, ::copyCode, copied) { chatOpen = true; actions.chatVisible(true) }
+            PlayTopBar(state, leave, help, { details = true }) { chatOpen = true; actions.chatVisible(true) }
             if (snapshot == null) OpeningPuzzle(Modifier.weight(1f).fillMaxWidth())
             else BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 val wide = maxWidth >= 520.dp && maxWidth > maxHeight && !snapshot.completed
                 if (wide) {
                     val railWidth = (maxWidth * .46f).coerceIn(288.dp, 352.dp)
                     Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        PlayBoardPane(state, actions, new, replace, details, { details = !details },
+                        PlayBoardPane(state, actions, new,
                             Modifier.weight(1f).fillMaxHeight(), roomStatus = false)
                         Column(Modifier.width(railWidth).fillMaxHeight().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -75,13 +75,32 @@ import kotlinx.coroutines.delay
                         }
                     }
                 } else Column(Modifier.fillMaxSize()) {
-                    PlayBoardPane(state, actions, new, replace, details, { details = !details },
+                    PlayBoardPane(state, actions, new,
                         Modifier.weight(1f).fillMaxWidth(), roomStatus = true)
                     if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
                 }
             }
         }
     }
+    if (details && state.role != SOLO) AlertDialog(onDismissRequest = { details = false },
+        title = { Text("Game details") }, text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (state.role == HOST && state.roomCode.isNotBlank()) {
+                    SelectionContainer { Text(state.roomCode, color = Forest, fontSize = 18.sp,
+                        modifier = Modifier.semantics { contentDescription = "Room code ${state.roomCode}" }) }
+                    CopyControl(::copyCode, copied)
+                } else if (state.role == HOST) Text("Open nearby game", color = Forest)
+                if (state.address.isNotBlank()) SelectionContainer { Text("Join address\n${state.address}", color = Forest, fontSize = 13.sp) }
+                Text("Keep both apps open while you play.", color = Muted, fontSize = 13.sp)
+                if (state.role == HOST) {
+                    TextButton({ details = false; new() }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text(if (state.snapshot?.mode == VERSUS) "Next race" else "New puzzle")
+                    }
+                    if (state.snapshot?.guestName != null) TextButton({ details = false; replace() }, enabled = !state.busy,
+                        modifier = Modifier.heightIn(min = 48.dp)) { Text("Replace partner") }
+                }
+            }
+        }, confirmButton = { TextButton({ details = false }) { Text("Done") } })
     HintAndChat(state, actions, chatOpen) { chatOpen = false; actions.chatVisible(false) }
 }
 
@@ -93,26 +112,16 @@ import kotlinx.coroutines.delay
     }
 }
 
-@Composable private fun PlayTopBar(state: GameUiState, home: () -> Unit, help: () -> Unit, copy: () -> Unit, copied: Boolean, chat: () -> Unit) {
-    BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp)) {
-        val reflow = state.role != SOLO && (LocalDensity.current.fontScale > 1.15f || maxWidth < 340.dp)
-        if (reflow) Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                HomeControl(home)
-                PlayTitle(state, Modifier.weight(1f))
-                HelpControl(help)
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (state.role == HOST && state.roomCode.isNotBlank())
-                    CopyControl(copy, copied, Modifier.weight(1f))
-                ChatControl(state, chat, Modifier.weight(1f), compact = true)
-            }
-        } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+@Composable private fun PlayTopBar(state: GameUiState, home: () -> Unit, help: () -> Unit, details: () -> Unit, chat: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             HomeControl(home)
             PlayTitle(state, Modifier.weight(1f))
-            if (state.role == HOST && state.roomCode.isNotBlank()) CopyControl(copy, copied)
-            if (state.role != SOLO) ChatControl(state, chat)
             HelpControl(help)
+        }
+        if (state.role != SOLO) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(details, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("Game details", fontSize = 13.sp) }
+            ChatControl(state, chat, Modifier.weight(1f))
         }
     }
 }
@@ -129,24 +138,22 @@ import kotlinx.coroutines.delay
             color = Forest, fontSize = 22.sp, lineHeight = 25.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
         Text(difficultyName(if (state.snapshot == null) state.selectedDifficulty else state.snapshot.puzzle.difficulty) + when {
             state.dailyDate != null -> " · ${state.dailyDate}"
-            state.role == HOST && state.roomCode.isNotBlank() -> " · Room ${state.roomCode}"
             else -> " · Classic 9×9"
-        }, color = Muted, fontSize = 10.sp, lineHeight = 14.sp,
-            modifier = if (state.role == HOST) Modifier.semantics { contentDescription = "Room code ${state.roomCode}" } else Modifier)
+        }, color = Muted, fontSize = 10.sp, lineHeight = 14.sp)
     }
 }
 
 @Composable private fun CopyControl(copy: () -> Unit, copied: Boolean, modifier: Modifier = Modifier) {
     TextButton(copy, modifier = modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
-        Text(if (copied) "Copied" else "Copy code", fontSize = 10.sp, lineHeight = 14.sp)
+        Text(if (copied) "Copied" else "Copy code", fontSize = 13.sp, lineHeight = 14.sp)
     }
 }
 
-@Composable private fun ChatControl(state: GameUiState, chat: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
+@Composable private fun ChatControl(state: GameUiState, chat: () -> Unit, modifier: Modifier = Modifier) {
     TextButton(chat, modifier = modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
-        if (!compact) { GameIcon(GameSymbol.CHAT, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)) }
+        GameIcon(GameSymbol.CHAT, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(4.dp))
         Text(if (state.unreadChat > 0) "Chat (${state.unreadChat})" else "Chat",
-            fontSize = if (compact) 10.sp else 12.sp, lineHeight = 14.sp)
+            fontSize = 13.sp, lineHeight = 18.sp)
     }
 }
 
@@ -157,7 +164,6 @@ import kotlinx.coroutines.delay
 }
 
 @Composable private fun PlayBoardPane(state: GameUiState, actions: GameActions, new: () -> Unit,
-    replace: () -> Unit, details: Boolean, toggleDetails: () -> Unit,
     modifier: Modifier, roomStatus: Boolean, scrollable: Boolean = true) {
     val snapshot = state.snapshot ?: return
     BoxWithConstraints(modifier) {
@@ -180,14 +186,6 @@ import kotlinx.coroutines.delay
                 GamePrimaryButton("Reconnect", { actions.showJoin(true) }, !state.busy)
             if (state.role == SOLO) {
                 if (!snapshot.completed && state.dailyDate == null) TextButton(new) { Text("New puzzle", fontSize = 11.sp) }
-            } else if (state.role == HOST) {
-                TextButton(toggleDetails) { Text(if (details) "Less" else "Room details", fontSize = 12.sp) }
-                if (details) GamePanel(Modifier.widthIn(max = 460.dp).fillMaxWidth()) {
-                    SelectionContainer { Text("Join address\n${state.address}", color = Forest, fontSize = 13.sp) }
-                    Text("Keep both apps open while you play.", color = Muted, fontSize = 12.sp)
-                    TextButton(new, enabled = !state.busy) { Text(if (snapshot.mode == VERSUS) "Next race" else "New puzzle") }
-                    if (snapshot.guestName != null) TextButton(replace, enabled = !state.busy) { Text("Replace partner") }
-                }
             }
         }
     }
@@ -291,10 +289,12 @@ private fun roomStatusText(state: GameUiState): String {
     val other = if (state.role == HOST) snapshot.guestAppearance else snapshot.hostAppearance
     val partner = if (state.role == HOST) snapshot.guestName else snapshot.hostName
     Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(emblemSymbol(state.appearance.emblem) + " " + state.name, Modifier.weight(1f),
-            color = inkFor(state.appearance.ink, false), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text(emblemSymbol(other.emblem) + " " + (partner ?: "Waiting for partner"), Modifier.weight(1f),
-            color = inkFor(other.ink, false), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
+        for ((look, name) in listOf(state.appearance to state.name, other to (partner ?: "Waiting for partner"))) {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                AnimalPortrait(look, Modifier.size(24.dp))
+                Text(name, color = inkFor(look.ink, false), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
     }
 }
 

@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -70,12 +71,12 @@ fun styleLabel(a: Appearance): String = listOf(
         Box(Modifier.size(if (compact) 30.dp else 44.dp)
             .background(color.copy(alpha = .12f), RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center) {
-            Text(emblemSymbol(appearance.emblem), fontSize = if (compact) 22.sp else 30.sp, color = color)
+            AnimalPortrait(appearance, Modifier.size(if (compact) 30.dp else 44.dp))
         }
         Column(Modifier.weight(1f, fill = false)) {
             Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 color = Ink, fontWeight = FontWeight.SemiBold, fontSize = if (compact) 12.sp else 16.sp)
-            Text(emblemName(appearance.emblem), maxLines = 1, overflow = TextOverflow.Ellipsis,
+            Text(identityStyleName(appearance), maxLines = 1, overflow = TextOverflow.Ellipsis,
                 color = Muted, fontSize = 10.sp)
         }
     }
@@ -86,12 +87,12 @@ fun styleLabel(a: Appearance): String = listOf(
     SectionTitle(title)
     val scale = LocalDensity.current.fontScale
     val tileWidth = if (scale > 1.3f) 172.dp else 136.dp
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    Row(Modifier.fillMaxWidth().testTag("cosmetic_$group").horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         options.forEach { item ->
             val unlocked = Cosmetics.allowed(item.id, state.profile.records)
-            val equipped = chosen == item.id
+            val equipped = chosen == item.id && (group != "emblem" || state.appearance.portrait.isEmpty())
             Surface(onClick = { actions.cosmetic(group, item.id) }, enabled = unlocked,
-                modifier = Modifier.width(tileWidth).semantics {
+                modifier = Modifier.width(tileWidth).testTag("cosmetic_${group}_${item.id}").semantics {
                     selected = equipped
                     stateDescription = if (equipped) "Equipped" else if (unlocked) "Available" else "Locked. ${item.requirement}"
                 }, shape = RoundedCornerShape(17.dp), color = if (equipped) GreenTint else Paper,
@@ -157,47 +158,48 @@ fun styleLabel(a: Appearance): String = listOf(
 
 private val TealColor = Color(0xFFDCECE4)
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable fun RoomChatSheet(state: GameUiState, actions: GameActions, close: () -> Unit) {
     var draft by remember { mutableStateOf("") }
     val scroll = rememberLazyListState()
-    LaunchedEffect(state.chat.size) {
-        if (state.chat.isNotEmpty()) scroll.animateScrollToItem(state.chat.lastIndex)
-    }
-    ModalBottomSheet(onDismissRequest = close, containerColor = Cream) {
-        Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp).padding(bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Room chat", fontFamily = FontFamily.Serif, color = Forest, fontSize = 23.sp)
-            Text("Messages aren't saved.",
-                color = Muted, fontSize = 12.sp)
-            LazyColumn(Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 310.dp), state = scroll,
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(state.chat, key = { it.id }) { msg ->
-                    val mine = msg.player == state.role
-                    val author = if (msg.player == HOST) state.snapshot?.hostName ?: "Host"
-                        else state.snapshot?.guestName ?: "Partner"
-                    val look = if (msg.player == HOST) state.snapshot?.hostAppearance ?: Appearance()
-                        else state.snapshot?.guestAppearance ?: Appearance()
-                    Column(Modifier.fillMaxWidth(), horizontalAlignment = if (mine) Alignment.End else Alignment.Start) {
-                        Text(author, fontSize = 10.sp, color = Muted)
-                        Text(msg.text, modifier = Modifier.background(if (mine) TealColor else Paper,
-                            RoundedCornerShape(12.dp)).padding(12.dp), fontFamily = fontFor(look.font),
-                            color = inkFor(look.ink, false), fontSize = 14.sp)
+    LaunchedEffect(state.chat.size) { if (state.chat.isNotEmpty()) scroll.animateScrollToItem(state.chat.lastIndex) }
+    ModalBottomSheet(onDismissRequest = close, containerColor = Cream,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        BoxWithConstraints(Modifier.fillMaxWidth().heightIn(max = 560.dp).imePadding()) {
+            val showReplies = WindowInsets.ime.getBottom(LocalDensity.current) == 0 && maxHeight >= 360.dp
+            Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(horizontal = 16.dp).padding(bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Room chat", fontFamily = FontFamily.Serif, color = Forest, fontSize = 23.sp)
+                Text("Messages aren't saved.", color = Muted, fontSize = 12.sp)
+                LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 240.dp), state = scroll,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(state.chat, key = { it.id }) { msg ->
+                        val mine = msg.player == state.role
+                        val author = if (msg.player == HOST) state.snapshot?.hostName ?: "Host" else state.snapshot?.guestName ?: "Partner"
+                        val look = if (msg.player == HOST) state.snapshot?.hostAppearance ?: Appearance() else state.snapshot?.guestAppearance ?: Appearance()
+                        Column(Modifier.fillMaxWidth(), horizontalAlignment = if (mine) Alignment.End else Alignment.Start) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                AnimalPortrait(look, Modifier.size(24.dp))
+                                Text(if (mine) "You" else author, fontSize = 12.sp, color = Muted)
+                            }
+                            Text(msg.text, modifier = Modifier.background(if (mine) TealColor else Paper,
+                                RoundedCornerShape(12.dp)).padding(12.dp), fontFamily = fontFor(look.font),
+                                color = inkFor(look.ink, false), fontSize = 14.sp)
+                        }
                     }
                 }
-            }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = draft, onValueChange = { draft = it.take(ChatRules.MAX_LENGTH) },
-                    placeholder = { Text("Message your partner") }, maxLines = 3, modifier = Modifier.weight(1f),
-                    enabled = state.role == HOST || state.connected)
-                Button(onClick = { actions.sendChat(draft); draft = "" },
-                    enabled = draft.isNotBlank() && (state.role == HOST || state.connected)) { Text("Send") }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                listOf("Nice move!", "Need a hint?", "Good game!", "Rematch?").forEach { phrase ->
-                    TextButton(onClick = { actions.sendChat(phrase) },
-                        enabled = state.role == HOST || state.connected) { Text(phrase, fontSize = 11.sp) }
+                if (showReplies) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    listOf("Nice move!", "Need a hint?", "Good game!", "Rematch?").forEach { phrase ->
+                        TextButton(onClick = { actions.sendChat(phrase) }, modifier = Modifier.heightIn(min = 48.dp),
+                            enabled = state.role == HOST || state.connected) { Text(phrase, fontSize = 13.sp) }
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = draft, onValueChange = { draft = it.take(ChatRules.MAX_LENGTH) },
+                        placeholder = { Text("Message your partner") }, maxLines = 3,
+                        modifier = Modifier.weight(1f).testTag("chat_input"), enabled = state.role == HOST || state.connected)
+                    Button(onClick = { actions.sendChat(draft);draft = "" }, modifier = Modifier.heightIn(min = 48.dp),
+                        enabled = draft.isNotBlank() && (state.role == HOST || state.connected)) { Text("Send") }
                 }
             }
         }

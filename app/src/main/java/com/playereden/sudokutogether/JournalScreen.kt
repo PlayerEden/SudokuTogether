@@ -107,6 +107,7 @@ import com.playereden.sudokutogether.core.*
     }
     Text("Earned milestones " + Achievements.earnedCount(state.profile.records) + " of " + Achievements.progress(state.profile.records).size,
         color = Muted, fontSize = 13.sp)
+    WoodlandCollection(state, actions)
     CosmeticSelector("Number colors", "ink", Cosmetics.inks, state.appearance.ink, state, actions)
     CosmeticSelector("Board styles", "board", Cosmetics.boards, state.appearance.board, state, actions)
     CosmeticSelector("Number fonts", "font", Cosmetics.fonts, state.appearance.font, state, actions)

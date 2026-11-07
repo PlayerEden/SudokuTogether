@@ -87,7 +87,7 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
                 if (failures.size > 32) failures.clear()
                 val attempts = failures.getOrPut(address) { mutableListOf() }.also { it.removeAll { time -> now - time > 60_000 } }
                 if (attempts.size >= 5) reject("Too many incorrect codes. Try again in a minute.")
-                if (hello.token == null && hello.code != code) { attempts.add(now); reject("That room code is incorrect.") }
+                if (session.requiresCode && hello.token == null && hello.code != code) { attempts.add(now); reject("That room code is incorrect.") }
                 val identity = try { session.admitGuest(hello.name, hello.token, hello.appearance) } catch (e: Exception) { reject(e.message ?: "Could not join this room.") }
                 incoming.soTimeout = 10_000
                 val link = Link(incoming, ::drop); admitted = link; peer = link; guestActive = true; partnerCell = -1; syncPresence()

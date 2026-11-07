@@ -1,0 +1,90 @@
+{
+  "collection": "Woodland",
+  "generator": "built-in image generation",
+  "assets": [
+    {
+      "id": "owl",
+      "sha": "dcb19f617eb26e152577a7b62ff6447891705b76",
+      "path": "design/woodland/originals/owl.png",
+      "prompt": "Use case: stylized-concept. Asset type: one production portrait icon for GridMates: Sudoku's Woodland collection. Subject: a calm friendly tawny owl, centered head and shoulders, looking forward. Style: simple polished flat editorial illustration, cut-paper-like broad shapes, confident deep forest green outlines with subtly rounded corners; adult-friendly, warm and understated. Exactly two natural dot eyes, a single small gold beak, simple symmetric feather shapes. Palette: deep forest green #204F40, warm cream #F7F5E9, muted ochre gold #D8B76B and natural tawny brown. Composition: square, portrait silhouette entirely inside the central 76 percent, ample empty margin for circular UI crops, head filling most of the icon. Background truly transparent. No circle frame or backdrop, no words, no digits, no props, no clothes, no puzzle board, no decorative scenery. Crisp readable at 48 pixels. Avoid glossy 3D, photorealism, grunge texture, complex feather lines, extra anatomy, oversized baby eyes, busy detail. This image establishes a coherent collection of animal portraits.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "fox",
+      "sha": "68493568d7e9a205e9e23450be5a6acaa7155829",
+      "path": "design/woodland/originals/fox.png",
+      "prompt": "Create a sibling portrait for GridMates: Sudoku's Woodland collection. Use the attached owl ONLY as the exact style/palette/line-weight reference; replace the owl entirely with the requested animal. Match its simple polished flat editorial illustration, broad cut-paper-like shapes, warm adult-friendly face, deep forest outline, cream accents and muted natural colors. One centered head-and-shoulders animal, frontal view, strong species silhouette, simple dot eyes; generous transparent margin for circular UI cropping, head filling the icon. Truly transparent background. No words, digits, clothing, props, frames, scenery, glossy3D, complex texture or tiny details. Subject: a red fox, pointed ears, cream cheek patches, rusty muted orange fur.",
+      "refinement_prompt": "Edit this animal portrait. Preserve its head, species, face, forest-green outline weight, warm palette, framing and genuinely transparent background. Change ONLY the body/shoulder area: replace all layered owl-feather/wing/chevron patterns with plain rusty orange shoulders and a simple cream fur chest bib. It is a mammal and must have NO feathers or wing shapes. Keep the body as two or three broad simple flat shapes with no arms/hands visible. No extra texture, props, clothing, text, frame or background. Keep the portrait otherwise identical and simple for a small mobile-game profile icon."
+    },
+    {
+      "id": "rabbit",
+      "sha": "2ed0c9cdcff0ec96f956b4519ee3473bfc2532c4",
+      "path": "design/woodland/originals/rabbit.png",
+      "prompt": "Create a sibling portrait for GridMates: Sudoku's Woodland collection. Use the attached owl ONLY as the exact style/palette/line-weight reference; replace the owl entirely with the requested animal. Match its simple polished flat editorial illustration, broad cut-paper-like shapes, warm adult-friendly face, deep forest outline, cream accents and muted natural colors. One centered head-and-shoulders animal, frontal view, strong species silhouette, simple dot eyes; generous transparent margin for circular UI cropping, head filling the icon. Truly transparent background. No words, digits, clothing, props, frames, scenery, glossy3D, complex texture or tiny details. Subject: a warm gray rabbit, two upright ears, cream muzzle, short neck, no hands.",
+      "refinement_prompt": "Edit this animal portrait. Preserve its head, species, face, forest-green outline weight, warm palette, framing and genuinely transparent background. Change ONLY the body/shoulder area: replace all layered owl-feather/wing/chevron patterns with plain gray shoulders and a simple cream oval chest patch. It is a mammal and must have NO feathers or wing shapes. Keep the body as two or three broad simple flat shapes with no arms/hands visible. No extra texture, props, clothing, text, frame or background. Keep the portrait otherwise identical and simple for a small mobile-game profile icon."
+    },
+    {
+      "id": "bear",
+      "sha": "c4e2a8d1fe2e7c4a3261b2aefcf6bc8240b9a648",
+      "path": "design/woodland/originals/bear.png",
+      "prompt": "Create a sibling portrait for GridMates: Sudoku's Woodland collection. Use the attached owl ONLY as the exact style/palette/line-weight reference; replace the owl entirely with the requested animal. Match its simple polished flat editorial illustration, broad cut-paper-like shapes, warm adult-friendly face, deep forest outline, cream accents and muted natural colors. One centered head-and-shoulders animal, frontal view, strong species silhouette, simple dot eyes; generous transparent margin for circular UI cropping, head filling the icon. Truly transparent background. No words, digits, clothing, props, frames, scenery, glossy3D, complex texture or tiny details. Subject: a brown bear with two rounded ears and cream muzzle.",
+      "refinement_prompt": "Edit this animal portrait. Preserve its head, species, face, forest-green outline weight, warm palette, framing and genuinely transparent background. Change ONLY the body/shoulder area: replace all layered owl-feather/wing/chevron patterns with plain brown shoulders and a simple small cream oval chest patch. It is a mammal and must have NO feathers or wing shapes. Keep the body as two or three broad simple flat shapes with no arms/hands visible. No extra texture, props, clothing, text, frame or background. Keep the portrait otherwise identical and simple for a small mobile-game profile icon."
+    },
+    {
+      "id": "badger",
+      "sha": "45a661cda109516dad86b32c57a3e9ae6a8e8186",
+      "path": "design/woodland/originals/badger.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a European badger with round ears, gray shoulders and its clear black-and-cream striped face, plain gray chest.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "hedgehog",
+      "sha": "dcc0d3789cff1e89d765c56139624b450cae5ead",
+      "path": "design/woodland/originals/hedgehog.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a hedgehog with simple rounded spiky brown silhouette around a cream face, very small rounded ears and plain warm brown shoulders.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "robin",
+      "sha": "76f820b1f3339bd93064560c6b0c2510a3ff6952",
+      "path": "design/woodland/originals/robin.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a small robin bird with a simple reddish orange breast, warm gray-brown head, small beak and two simple wings, minimal feather divisions.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "deer",
+      "sha": "0dfa74398e569ca2d0c9c5c0ea0dd79af4300fa0",
+      "path": "design/woodland/originals/deer.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a gentle doe deer with two long natural ears, warm brown fur and cream muzzle/chest, no antlers.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "squirrel",
+      "sha": "93abecc77dc1ef08a104a3797c5273fb5775e40b",
+      "path": "design/woodland/originals/squirrel.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a red squirrel with small tufted ears, cream muzzle/chest, rusty natural fur and a simple curled tail just peeking behind one shoulder.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "otter",
+      "sha": "ac9e4d56ca2ebed086c2b7e0fde263856d166128",
+      "path": "design/woodland/originals/otter.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a river otter with very small round ears, warm brown fur, broad cream muzzle and just two short whisker marks on each side; plain cream chest, no props.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "tortoise",
+      "sha": "de26c6f3f4eeb64e2d14382938df8a197f7a513f",
+      "path": "design/woodland/originals/tortoise.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a friendly woodland tortoise with muted olive green rounded head, simple cream muzzle and a broad olive shell visible as the shoulders, very few broad shell divisions, no hands or props.",
+      "refinement_prompt": null
+    },
+    {
+      "id": "cat",
+      "sha": "06f9de4ff08c81ba2a7deb8a308aa5e43e3683a1",
+      "path": "design/woodland/originals/cat.png",
+      "prompt": "Create one sibling animal portrait for GridMates: Sudoku Woodland collection. The attached fox is ONLY a style, line-weight and rendering reference. Use the same warm polished simple editorial illustration: broad flat natural-color shapes, deep forest-green outline, cream accents, restrained natural ochre details, simple dot eyes. The new subject must have its OWN natural species-appropriate markings and a plain simple body; do not copy fox ears, owl feathers, layered chevrons or arbitrary ornamental forehead patterns. Frontal head-and-shoulders, no hands, face recognizable at48px. Keep the whole silhouette inside the central75percent of a square canvas with generous transparent margins. Truly transparent background, no frame/backdrop, no props, clothes, words, numbers, scenery, glossy3D or noisy textures. Subject: a warm gray tabby cat with triangular ears, cream muzzle/chest and just three simple darker forehead stripes, two short whisker marks on each cheek, no props.",
+      "refinement_prompt": null
+    }
+  ]
+}

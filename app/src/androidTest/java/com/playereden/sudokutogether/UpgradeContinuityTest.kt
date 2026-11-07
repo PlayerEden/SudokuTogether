@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.security.MessageDigest
 
-/** Run seed on the original v0.11A APK, install -r the candidate, then run verify. */
+/** Seed the accepted v0.11B APK, install -r the candidate, then run verify. */
 @RunWith(AndroidJUnit4::class)
 class UpgradeContinuityTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
@@ -48,7 +48,7 @@ class UpgradeContinuityTest {
             compose.waitUntil(20000) { model.state.value.pendingId == null && model.state.value.snapshot!!.cells[hint.cell].value == hint.digit }
         }
         val recordId = model.state.value.profile.records.last().id
-        compose.runOnUiThread { model.home();model.solo(false) }
+        compose.runOnUiThread { model.chooseCosmetic("emblem", "leaf");model.home();model.solo(false) }
         compose.waitUntil(60000) { model.state.value.page == Page.PLAY && model.state.value.canEdit }
         val snapshot = model.state.value.snapshot!!
         val entry = com.playereden.sudokutogether.core.SudokuAssistance.nextHint(snapshot.puzzle,snapshot.cells.map { it.value })!!
@@ -62,12 +62,18 @@ class UpgradeContinuityTest {
         compose.waitUntil(15000) { model.state.value.pendingId == null && model.state.value.snapshot!!.cells[cell].notes != 0 }
         compose.runOnUiThread { model.home() }
         compose.waitUntil(15000) { model.state.value.page == Page.HOME && !model.state.value.busy }
+        compose.runOnUiThread { model.host(false) }
+        compose.waitUntil(60000) { model.state.value.page == Page.PLAY && model.state.value.role == com.playereden.sudokutogether.core.HOST && model.state.value.snapshot != null && !model.state.value.busy }
+        val hostId = model.state.value.snapshot!!.sessionId
+        compose.runOnUiThread { model.home() }
+        compose.waitUntil(15000) { model.state.value.page == Page.HOME && !model.state.value.busy }
         val state = model.state.value
         val data = JSONObject().put("profileSha256", profileHash()).put("playerId", state.profile.playerId)
             .put("soloId", state.profile.activeSolo!!.id).put("cell", cell)
             .put("notes", state.profile.activeSolo!!.cells[cell].notes)
             .put("entryCell",entry.cell).put("entryValue",entry.digit)
             .put("recordId",recordId).put("recordCount",state.profile.records.size)
+            .put("emblem", state.appearance.emblem).put("hostId", hostId)
         checkpoint.parentFile!!.mkdirs(); checkpoint.writeText(data.toString())
         assertTrue(data.getInt("notes") != 0)
     }
@@ -83,6 +89,10 @@ class UpgradeContinuityTest {
         assertEquals(old.getString("playerId"), state.profile.playerId)
         assertEquals(old.getString("soloId"), state.profile.activeSolo!!.id)
         assertEquals("Upgrade player", state.name)
+        assertEquals("leaf", state.appearance.emblem)
+        assertEquals(old.getString("emblem"), state.appearance.emblem)
+        assertEquals("", state.appearance.portrait)
+        assertFalse("New rooms default open after the update", state.requireRoomCode)
         assertTrue(state.uniformNumbers); assertFalse(state.touchFeedback); assertTrue(state.autoCleanNotes)
         assertEquals(old.getInt("notes"), state.profile.activeSolo!!.cells[old.getInt("cell")].notes)
         assertEquals(old.getInt("entryValue"),state.profile.activeSolo!!.cells[old.getInt("entryCell")].value)
@@ -93,6 +103,10 @@ class UpgradeContinuityTest {
         assertEquals(old.getString("soloId"), model.state.value.snapshot!!.sessionId)
         assertEquals(old.getInt("notes"), model.state.value.snapshot!!.cells[old.getInt("cell")].notes)
         assertEquals(old.getInt("entryValue"),model.state.value.snapshot!!.cells[old.getInt("entryCell")].value)
+        compose.runOnUiThread { model.home();model.host(true) }
+        compose.waitUntil(30000) { model.state.value.page == Page.PLAY && model.state.value.snapshot != null && !model.state.value.busy }
+        assertEquals(old.getString("hostId"), model.state.value.snapshot!!.sessionId)
+        assertTrue("A legacy saved room keeps its code", model.state.value.roomCode.isNotBlank())
         compose.runOnUiThread {
             model.home(); model.setName("Player"); model.setUniformNumbers(false)
             model.setTouchFeedback(true); model.setAutoCleanNotes(false)
