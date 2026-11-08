@@ -71,6 +71,22 @@ class CompactPlayLayoutTest {
         for (number in 1..9) compose.onNodeWithTag("number_$number").performScrollTo().assertIsDisplayed()
         capture("landscape-controls")
     }
+    @Test fun compactVersusLandscapeKeepsPresenceAboveTheKeypadBesideTheBoard() {
+        launch(true)
+        val state = fixture(HOST, VERSUS).let {
+            it.copy(snapshot = requireNotNull(it.snapshot).copy(guestName = "Taylor"),
+                status = RoomStatus(guestActive = true, reserved = true), connected = true)
+        }
+        scenario!!.onActivity { it.setContent { SudokuTogetherTheme { SudokuApp(state, actions, {}) } } }
+
+        val presence = compose.onNodeWithTag("versus_presence").assertIsDisplayed().getUnclippedBoundsInRoot()
+        val board = compose.onNodeWithTag("board_frame").assertIsDisplayed().getUnclippedBoundsInRoot()
+        val dock = compose.onNodeWithTag("input_dock").getUnclippedBoundsInRoot()
+        assertTrue(presence.left >= board.right)
+        assertTrue(presence.bottom <= dock.top)
+        capture("versus-landscape")
+        compose.onNodeWithTag("number_9").performScrollTo().assertIsDisplayed()
+    }
     @Test fun hostHeadersAt200PercentKeepCodeAndActionsVisibleWithUnreadChat() {
         launch(false)
         val shown = mutableStateOf(fixture(HOST))

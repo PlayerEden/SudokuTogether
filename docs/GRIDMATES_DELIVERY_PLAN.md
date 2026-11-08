@@ -1,8 +1,8 @@
 # GridMates delivery plan
 
-November 7 follow-up. The [player presence and menu design](superpowers/specs/2026-11-04-player-presence-and-menu-design.md) and [APK update and save preparation](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) are ready to review against v0.11C. The latest Android build evidence remains the original v0.11C delivery.
+November 7 follow-up. The [player presence and menu design](superpowers/specs/2026-11-04-player-presence-and-menu-design.md) and [APK update and save preparation](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) build on v0.11C, which remains the latest delivered QA APK.
 
-The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md) sequences the November playtest work. Its first stage bundles the existing number styles and aligns Collection's preview with the Classic number display setting. The two-phone and signed upgrade checks are tracked there.
+The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md) tracks the bundled number styles, the [Versus player panel](superpowers/plans/2026-11-07-gridmates-native-rollout.md#stage-2-implementation), and the remaining two-phone and signed upgrade checks.
 
 Updated November4, 2026 (America/Chicago). Current verified QA milestone: v0.11C, `feat/gridmates-nearby-animals` ([draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28)), stacked on the owner-accepted v0.11B.117 JVM tests and78 accepted native executions; original18→19 update verified. Preserve the earlier drafts/checkpoints and v0.11B rollback. [Current audit and exact source/artifact evidence](V0.11C_NEARBY_WOODLAND_QA.md). The older development app is not the implementation baseline.
 

@@ -61,6 +61,20 @@ Router-free nearby play and optional cloud saves are later projects. They need t
 - [x] Add the assets, licenses and shared display policy. Route the main preview and board through it while retaining the equipped choice.
 - [x] Compile and link the four font resources with Android's resource tools. Verify all digit outlines are present and compare the packaged font and license bytes to the source files.
 - [x] Run workflow lint and the APK preflight tests after repairing the signing-path reference. Actionlint and all 13 Python tests passed.
-- [ ] Run `:core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest`. Verify the four assets and notices in the APK.
-- [ ] Run the preview instrumentation test on Android and exercise the three fonts on both phones using the same setting. Include a dark board and pencil notes at large text size.
+- [x] Run `:core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest` on the combined Versus branch. The four fonts and license notice in the APK match the source bytes.
+- [x] Run the Collection preview instrumentation test on the API 26 emulator.
+- [ ] Exercise the three fonts on both phones using the same setting. Include a dark board and pencil notes at large text size.
 - [ ] Use the original v0.11C signing key and a newer version code for the install-over rehearsal. Record actual saved data and visual results before offering a download.
+
+## Stage 2 implementation
+
+Stack the Versus pass on [PR #30](https://github.com/PlayerEden/SudokuTogether/pull/30). Read both identities and aggregate fill counts from the existing race snapshot. Each track has the same target, the number of cells that started empty. Clearing an entry can reduce progress. Pencil marks do not fill a cell.
+
+- [x] Test the presentation mapping with real host and guest snapshots. Cover an open seat, a live race, a player stepping away, a dropped guest connection, and an authoritative finish.
+- [x] Put both players and the race state above the grid in portrait and above the keypad in the landscape side rail. Keep the known rival and their last count visible while paused. The open seat has no score.
+- [x] Check long names and keypad access at 320dp with 200% text, rematch progress reset, and the finished view. Keep Reconnect available to a disconnected guest alongside the finished result so they can rejoin for the next race.
+- [ ] Play a race on two physical phones. Verify join, erase, pause, reconnect, finish, and the next race from each seat.
+
+The combined branch built both Android packages and passed 112 core tests, 12 app unit tests, and 13 APK update preflight tests. Android lint reported zero errors and 16 warnings. Device regressions reproduced a missing Reconnect action after a finish and truncated names at 200% text before the fixes.
+
+The API 26 emulator passed 12 of 13 checks, including all Versus cases, compact Solo layout, host smoke tests, and the font preview. The existing standalone chat test could not find the “Rematch?” quick reply in the full run or the chat-only rerun. The test renders the chat sheet directly.

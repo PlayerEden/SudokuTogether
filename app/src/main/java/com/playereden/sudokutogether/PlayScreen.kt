@@ -70,7 +70,10 @@ import kotlinx.coroutines.delay
                             Modifier.weight(1f).fillMaxHeight(), roomStatus = false)
                         Column(Modifier.width(railWidth).fillMaxHeight().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            if (state.role != SOLO) RoomStatusCard(state, actions)
+                            if (state.role != SOLO) {
+                                if (snapshot.mode == VERSUS) VersusPresence(state, snapshot) { actions.showJoin(true) }
+                                else RoomStatusCard(state, actions)
+                            }
                             if (!snapshot.completed) SudokuInputDock(snapshot, state, actions, ::tick)
                         }
                     }
@@ -173,7 +176,7 @@ import kotlinx.coroutines.delay
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (snapshot.completed) PuzzleFinishCard(state, actions, new)
             PlayGridViewport(state, actions, roomStatus, viewportHeight - 8.dp)
-            if (state.role != SOLO) PartnerStrip(state)
+            if (state.role != SOLO && snapshot.mode != VERSUS) PartnerStrip(state)
             if (snapshot.mode == COOP && snapshot.completed && snapshot.guestName != null) {
                 GamePanel(Modifier.widthIn(max = 460.dp).fillMaxWidth()) {
                     SectionTitle("A board solved together")
@@ -182,7 +185,7 @@ import kotlinx.coroutines.delay
                 }
             }
             state.message?.let { Notice(it) }
-            if (roomStatus && state.role == GUEST && !state.connected)
+            if (roomStatus && snapshot.mode != VERSUS && state.role == GUEST && !state.connected)
                 GamePrimaryButton("Reconnect", { actions.showJoin(true) }, !state.busy)
             if (state.role == SOLO) {
                 if (!snapshot.completed && state.dailyDate == null) TextButton(new) { Text("New puzzle", fontSize = 11.sp) }
@@ -204,9 +207,14 @@ import kotlinx.coroutines.delay
     SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
         val textConstraints = Constraints(minWidth = constraints.maxWidth, maxWidth = constraints.maxWidth, maxHeight = Constraints.Infinity)
         val meta = subcompose("meta") {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (roomStatus && state.role != SOLO) Text(roomStatusText(state), color = Forest, fontSize = 11.sp, lineHeight = 16.sp)
-                PuzzleMeta(state)
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (state.role != SOLO && snapshot.mode == VERSUS) {
+                    if (roomStatus) VersusPresence(state, snapshot) { actions.showJoin(true) }
+                } else {
+                    if (roomStatus && state.role != SOLO) Text(roomStatusText(state), color = Forest, fontSize = 11.sp, lineHeight = 16.sp)
+                    PuzzleMeta(state)
+                }
             }
         }.single().measure(textConstraints)
         val label = subcompose("caption") {
@@ -216,7 +224,8 @@ import kotlinx.coroutines.delay
         val frame = gap * 2
         val maxGrid = (constraints.maxWidth - frame).coerceAtLeast(1).coerceAtMost(440.dp.roundToPx())
         val minGrid = minOf(144.dp.roundToPx(), maxGrid)
-        val gridPixels = (viewportHeight.roundToPx() - meta.height - label.height - frame - gap * 2).coerceIn(minGrid, maxGrid)
+        val gridTop = meta.height + if (meta.height > 0) gap else 0
+        val gridPixels = (viewportHeight.roundToPx() - gridTop - label.height - frame - gap).coerceIn(minGrid, maxGrid)
         val gridSize = gridPixels.toDp()
         val grid = subcompose("grid") {
             Surface(shape = RoundedCornerShape(16.dp), color = boardFillFor(state.appearance.board), shadowElevation = 3.dp,
@@ -229,10 +238,10 @@ import kotlinx.coroutines.delay
                 }
             }
         }.single().measure(Constraints.fixed(gridPixels + frame, gridPixels + frame))
-        layout(constraints.maxWidth, meta.height + gap + grid.height + gap + label.height) {
+        layout(constraints.maxWidth, gridTop + grid.height + gap + label.height) {
             meta.placeRelative(0, 0)
-            grid.placeRelative((constraints.maxWidth - grid.width) / 2, meta.height + gap)
-            label.placeRelative(0, meta.height + gap + grid.height + gap)
+            grid.placeRelative((constraints.maxWidth - grid.width) / 2, gridTop)
+            label.placeRelative(0, gridTop + grid.height + gap)
         }
     }
 }
@@ -249,11 +258,6 @@ import kotlinx.coroutines.delay
                 Text("$filled/81 squares filled", color = Muted, fontSize = 11.sp)
                 SoloTimer(state.soloElapsedMs, state.soloClockStartedAt)
             }
-        } else if (snapshot.mode == VERSUS) {
-            val given = snapshot.puzzle.clues.count { it != 0 }
-            val own = if (state.role == HOST) snapshot.hostProgress else snapshot.guestProgress
-            val rival = if (state.role == HOST) snapshot.guestProgress else snapshot.hostProgress
-            Text("You ${(own - given).coerceAtLeast(0)} · Rival ${(rival - given).coerceAtLeast(0)} entries", color = Forest, fontSize = 12.sp)
         } else Text("You · shared grid · " + if (state.partnerCell >= 0) "Partner: R${state.partnerCell / 9 + 1} C${state.partnerCell % 9 + 1}" else "Partner", color = Forest, fontSize = 11.sp)
         LinearProgressIndicator(progress = { filled / 81f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Forest, trackColor = Rule.copy(alpha = .6f))
     }
@@ -263,10 +267,6 @@ private fun roomStatusText(state: GameUiState): String {
     val snapshot = state.snapshot ?: return "Opening room…"
     val partner = if (state.role == HOST) snapshot.guestName else snapshot.hostName
     return when {
-        snapshot.mode == VERSUS && snapshot.completed && snapshot.winner == state.role -> "You won! The result is saved in your records."
-        snapshot.mode == VERSUS && snapshot.completed -> "Your rival finished first. Match complete."
-        snapshot.mode == VERSUS && !state.status.guestActive -> "Waiting for your rival to join or reconnect"
-        snapshot.mode == VERSUS -> "Race in progress! First valid solution wins."
         snapshot.completed -> "Solved together. Nice work!"
         state.role == GUEST && !state.connected -> "Connection paused. Rejoin to continue."
         state.status.paused -> "Paused while your partner is away"
@@ -327,7 +327,7 @@ private fun roomStatusText(state: GameUiState): String {
                     state.dailyDate != null -> "Daily challenge complete"
                     state.role == SOLO -> "Puzzle completed"
                     snapshot.mode == VERSUS && snapshot.winner == state.role -> "Victory!"
-                    snapshot.mode == VERSUS -> "Race finished"
+                    snapshot.mode == VERSUS -> "Your rival won"
                     else -> "Solved together!"
                 }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.SemiBold)
@@ -420,7 +420,8 @@ private fun roomStatusText(state: GameUiState): String {
                 }
                 if (numbers.size == 4) Box(Modifier.weight(1f).height(keypadHeight),
                     contentAlignment = Alignment.Center) {
-                    Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
+                    if (snapshot.mode != VERSUS)
+                        Text("${snapshot.cells.count { it.value != 0 }}/81", fontSize = 11.sp, color = Muted)
                 }
             }
         }
