@@ -6,6 +6,8 @@
 >
 > **Co-op shared board themes (Nov 7):** [Design and QA brief](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md). The owner wants **both players' puzzle board to show the higher-ranked equipped board theme**, particularly when one uses Classic and the other has an unlocked theme, while **each person's authored number ink/font stays their own**. Current v0.11C renderer uses local `state.appearance.board` for board colors and host/guest appearances for authored digits. The brief proposes a deterministic resolver and contrast/ownership/LAN tests; exact rank order, mid-round theme changes and possible local accessibility override remain open. **Documentation only, not code implemented.**
 >
+> **Online play feasibility (Nov 8):** [Friend challenges, remote multiplayer & matchmaking research](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_ONLINE_FRIEND_CHALLENGES_AND_MATCHMAKING_FEASIBILITY.md). Explores **optional asynchronous invite-only same-puzzle challenges** first, then remote Versus/Co-op and public random matching, with Firebase/Supabase choices, security, cost, and cross-game reuse. **Investigation only**, no approved backend, online implementation or change to existing offline/Solo/LAN priorities. Google Play Games does not supply current multiplayer matchmaking APIs.
+>
 > Last reconciled: **2026-11-04 America/Chicago**.
 > Game priority: **finish GridMates: Sudoku before building any other game**.
 > This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
