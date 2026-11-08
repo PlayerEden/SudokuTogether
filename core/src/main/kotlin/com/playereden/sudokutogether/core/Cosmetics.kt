@@ -35,13 +35,21 @@ object Cosmetics {
         fun cosmetic() = Cosmetic(id, name, milestone.describe(target))
     }
 
-    private val portraitEntries = linkedMapOf(
+    private val woodlandEntries = linkedMapOf(
         "owl" to 0, "fox" to 0, "rabbit" to 1, "bear" to 2,
         "badger" to 3, "hedgehog" to 4, "robin" to 5, "deer" to 6,
         "squirrel" to 8, "otter" to 10, "tortoise" to 12, "cat" to 15
     ).map { (animal, count) ->
         CatalogEntry("woodland_$animal", animal.replaceFirstChar { it.uppercase() }, count, Milestone.FINISH)
     }
+    private val oceanEntries = listOf(
+        CatalogEntry("ocean_octopus", "Octopus", 0, Milestone.FINISH),
+        CatalogEntry("ocean_seal", "Harbor Seal", 18, Milestone.FINISH),
+        CatalogEntry("ocean_hermit_crab", "Hermit Crab", 25, Milestone.FINISH),
+        CatalogEntry("ocean_manta_ray", "Manta Ray", 35, Milestone.FINISH),
+        CatalogEntry("ocean_jellyfish", "Jellyfish", 50, Milestone.FINISH),
+        CatalogEntry("ocean_narwhal", "Narwhal", 75, Milestone.FINISH)
+    )
     private val inkEntries = listOf(
         CatalogEntry("forest", "Forest"),
         CatalogEntry("cobalt", "Cobalt", 1),
@@ -69,9 +77,11 @@ object Cosmetics {
         CatalogEntry("star", "Star Solver", 5),
         CatalogEntry("laurel", "Champion", 3, Milestone.RACE)
     )
-    private val entries = (portraitEntries + inkEntries + boardEntries + fontEntries + emblemEntries).associateBy { it.id }
+    private val entries = (woodlandEntries + oceanEntries + inkEntries + boardEntries + fontEntries + emblemEntries).associateBy { it.id }
 
-    val portraits = portraitEntries.map(CatalogEntry::cosmetic)
+    val woodlandPortraits = woodlandEntries.map(CatalogEntry::cosmetic)
+    val oceanPortraits = oceanEntries.map(CatalogEntry::cosmetic)
+    val portraits = woodlandPortraits + oceanPortraits
     val inks = inkEntries.map(CatalogEntry::cosmetic)
     val boards = boardEntries.map(CatalogEntry::cosmetic)
     val fonts = fontEntries.map(CatalogEntry::cosmetic)

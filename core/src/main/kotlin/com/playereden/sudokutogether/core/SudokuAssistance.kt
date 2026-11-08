@@ -10,6 +10,21 @@ package com.playereden.sudokutogether.core
 object SudokuAssistance {
     data class Hint(val cell: Int, val digit: Int, val technique: HumanSudoku.Technique, val explanation: String)
 
+    data class CoachHint(val steps: List<CoachStep>) {
+        val cell: Int get() = steps.first().targetCells.first()
+        val explanation: String get() = steps.first().explanation
+    }
+
+    data class CoachStep(
+        val technique: HumanSudoku.Technique,
+        val sourceCells: List<Int>,
+        val targetCells: List<Int>,
+        val digits: List<Int>,
+        val explanation: String,
+        /** Candidates removed from each target at this step, empty for placements. */
+        val eliminations: Map<Int, List<Int>>
+    )
+
     enum class CheckKind { CONFLICT, INCORRECT_ENTRY, CORRECT_SO_FAR, NO_ENTRIES }
     data class EntryCheck(val kind: CheckKind, val cell: Int = -1, val conflicts: Set<Int> = emptySet()) {
         val usesSolution: Boolean get() = kind == CheckKind.INCORRECT_ENTRY || kind == CheckKind.CORRECT_SO_FAR
@@ -36,9 +51,7 @@ object SudokuAssistance {
     }
 
     fun nextHint(puzzle: Puzzle, visible: List<Int>): Hint? {
-        if (visible.size != 81 || puzzle.clues.size != 81) return null
-        if (visible.any { it !in 0..9 }) return null
-        if ((0..80).any { puzzle.clues[it] != 0 && puzzle.clues[it] != visible[it] }) return null
+        if (!hasUnchangedGivens(puzzle, visible)) return null
         // An incorrect entry in a uniquely-solvable puzzle removes the
         // solution; never give an invented deduction for a broken grid.
         val report = HumanSudoku.assess(Puzzle("visible-hint", visible))
@@ -67,6 +80,17 @@ object SudokuAssistance {
         return Hint(cell, digit, step.technique,
             "${leadIn}Row ${cell / 9 + 1}, column ${cell % 9 + 1}: $basis")
     }
+
+    /** Shows each elimination through the first placement, or until the solver has no further deduction. */
+    fun nextCoachHint(puzzle: Puzzle, visible: List<Int>): CoachHint? {
+        if (!hasUnchangedGivens(puzzle, visible)) return null
+        val steps = HumanSudoku.coachSteps(visible)
+        return if (steps.isEmpty()) null else CoachHint(steps)
+    }
+
+    private fun hasUnchangedGivens(puzzle: Puzzle, visible: List<Int>): Boolean =
+        puzzle.clues.size == 81 && visible.size == 81 && visible.all { it in 0..9 } &&
+            visible.indices.all { puzzle.clues[it] == 0 || puzzle.clues[it] == visible[it] }
 
     fun isPeer(first: Int, second: Int): Boolean =
         first in 0..80 && second in 0..80 && first != second &&

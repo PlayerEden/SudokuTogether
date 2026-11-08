@@ -69,14 +69,33 @@ class NearbyAdmissionTest {
         }
     }
     @Test fun previousProtocolReceivesAVersionErrorBeforeAdmission() {
-        assertEquals(6, WIRE_PROTOCOL_VERSION)
-        HostServer(GameSession.create(fixture(), requireCode = false)).use { host ->
+        val game = GameSession.create(fixture(), requireCode = false)
+        HostServer(game).use { host ->
             Socket("127.0.0.1", host.start()).use { socket ->
                 socket.soTimeout = 3000
-                Protocol.write(socket.getOutputStream(), Message("hello", version = 5, name = "Taylor"))
+                Protocol.write(socket.getOutputStream(), Message("hello", version = 6, name = "Taylor"))
                 val reply = Protocol.read(socket.getInputStream())
                 assertEquals("error", reply.type)
                 assertTrue(reply.text.contains("same app version"))
+                assertNull(reply.snapshot)
+                assertNull(reply.token)
+                assertNull(game.saved().guest)
+            }
+        }
+    }
+    @Test fun currentProtocolSharesOceanPortraitsOnJoin() {
+        val hostLook = Appearance(portrait = "ocean_narwhal")
+        val guestLook = Appearance(portrait = "ocean_octopus")
+        val game = GameSession.create(fixture(), hostAppearance = hostLook, requireCode = false)
+        HostServer(game).use { host ->
+            Socket("127.0.0.1", host.start()).use { socket ->
+                socket.soTimeout = 3000
+                Protocol.write(socket.getOutputStream(), Message("hello", version = 7, name = "Taylor", appearance = guestLook))
+                val reply = Protocol.read(socket.getInputStream())
+                assertEquals("welcome", reply.type)
+                assertEquals(7, reply.version)
+                assertEquals(hostLook, reply.snapshot?.hostAppearance)
+                assertEquals(guestLook, reply.snapshot?.guestAppearance)
             }
         }
     }

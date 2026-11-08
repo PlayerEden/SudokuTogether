@@ -21,6 +21,8 @@ import android.os.SystemClock
 internal fun cleanPlayerName(name: String): String =
     name.filterNot { it.isISOControl() }.take(24).dropLastWhile { Character.isHighSurrogate(it) }
 
+private const val MAX_RECENT_COACH_HINTS = 128
+
 enum class Page { HOME, JOIN, PLAY, PROFILE }
 data class GameUiState(
     val page: Page = Page.HOME, val name: String = "Player", val role: String = HOST,
@@ -37,7 +39,7 @@ data class GameUiState(
     val touchFeedback: Boolean = true,
     val selectedDifficulty: String = "EASY",
     val autoCleanNotes: Boolean = false,
-    val hint: SudokuAssistance.Hint? = null,
+    val hint: SudokuAssistance.CoachHint? = null,
     val dailyDate: String? = null,
     val finishedSolo: SoloProgress? = null,
     val soloClockStartedAt: Long? = null,
@@ -90,6 +92,9 @@ class GameViewModel @JvmOverloads constructor(
     private val generation = AtomicLong()
     private val localStartLock = Any()
     private val roomPresenceLock = Any()
+    private data class CoachBoard(val sessionId: String, val date: String?, val puzzle: Puzzle, val values: List<Int>)
+    private data class CachedCoach(val hint: SudokuAssistance.CoachHint, val countedAt: Int)
+    private val recentCoach = LinkedHashMap<CoachBoard, CachedCoach>(16, 0.75f, true)
     @Volatile private var server: HostServer? = null
     @Volatile private var guest: GuestClient? = null
     @Volatile private var guestResume: SavedSession? = null
@@ -144,7 +149,9 @@ class GameViewModel @JvmOverloads constructor(
     internal fun confirmProgressBackupRestore() {
         val preview = _progressBackup.value.preview ?: return
         runBackupOperation {
-            val restored = synchronized(localStartLock) { backupStore.restore(localPlayer, preview) }
+            val restored = synchronized(localStartLock) {
+                backupStore.restore(localPlayer, preview).also { recentCoach.clear() }
+            }
             _state.update {
                 it.withStoredPlayerSettings().copy(
                     profile = restored,
@@ -282,9 +289,20 @@ class GameViewModel @JvmOverloads constructor(
             try {
                 if (generation.get() != token) return@launch
                 val progress = progressFor(localPlayer.current(), before.dailyDate)
-                val hint = if (progress != null && progress.id == expectedId &&
-                    progress.moves.toLong() == expectedMoves && !progress.completed)
-                    SudokuAssistance.nextHint(progress.puzzle, progress.cells.map { it.value }) else null
+                if (progress == null || progress.id != expectedId || progress.moves.toLong() != expectedMoves || progress.completed) {
+                    publishAssistance(token, before) { it.copy(busy = false, message = "Your puzzle changed. Try again.") }
+                    return@launch
+                }
+                val values = progress.cells.map { it.value }
+                val board = CoachBoard(expectedId, before.dailyDate, progress.puzzle, values)
+                val cached = synchronized(localStartLock) {
+                    recentCoach[board]?.takeIf { progress.hintsUsed >= it.countedAt }
+                }
+                if (cached != null) {
+                    publishAssistance(token, before) { it.copy(busy = false, hint = cached.hint, selected = cached.hint.cell) }
+                    return@launch
+                }
+                val hint = SudokuAssistance.nextCoachHint(progress.puzzle, values)
                 if (hint == null) {
                     publishAssistance(token, before) { it.copy(busy = false,
                         hintUnavailable = true, message = null) }
@@ -303,6 +321,8 @@ class GameViewModel @JvmOverloads constructor(
                     }
                     val confirmed = progressFor(updated, before.dailyDate)
                     if (accepted && confirmed?.id == expectedId && confirmed.moves.toLong() == expectedMoves) {
+                        recentCoach[board] = CachedCoach(hint, confirmed.hintsUsed)
+                        if (recentCoach.size > MAX_RECENT_COACH_HINTS) recentCoach.remove(recentCoach.keys.first())
                         publishAssistance(token, before) { it.copy(profile = updated, busy = false, hint = hint, selected = hint.cell) }
                     } else publishAssistance(token, before) { it.copy(busy = false) }
                 }

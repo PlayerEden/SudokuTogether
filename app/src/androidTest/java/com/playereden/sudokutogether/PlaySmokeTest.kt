@@ -111,6 +111,7 @@ class PlaySmokeTest {
     }
 
     @Test fun soloHintsExplainOneDeductionWithoutPlayingIt() {
+        compose.onNodeWithTag("difficulty_EASY").performScrollTo().performClick()
         compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed().performClick()
         if (compose.onAllNodesWithText("Start new").fetchSemanticsNodes().isNotEmpty()) {
             compose.onNodeWithText("Start new").performClick()
@@ -120,13 +121,36 @@ class PlaySmokeTest {
         compose.runOnUiThread { model = ViewModelProvider(compose.activity)[GameViewModel::class.java] }
         val before = model.state.value.snapshot!!.cells.map { it.copy() }
         val hintsBefore = model.state.value.profile.activeSolo!!.hintsUsed
-        compose.onNodeWithText("Hint").performClick()
-        compose.waitUntil(20000) {
-            compose.onAllNodesWithText("Your next deduction").fetchSemanticsNodes().isNotEmpty()
+        fun openCoach() {
+            compose.onNodeWithText("Hint").performClick()
+            compose.waitUntil(20000) { compose.onAllNodesWithText("Your next deduction").fetchSemanticsNodes().isNotEmpty() }
         }
-        compose.onNodeWithText(model.state.value.hint!!.explanation).assertExists()
-        assertEquals(before,model.state.value.snapshot!!.cells)
-        assertEquals(hintsBefore+1,model.state.value.profile.activeSolo!!.hintsUsed)
+        openCoach()
+        val hint = requireNotNull(model.state.value.hint)
+        compose.onNodeWithTag("coach_cell_${hint.cell}").assertExists()
+        compose.onNodeWithText(hint.explanation).assertDoesNotExist()
+        compose.onNodeWithText("Show why").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText(hint.explanation).assertExists()
+        assertEquals(before, model.state.value.snapshot!!.cells)
+        assertEquals(hintsBefore + 1, model.state.value.profile.activeSolo!!.hintsUsed)
+        compose.onNodeWithText("Back to puzzle").performClick()
+        openCoach()
+        assertEquals(hintsBefore + 1, model.state.value.profile.activeSolo!!.hintsUsed)
+        compose.onNodeWithText("Back to puzzle").performClick()
+
+        val placement = hint.steps.last()
+        val cell = placement.targetCells.single()
+        val digit = placement.digits.single()
+        compose.runOnUiThread { model.select(cell); model.number(digit) }
+        compose.waitUntil(20000) { model.state.value.snapshot!!.cells[cell].value == digit && model.state.value.canEdit }
+        openCoach()
+        assertEquals(hintsBefore + 2, model.state.value.profile.activeSolo!!.hintsUsed)
+        compose.onNodeWithText("Back to puzzle").performClick()
+        compose.onNodeWithText("Undo").performClick()
+        val originalValues = before.map { it.value }
+        compose.waitUntil(20000) { model.state.value.canEdit && model.state.value.snapshot!!.cells.map { it.value } == originalValues }
+        openCoach()
+        assertEquals(hintsBefore + 2, model.state.value.profile.activeSolo!!.hintsUsed)
         compose.onNodeWithText("Back to puzzle").performClick()
         compose.onNodeWithTag("input_dock").assertIsDisplayed()
     }

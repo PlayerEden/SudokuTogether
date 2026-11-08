@@ -13,7 +13,7 @@ class NearbyAdvertisementTest {
         assertFalse(decodeNearbyRoom("Taylor's game","192.168.1.20",41421,attributes("0"))!!.requiresCode)
     }
     @Test fun incompatibleVersionsAndMissingEndpointsAreNotOffered() {
-        assertNull(decodeNearbyRoom("Old game","192.168.1.20",41421,attributes("0",5)))
+        assertNull(decodeNearbyRoom("Old game","192.168.1.20",41421,attributes("0",6)))
         assertNull(decodeNearbyRoom("No address",null,41421,attributes("0")))
         assertNull(decodeNearbyRoom("No port","192.168.1.20",0,attributes("0")))
     }
