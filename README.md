@@ -1,8 +1,12 @@
 # GridMates: Sudoku
 
-> **Latest verified QA: v0.11C** on [feat/gridmates-nearby-animals](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-nearby-animals), stacked on the accepted v0.11B. Open nearby joining with optional remembered code protection, clearer room/chat controls and12 earned Woodland portraits. **117 JVM tests and78 accepted Android executions passed**; lint0 errors/17 warnings. Original18→19 in-place update and installed APK bytes/signing/icon verified. [QA audit](docs/V0.11C_NEARBY_WOODLAND_QA.md) · [Draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md). Both phones need the new APK; renewed physical two-phone testing remains open. No main/development promotion or Play publication.
+The full Android source, tests and design history live on `main`. [Start here](CONTINUE_HERE.md) · [Project handoff](docs/PROJECT_HANDOFF.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md)
+
+**v0.11D QA** adds both players' identities and progress to the Versus screen, reconnect feedback, and consistent bundled number styles. The signed update uses the installed Sudoku QA app's identity. [Repository audit and upgrade evidence](docs/V0.11D_INTEGRATION_AND_QA.md)
 
 ## Earlier QA milestones
+
+> **v0.11C rollback QA** introduced open nearby joining, optional remembered code protection and 12 earned Woodland portraits. [Native QA audit](docs/V0.11C_NEARBY_WOODLAND_QA.md) · [APK receipt](docs/V0.11C_DELIVERY_RECEIPT.md)
 
 > **v0.11B rollback QA** on [feat/gridmates-coach-launcher](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. Launcher **Sudoku**, full **GridMates: Sudoku** brand retained; explicit Solo/Daily entry checks with saved assistance. **103 JVM +46 API26 native cases passed**, lint0 errors/14 warnings, exact17→18 update verified. [QA audit](docs/V0.11B_COACH_LAUNCHER_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md) · [Recovery log](docs/V0.11B_RECOVERY_LOG.md). Main/development and earlier checkpoints remain unchanged.
 
@@ -12,7 +16,7 @@
 
 > **v0.11A QA:** version17 / `0.11.0-dev1-qa`; 87 JVM tests and 31 accepted API26 native cases passed, lint0 errors/20 warnings. The exact APK updated v0.10D while preserving the seeded profile, active puzzle/note, identity and preferences. [QA checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11a-gridmates-qa-green). Two-phone/device release gates remain open.
 
-> **Previous isolated work: v0.10D Visual QA**, on [`feat/v0.10d-game-visuals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/v0.10d-game-visuals), stacked on the verified v0.10C source. Read the [living handoff](docs/PROJECT_HANDOFF.md), [visual QA audit](docs/V0.10D_VISUAL_QA.md) and [roadmap](docs/ROADMAP_V08_TO_LAUNCH.md). Development remains the previous promoted v0.10B baseline; main is the documentation/manual-CI entrypoint. Prior checkpoints are preserved.
+> **Earlier v0.10D Visual QA**, stacked on the verified v0.10C source. [Visual QA audit](docs/V0.10D_VISUAL_QA.md)
 
 > **Changes:** a cohesive native game theme and icon; immediate Solo Resume and Daily access; Play/Records/Collection/Settings navigation; cosmetic previews; framed grid, clearer controls, adaptive landscape/large-text layouts, improved results and Join keyboard flow. QA `0.10.0-dev4-qa`  / code16. The v0.10C save integrity work remains intact. 87 JVM tests and 42 API26 native cases passed; lint 0 errors/18 warnings. Both independent-review regressions are GREEN after observed RED fixtures. Physical two-phone testing remains deferred; this is not a Play release.
 
@@ -63,27 +67,24 @@ Branch: `feat/solo-profiles-race-v0.2` (based on the existing v0.1 co-op branch)
 
 ## Play on two phones
 
-1. Install the same APK on both Android phones (Android 8 or newer). If prompted, allow installation from the app opening the APK. You can share the APK file directly; your partner does not need access to this private repository.
+1. Install the same accepted QA APK on both Android phones (Android 8 or newer). If Sudoku is already installed, open the APK and choose **Update** to keep your progress.
 2. Connect both phones to the same home Wi-Fi. Guest networks with device isolation can block connections.
-3. Choose **Co-op**, then **Host a puzzle** on one phone. On the other, choose **Join a puzzle**, select the nearby room, and enter the code displayed by the host.
-4. If the room is not discovered, enter the complete address displayed by the host, including its port, then enter the room code. A code alone does not locate a phone.
+3. Host a co-op puzzle or Versus race on one phone. On the other, choose **Join a game** and select the nearby room. Enter the displayed code if the host enabled **Require a code**.
+4. If the room is missing from the list, enter the complete host address, including its port. Supply the code for a protected room.
 5. Both people can enter numbers and shared notes freely. Starting clues stay fixed. Duplicate numbers are highlighted; wrong guesses do not end the game.
 6. Keep both apps visible while playing. If either phone leaves the game, entries pause. Return to the apps, or use **Reconnect** and select the host's room again. The host can reopen **Resume your puzzle** after a restart.
 
-The multiplayer modes support a trusted home LAN. The room code controls admission; LAN game traffic is not encrypted. Remote internet rooms, guaranteed background hosting, all hotspot configurations, online accounts, and public-store publication are outside the currently tested v0.1 baseline.
+Play multiplayer on a trusted home network. Optional room codes control who can join.
 
 ## Build
 
-Current QA uses an isolated `.qa` package and a local debug key. In-place updates require the same package/signing identity. See the current audit before installing over older QA builds.
 Install JDK 17 and Android SDK platform 35/build-tools 35.0.0. Set `ANDROID_HOME` to the SDK directory (or use an untracked `local.properties`).
 
 ```bash
 ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
 
-To build a signed update using the existing private signing backup, extract the backup outside the repository, edit its `storeFile` path, set `SUDOKU_SIGNING_FILE` to its `signing.properties`, increment `versionCode`, and run `./gradlew :app:assembleRelease`. The keystore and signing properties must stay private and untracked. See [development notes](docs/DEVELOPMENT.md).
-
-The GitHub build workflow runs only when manually requested. It requires the existing signing identity in repository secrets; source/documentation changes do not trigger Android builds. Local testing and building can continue without using Actions minutes.
+For an update to the installed Sudoku QA app, follow the original-signer and increasing-version checks in the [QA update guide](docs/GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md). The ordinary developer build above uses the local debug signer. The manual QA workflow builds the selected revision and verifies APK identity. The production signing workflow serves the separate production app. [Actions](https://github.com/PlayerEden/SudokuTogether/actions) · [Development notes](docs/DEVELOPMENT.md)
 
 ## Project records
 

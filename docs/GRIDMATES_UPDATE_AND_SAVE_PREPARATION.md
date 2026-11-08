@@ -1,6 +1,6 @@
 # GridMates APK updates and progress preservation
 
-November 4, 2026 (America/Chicago). Prepared from the verified v0.11C branch at `975e31a1e8cbfebad1fbbc7602b3340c357da7ef`. This is preparation and a packaging repair, not a new delivered APK, online updater, cloud save, or public release.
+The current accepted QA baseline is v0.11D. The [integration audit](V0.11D_INTEGRATION_AND_QA.md) records the original v0.11C to v0.11D install-over check. This guide records the original packaging design and the separate portable backup proposal.
 
 ## What the owner asked for
 
@@ -32,15 +32,15 @@ Unlocks/achievement progress are derived from real saved records, so preserving 
 
 `android:allowBackup="false"` is currently intentional. Local recovery lives inside the app and is not an external/device-replacement backup. We have not enabled Google backup, Play Games, accounts or a developer upload service. Do not promise that uninstalling or clearing app data preserves progress.
 
-## Packaging repair prepared in this branch
+## QA update packaging
 
-- `distribution/qa-update-baseline.json` records the exact verified v0.11C QA APK: package `com.playereden.sudokutogether.qa`, code **19**, min SDK **26**, certificate SHA-256 `949731a60cb187405282efc8233d6e68ab5b46e9bf6765f70aa2b60dcc543b2c`, APK SHA-256 `4ca53d52b24d537372c407d17a31a8c293c27bc0dd060a1fd8b97b2e43f260f4`.
+- [QA baseline policy](../distribution/qa-update-baseline.json) records the accepted APK identity, version, checksum and exact source. The previous build has its own [v0.11C receipt](V0.11C_DELIVERY_RECEIPT.md).
 - The manual QA workflow restores **the original** private debug keystore from `SUDOKU_QA_KEYSTORE_BASE64`. No key material is stored in source. Missing/wrong material stops the build before it can generate a substitute downloadable APK. The expected original alias/password are Android's debug defaults; a differently configured key must not silently replace the baseline.
 - Paired Gradle properties `gridmatesQaUpdate=true` and `gridmatesQaVersionCode` select that QA signer. Unconfigured local developer builds retain their usual behavior. Production signing remains separate; QA builds are not Play releases.
 - A new workflow run reserves code `1000 + github.run_number`; reruns are refused so a rebuilt candidate does not pretend to be a newly numbered release. Only this workflow owns this numbering stream. A future higher manually numbered channel must reconcile the accepted baseline before resuming it.
 - `scripts/apk_update_preflight.py` invokes real Android `apksigner verify` and `aapt dump badging`, compares the package, signer, requested increasing version and minimum SDK, and hashes the unchanged final APK. It never installs, edits or clears app data.
 - The download includes `GridMates-Sudoku-QA.apk`, its SHA-256, and a receipt with the exact source SHA. A receipt explicitly says install-over/save-retention have **not** been tested by the identity check.
-- The selected source ref is built as selected, without silently substituting the old `development` branch. The workflow remains manual-only; this preparation does not consume an Android CI run.
+- The workflow is manual and builds the selected revision.
 
 This guards the designated QA download path. A local developer debug APK can still have a different signer and must not be advertised as an owner update. The release workflow targets the separate production package and is not a QA migration mechanism.
 
@@ -50,7 +50,7 @@ For now, workflow APK artifacts expire after 14 days. A chat file and an Actions
 
 When the next APK has passed native acceptance, retain its original bytes as a uniquely tagged GitHub **prerelease**, with its receipt and checksum. Then update one checked-in current-QA index/readme entry to point to that exact immutable asset. Do not replace older release assets or point people to an unverified newest workflow run. Advance the accepted baseline in the same reviewed delivery record. The future current index must include package, signer, version, source, checksum, exact asset URL, and native retention evidence.
 
-No release/tag/current-download pointer has been published or advanced in this pass. An automatic downloader or installer is a separate feature and unnecessary for this foundation. Android's standard installer remains responsible for installing an explicitly downloaded APK.
+v0.11D is an owner sideload delivery. Open the accepted APK with Android's standard installer and choose **Update** while Sudoku is installed.
 
 ## Portable backup follow-up — proposed, not implemented
 
@@ -70,12 +70,10 @@ Do not mark this portable backup as shipped, and do not add a nonfunctional back
 
 ## Verification and remaining gates
 
-Existing historical evidence remains: original v0.11B **18 → v0.11C 19** update preserved the complete profile hash, a genuine completed record, active answer/note, player ID/preferences/equipped emblem and a protected legacy room. See [v0.11C QA](V0.11C_NEARBY_WOODLAND_QA.md) and [receipt](V0.11C_DELIVERY_RECEIPT.md). That is prior evidence, not a fresh test of this branch.
+The original v0.11B **18 → v0.11C 19** check preserved the complete profile, an active answer and note, preferences, and a protected legacy room. [v0.11C QA](V0.11C_NEARBY_WOODLAND_QA.md)
 
-This branch adds executable release-decision tests using temporary command doubles for Android tools. They cover acceptance/hash receipt and rejection of wrong package/certificate/version/minimum SDK, failed tools and malformed metadata/policy. Actual APK signature verification, Gradle compilation and a new native update rehearsal are separate gates. This workspace currently has a JRE but no Android SDK/full JDK or original private QA keystore, and those native checks have not run.
+The original v0.11C **19 → v0.11D 20** rehearsal used the exact delivered APKs and verified the saved profile and reopened Solo, Daily, and host sessions. `UpgradeContinuityTest` accepts explicit baseline and candidate versions. Its two phases run on either side of `adb install -r`. [v0.11D QA](V0.11D_INTEGRATION_AND_QA.md)
 
-November 7 verification passed all 13 release-decision tests. The QA workflow YAML parsed, and Bash syntax checks passed for all nine shell blocks. Independent review found no blocking issue in the inspected packaging logic. Native build and install-over validation remain open.
-
-Before recommending a candidate: restore the exact original private QA key, run the native build/test/lint checks, seed the **original delivered v0.11C APK**, install the new APK with `adb install -r`, then verify actual Solo/Daily boards, notes/Undo/timers, records/unlocks, selected Woodland portrait and legacy emblem, identity/preferences and saved rooms. Test relaunch as a baseline control. The existing `UpgradeContinuityTest` was written around v0.11B and needs a separate current-baseline fixture; rerunning it unmodified is not evidence for a v0.11C→new update.
+For each new APK, use the previously delivered bytes as the emulator baseline, seed actual progress, and repeat the package, signer, version, native build and install-over checks before advancing the baseline policy.
 
 Official Android references: [app updates](https://developer.android.com/google/play/app-updates), [app signing](https://developer.android.com/studio/publish/app-signing), [Auto Backup](https://developer.android.com/identity/data/autobackup). Compatible application ID and signing certificate, plus a suitable version code, permit an in-place update; retention still depends on preserving and reading the application's data correctly.

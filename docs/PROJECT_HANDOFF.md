@@ -1,38 +1,28 @@
-# GridMates: Sudoku — CURRENT PROJECT HANDOFF
+# GridMates: Sudoku — Project handoff
 
-> **Read this first in a new ChatGPT conversation or after a context reset.**
->
-> **Versus post-match comparison idea (Nov 6):** [Compare Puzzles UX and QA proposal](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md). Same starting Sudoku, independent boards, first valid finish wins and freezes rival board. Optional Compare Puzzles after completion; no opponent-answer leakage during live race. Existing progress counts are **entries**, not proven correct digits, and full side-by-side reveal needs explicit post-match consent/new safe protocol. **Design only; do not interrupt current Work-chat feature gates.**
->
-> **Co-op shared board themes (Nov 7):** [Design and QA brief](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md). The owner wants **both players' puzzle board to show the higher-ranked equipped board theme**, particularly when one uses Classic and the other has an unlocked theme, while **each person's authored number ink/font stays their own**. Current v0.11C renderer uses local `state.appearance.board` for board colors and host/guest appearances for authored digits. The brief proposes a deterministic resolver and contrast/ownership/LAN tests; exact rank order, mid-round theme changes and possible local accessibility override remain open. **Documentation only, not code implemented.**
->
-> Last reconciled: **2026-11-07 America/Chicago**.
-> Game priority: **finish GridMates: Sudoku before building any other game**.
-> This file is the living development handoff. Update it after every meaningful milestone, QA run, architectural decision, bug discovery, or shipped build.
+Start from `main`, the canonical Android source and documentation. The [delivery plan](GRIDMATES_DELIVERY_PLAN.md) tracks the next product work. The [v0.11D integration audit](V0.11D_INTEGRATION_AND_QA.md) records exact source, APK and verification details.
 
-> **New planning reference (Nov 6):** [Sudoku Deep Research & Game Design Reference](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md) is a source-backed 16-section study of Sudoku rules, technique strategies, real difficulty, generated puzzle grading, coaching, scoring and possible in-game lessons. The research file lives on the **development** branch and should inform future implementation **without changing current v0.11C game code or its saved grade definitions**. This is design/research, not a completed feature or QA pass.
+## Current QA milestone — v0.11D
 
-## November 7 — player interface and update preparation
+The launcher stays **Sudoku** and the in-app name is **GridMates: Sudoku**. Versus shows both identities and player-filled progress, with a reconnect state that retains the last known opponent. Number styles now use licensed bundled fonts under the existing cosmetic IDs. [Number font assets](GRIDMATES_FONT_ASSETS.md) · [Native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md)
 
-The [player presence and menu design](superpowers/specs/2026-11-04-player-presence-and-menu-design.md) now has a clickable prototype using the existing Woodland art. The [APK update and save preparation](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) records the Operation PHOSPHOR and Sector Rebound comparison, a QA identity check and the future portable backup flow. Use the original QA key and a fresh install-over rehearsal before offering another APK. The verified Android baseline remains v0.11C.
+The previous [v0.11C checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11c-nearby-woodland-qa) retains open nearby joining, optional code protection and Woodland portraits. Its [exact APK receipt](V0.11C_DELIVERY_RECEIPT.md) is the reference for the 19 → 20 upgrade rehearsal. Keep earlier source and APK checkpoints for recovery. [QA update guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md)
 
-The [November 5 cosmetics and font playtest brief](https://github.com/PlayerEden/SudokuTogether/blob/1818cd54e2fc5c5eaecf37389295ae3d55b898c9/docs/GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md) is incorporated in the delivery plan. Verify the reported font difference on the same app version and settings, then use bundled, licensed fonts under the existing cosmetic IDs. Ocean and Bug art will use the same icon browser. Daily reward rules remain a design decision.
+The owner reported a successful v0.11B two-phone smoke test. The current release gates include a fresh two-phone co-op and Versus pass, modern Android accessibility checks, and production signing and store setup. [Current gates and evidence](V0.11D_INTEGRATION_AND_QA.md)
 
-## Current verified milestone — v0.11C
+## Product decisions and design references
 
-Start from [`feat/gridmates-nearby-animals`](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-nearby-animals), [draft PR28](https://github.com/PlayerEden/SudokuTogether/pull/28), stacked on the locked v0.11B source. Read the [v0.11C audit](V0.11C_NEARBY_WOODLAND_QA.md) and [delivery plan](GRIDMATES_DELIVERY_PLAN.md). The QA APK is version19 /0.11.0-dev3-qa, launcher Sudoku, unchanged package/icon/signing and schema1, protocol6 on both phones.
+- Local play and nearby Wi-Fi are the core of GridMates. Finish Sudoku before expanding the series or extracting a reusable framework. [Brand and series](GRIDMATES_BRAND_AND_SERIES.md)
+- The selected launch model is free-to-install with rare between-puzzle ads and an optional Remove Ads purchase. [Monetization plan](GRIDMATES_MONETIZATION_AND_PLAY_TESTING_PLAN.md) · [Store setup guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md)
+- Design briefs cover an optional [Share result flow](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md), [profile and result cards](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md), and [coaching and scoring](GRIDMATES_PUZZLE_COACH_AND_SCORING_PROPOSAL.md).
+- Future product ideas include [Ocean and Bug collections and Daily rewards](GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md), [offline gift codes](GRIDMATES_GIFT_CODES_SIMPLE_DESIGN.md), [router-free nearby play](GRIDMATES_OFFLINE_NEARBY_BLUETOOTH_DESIGN.md), [post-match puzzle comparison](GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md) and [shared co-op board themes](GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md).
+- The [Sudoku research reference](SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md) documents the solving techniques and engine experiments for future coaching and difficulty work.
 
-Open nearby rooms join on tap; Require a code is optional and remembered through Home/new-room creation. Old saved rooms keep their policy. Header/chat are refined; the optional12-animal Woodland collection preserves all earlier emblems and unlocks.117 JVM tests and78 accepted native executions pass, lint0 errors/17 warnings; original18→19 data continuity and installed APK hash are verified. One source review's two Important findings have pre-fix reproductions and passing regressions. The audit records remaining minor wrapping/old-client message limits.
+## Historical milestones
 
-Owner physical v0.11B two-phone success remains recorded; renew the physical test for v0.11C. Newer Android/TalkBack, source consolidation, release signing/AAB and store work remain open. Do not merge/delete the stacked older branches out of order. Preserve v0.11B rollback. Clearer coach explanations are the next larger product slice; sharing/profile/scoring plans remain later stages.
+The entries below preserve the branch and release status as it stood when each milestone was recorded.
 
-Recovery note: use a full JDK17 (the base environment may have only a JRE), pinned Gradle8.11.1 and the declared Android35 toolchain; native verification used API26 x86_64. Restore the original private QA debug keystore into the task's Android user directory and compare the certificate before packaging. Keep signing material outside git. Do not infer interrupted checks passed after an environment reset.
-
-Earlier handoff records follow for traceability; the v0.11C audit takes precedence for this branch.
-
-**Project vision & release-status baseline:** [November 2, 2026 status report](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/PROJECT_STATUS_AND_VISION_2026-11-02.md). This is a dated overview of shipped code, proposed finish states, resources, risks and possible launch scopes; for next coding steps, prefer this living handoff and fresh QA evidence.
-
-## November 4 — owner acceptance and successful two-phone smoke test
+### November 4 — owner acceptance and successful two-phone smoke test
 
 The owner reports that the game and a two-phone test work, and asks to lock the current baseline. [Playtest record, screenshot findings and remaining work](V0.11B_OWNER_PLAYTEST_2026-11-04.md). Preserve v0.11B at [checkpoint/v0.11b-two-phone-smoke](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11b-two-phone-smoke), source77f900f73f21dcb5a02cdae01fab71f00514b898 and the already delivered APK. The current visual direction is retained. Basic physical co-op is owner-reported successful; the full reconnect/kill/complete-game/versus checklist is not individually established. Do not keep reporting physical LAN as wholly untested or claim the full checklist passed.
 

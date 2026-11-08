@@ -1,6 +1,6 @@
 # GridMates: Sudoku — Product & Release Roadmap (v0.8 → Google Play)
 
-Status: **active development plan**, updated November4, 2026. Latest verified QA: [v0.11B launcher and entry checks](V0.11B_COACH_LAUNCHER_QA.md), on [feat/gridmates-coach-launcher](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-coach-launcher), stacked on v0.11A. Stage1 is implemented/verified; [stages2–5](GRIDMATES_DELIVERY_PLAN.md) cover coach guidance, sharing, profile/cards and calibrated scoring. The owner now reports a successful basic two-phone test and asks to lock this baseline. [Current playtest findings](V0.11B_OWNER_PLAYTEST_2026-11-04.md) recommend multiplayer usability refinement next. Final art/release work and the remaining physical LAN checklist are open. Previous checkpoints and unmerged drafts are preserved.
+Status · active development plan. The current source is on `main`. See the [v0.11D integration and QA audit](V0.11D_INTEGRATION_AND_QA.md) for the signed update and current release gates. The [delivery plan](GRIDMATES_DELIVERY_PLAN.md) tracks coaching, sharing, profile and scoring work. Historical milestone entries below retain their original QA context.
 
 ## Product promise and boundaries
 
