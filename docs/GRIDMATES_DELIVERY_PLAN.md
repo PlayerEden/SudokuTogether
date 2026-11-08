@@ -39,6 +39,15 @@ The design notes and implementation now share the same source branch. Keep each 
 
 The five new proposal files remain design references. An approved product direction is distinct from implemented, tested or released software. Global leaderboards, remote play, cloud backup, paid randomized cosmetics, Split Clues and framework extraction remain separate future decisions/gates.
 
+
+## Post-launch expansion — gated, not part of the offline core release (owner decision November 8, 2026)
+
+**Prioritize an excellent, complete offline Sudoku game and a clean Google Play release before starting internet multiplayer services.** Local Solo, Daily, LAN/nearby co-op and versus must stand on their own. First release is free-to-install; only **respectful between-puzzle ads and an optional one-time Remove Ads purchase** are approved monetization directions, subject to implementation/QA and policy. Preserve the relationship-focused, no-required-login experience.
+
+**Future online services are a separately approved phase**, not an unfulfilled initial launch feature. After release, evaluate player demand, retention, **real net earnings** and prospective ongoing backend/maintenance costs. Set a budget ceiling before any backend prototype; no assumption that downloads will produce sufficient revenue. If reasonable, start with invite-only asynchronous friend challenges, then remote Versus/Co-op, and consider public matchmaking only after an active population exists. Online failure/unavailability must never prevent offline play. [Full online feasibility, cost and readiness gates](GRIDMATES_ONLINE_FRIEND_CHALLENGES_AND_MATCHMAKING_FEASIBILITY.md).
+
+Do not defer launch to build cloud accounts, public lobbies, matchmaking queues or server infrastructure. This planning update is not permission to change code, monetize aggressively or provision paid infrastructure.
+
 ## First APK scope
 
 Stage 1 is the first implementation pass. It does not bundle the later stages into the launcher-label request. Entry checks never change a value automatically. The player can explicitly erase the identified entry and use normal Undo. A successful comparison against the original unique puzzle is counted separately from logical hints and marks the finish Assisted. Duplicate-rule feedback and an empty check do not add assistance. Existing records retain their meaning; optional new fields default to zero.
