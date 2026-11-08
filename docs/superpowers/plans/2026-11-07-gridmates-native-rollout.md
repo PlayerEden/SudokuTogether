@@ -75,6 +75,8 @@ Stack the Versus pass on [PR #30](https://github.com/PlayerEden/SudokuTogether/p
 - [x] Check long names and keypad access at 320dp with 200% text, rematch progress reset, and the finished view. Keep Reconnect available to a disconnected guest alongside the finished result so they can rejoin for the next race.
 - [ ] Play a race on two physical phones. Verify join, erase, pause, reconnect, finish, and the next race from each seat.
 
-The combined branch built both Android packages and passed 112 core tests, 12 app unit tests, and 13 APK update preflight tests. Android lint reported zero errors and 16 warnings. Device regressions reproduced a missing Reconnect action after a finish and truncated names at 200% text before the fixes.
+The combined branch built both Android packages and passed 112 core tests, 12 app unit tests, and 13 APK update preflight tests. The fresh Android lint run reported zero errors and 17 warnings in existing files. Device regressions reproduced a missing Reconnect action after a finish and truncated names at 200% text before the fixes.
 
-The API 26 emulator passed 12 of 13 checks, including all Versus cases, compact Solo layout, host smoke tests, and the font preview. The existing standalone chat test could not find the “Rematch?” quick reply in the full run or the chat-only rerun. The test renders the chat sheet directly.
+The first API 26 emulator run passed 12 of 13 checks, including all Versus cases, compact Solo layout, host smoke tests, and the font preview. The standalone chat test missed the “Rematch?” quick reply and failed again when the chat test class was rerun.
+
+On a fresh API 26 emulator, the parent build at `290ad06` passed all four chat and room UI checks. The rebuilt Versus branch passed all eight checks on the same emulator, including those four, the three Versus UI cases, and compact Versus landscape at 200% text.
