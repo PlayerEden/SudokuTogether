@@ -14,6 +14,8 @@ val qaVersion = providers.gradleProperty("gridmatesQaVersionCode").orNull?.let {
     number.toInt()
 }
 require((qaUpdateFlag == "true") == (qaVersion != null)) { "QA update mode and version code must be supplied together" }
+val versusPlaytest = providers.gradleProperty("gridmatesVersusPlaytest").map(String::toBooleanStrict).orElse(false).get()
+require(!versusPlaytest || qaUpdateFlag == null) { "Use a separate build for the Versus playtest and the signed QA update" }
 val qaKeystore = System.getenv("SUDOKU_QA_KEYSTORE_FILE")?.let { file(it) }
 if (qaUpdateFlag == "true") require(qaKeystore?.isFile == true) {
     "Restore the existing private QA keystore before building an update; do not generate a replacement key"
@@ -42,8 +44,12 @@ android {
         debug {
             // QA uses a separate install so updating a test APK never
             // threatens the existing signed app's offline records.
-            applicationIdSuffix = ".qa"
-            versionNameSuffix = if (qaVersion != null) "-qa.$qaVersion" else "-qa"
+            applicationIdSuffix = if (versusPlaytest) ".versustest" else ".qa"
+            versionNameSuffix = when {
+                versusPlaytest -> "-versus-test"
+                qaVersion != null -> "-qa.$qaVersion"
+                else -> "-qa"
+            }
             if (qaVersion != null) signingConfig = signingConfigs.getByName("qaContinuity")
         }
         release {
@@ -51,6 +57,7 @@ android {
             if (privateSigning.isNotEmpty()) signingConfig = signingConfigs.getByName("privateKey")
         }
     }
+    if (versusPlaytest) sourceSets.getByName("debug").res.setSrcDirs(listOf("src/versusPlaytest/res"))
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
