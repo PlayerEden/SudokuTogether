@@ -62,6 +62,8 @@ The app validates the file before showing a preview. It checks size, schema, typ
 
 The Play variant uses a separate Android package. Export the file from the updated QA app before moving progress to that variant. Routine QA updates use Android's in-place update and existing saves.
 
+The Android 8 rehearsal used the system file picker to export from QA and restore into the split production package. The resumed Solo board matched the seeded entry and pencil note. [v0.11E QA evidence](V0.11E_PROFILE_PROGRESS_QA.md)
+
 ## Verification and remaining gates
 
 The original v0.11B **18 → v0.11C 19** check preserved the complete profile, an active answer and note, preferences, and a protected legacy room. [v0.11C QA](V0.11C_NEARBY_WOODLAND_QA.md)

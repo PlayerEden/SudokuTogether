@@ -11,7 +11,7 @@ The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.
 | Gate | Status |
 | --- | --- |
 | Player profile and collection | Implemented in v0.11E and exercised on Android 8. The native checks cover profile navigation, 200% text, icon unlock requirements and explicit equip. |
-| Owner updates and transfer | The signed v0.11D to v0.11E install-over passed. Settings now offers a portable progress file and a preview before restore. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
+| Owner updates and transfer | The signed v0.11D to v0.11E install-over passed. The split release build restored an exported QA file and reopened the same saved entry and pencil note. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
 | Android build and signing | The build targets API 36 and supports devices from API 26. The original production certificate was verified and the App Bundle passed local validation. |
 | Device acceptance | Finish current-build co-op and Versus on two physical phones, plus modern Android orientation, TalkBack, and Daily rollover. [LAN gate](https://github.com/PlayerEden/SudokuTogether/issues/12) |
 | Play Console | Confirm signing enrollment, listing and declarations, and run the required testing track. [Launch guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md) |
