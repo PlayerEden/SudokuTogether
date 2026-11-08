@@ -80,3 +80,19 @@ The combined branch built both Android packages and passed 112 core tests, 12 ap
 The first API 26 emulator run passed 12 of 13 checks, including all Versus cases, compact Solo layout, host smoke tests, and the font preview. The standalone chat test missed the “Rematch?” quick reply and failed again when the chat test class was rerun.
 
 On a fresh API 26 emulator, the parent build at `290ad06` passed all four chat and room UI checks. The rebuilt Versus branch passed all eight checks on the same emulator, including those four, the three Versus UI cases, and compact Versus landscape at 200% text.
+
+## Stage 3 implementation
+
+Start from the integrated v0.11D checkpoint. Use the native navigation and reuse the existing record and unlock models.
+
+- [ ] Route the bottom Profile tab and home avatar to the same profile. Make records, Daily history and achievements reachable from there.
+- [ ] Group Collection into Player icons, Boards and Numbers. Keep both basic emblems and Woodland portraits in the icon browser and retain their existing eligibility rules.
+- [ ] Verify that tapping a locked icon shows its real progress. Confirm that a separate equip action selects an available icon and that saved styles and records survive the upgrade.
+
+## First release preparation alongside Stage 3
+
+- [ ] Use Android SDK 36 for builds and API 36 for the hosted visual suite. Verify the supported SDK floor and both signing paths.
+- [ ] Produce the signed App Bundle alongside the existing production APK in the manual workflow. Fail before upload if either artifact cannot be verified.
+- [ ] Add portable progress export and restore to Settings. Validate the file before preview, require confirmation before replacing progress, and recover the destination profile and settings if a restore is interrupted.
+- [ ] Rehearse a signed v0.11D update with real saved games. Exercise backup transfer between independent local profiles and verify old room saves and destination identity.
+- [ ] Complete current-build physical Wi-Fi, TalkBack and Play Console acceptance.

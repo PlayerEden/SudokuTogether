@@ -1,40 +1,20 @@
 package com.playereden.sudokutogether
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.*
-import com.playereden.sudokutogether.core.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.playereden.sudokutogether.core.SOLO
+import com.playereden.sudokutogether.core.VERSUS
 
 data class GameActions(
     val name: (String) -> Unit, val host: (Boolean) -> Unit, val showJoin: (Boolean) -> Unit,
@@ -55,27 +35,48 @@ data class GameActions(
     val requireRoomCode: (Boolean) -> Unit = {}
 )
 
-@Composable fun SudokuApp(state: GameUiState, actions: GameActions, share: () -> Unit) {
+@Composable fun SudokuApp(
+    state: GameUiState, actions: GameActions, share: (() -> Unit)?,
+    settingsLocked: Boolean = false, settingsExtra: @Composable () -> Unit = {}
+) {
     var confirmation by remember { mutableStateOf<String?>(null) }
     var helpOpen by rememberSaveable { mutableStateOf(false) }
     var journalTab by rememberSaveable { mutableStateOf(JournalTab.RECORDS) }
-    fun journal(tab: JournalTab) { journalTab = tab; actions.profile() }
-    val routedActions = actions.copy(profile = { journal(JournalTab.RECORDS) })
-    BackHandler(state.page != Page.HOME) { if (state.page == Page.PLAY && state.role != SOLO) confirmation = "leave" else actions.home() }
+    var profileSection by rememberSaveable { mutableStateOf(ProfileSection.OVERVIEW) }
+    fun journal(tab: JournalTab, section: ProfileSection = ProfileSection.OVERVIEW) {
+        journalTab = tab
+        profileSection = section
+        if (state.page != Page.PROFILE) actions.profile()
+    }
+    val routedActions = actions.copy(profile = {
+        journal(JournalTab.RECORDS, if (state.dailyDate != null) ProfileSection.HISTORY else ProfileSection.STATISTICS)
+    })
+    BackHandler(state.page != Page.HOME) {
+        when {
+            state.page == Page.PROFILE && journalTab == JournalTab.SETTINGS && settingsLocked -> Unit
+            state.page == Page.PROFILE && journalTab == JournalTab.RECORDS && profileSection != ProfileSection.OVERVIEW -> {
+                profileSection = ProfileSection.OVERVIEW
+            }
+            state.page == Page.PLAY && state.role != SOLO -> confirmation = "leave"
+            else -> actions.home()
+        }
+    }
     Surface(Modifier.fillMaxSize(), color = Cream) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
-            when (state.page) {
-                Page.HOME -> HomeScreen(state, actions, { if (state.resumeHost || state.saveIssue != null) confirmation = "fresh" else actions.host(false) },
-                    { if (state.resumeSolo && state.profile.activeSolo?.completed == false) confirmation = "freshSolo" else actions.solo(false) },
-                    { if (state.resumeRace) confirmation = "freshRace" else actions.hostRace(false) }, { helpOpen = true }, ::journal)
-                Page.JOIN -> JoinScreen(state, actions)
-                Page.PLAY -> PlayScreen(state, routedActions, { if (state.role == SOLO) actions.home() else confirmation = "leave" }, { confirmation = "new" }, { confirmation = "partner" }, { helpOpen = true })
-                Page.PROFILE -> ProfileScreen(state, actions, journalTab, { helpOpen = true }, share)
-            }
+                when (state.page) {
+                    Page.HOME -> HomeScreen(state, actions, { if (state.resumeHost || state.saveIssue != null) confirmation = "fresh" else actions.host(false) },
+                        { if (state.resumeSolo && state.profile.activeSolo?.completed == false) confirmation = "freshSolo" else actions.solo(false) },
+                        { if (state.resumeRace) confirmation = "freshRace" else actions.hostRace(false) }, { helpOpen = true }, { journal(JournalTab.RECORDS) })
+                    Page.JOIN -> JoinScreen(state, actions)
+                    Page.PLAY -> PlayScreen(state, routedActions, { if (state.role == SOLO) actions.home() else confirmation = "leave" }, { confirmation = "new" }, { confirmation = "partner" }, { helpOpen = true })
+                    Page.PROFILE -> JournalScreen(state, actions, journalTab, profileSection,
+                        openSection = { profileSection = it }, collection = { journal(JournalTab.COLLECTION) },
+                        help = { helpOpen = true }, share = share, settingsLocked = settingsLocked, settingsExtra = settingsExtra)
+                }
             }
             if (state.page == Page.HOME || state.page == Page.PROFILE)
-                GameNavigation(state.page, journalTab, actions.home, ::journal, enabled = !state.busy)
+                GameNavigation(state.page, journalTab, actions.home, { journal(it) }, enabled = !state.busy && !settingsLocked)
         }
     }
     if (helpOpen) AlertDialog(

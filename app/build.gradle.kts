@@ -20,10 +20,10 @@ if (qaUpdateFlag == "true") require(qaKeystore?.isFile == true) {
 }
 android {
     namespace = "com.playereden.sudokutogether"
-    compileSdk = 35
+    compileSdk = 36
     defaultConfig {
         applicationId = "com.playereden.sudokutogether"
-        minSdk = 26; targetSdk = 35; versionCode = qaVersion ?: 20; versionName = "0.11.0-dev4"
+        minSdk = 26; targetSdk = 36; versionCode = qaVersion ?: 21; versionName = "0.11.0-dev5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     if (privateSigning.isNotEmpty()) signingConfigs.create("privateKey") {

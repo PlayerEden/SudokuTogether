@@ -19,13 +19,16 @@ class PlaySmokeTest {
     @Test fun profileCollectionDisplaysUnlockChoices() {
         compose.onNodeWithTag("nav_collection").performClick()
         compose.onNodeWithTag("nav_collection").assertIsSelected()
-        compose.onNodeWithText("Number colors").assertExists()
+        compose.onNodeWithTag("cosmetic_emblem_tile").assertExists()
+        compose.onNodeWithTag("portrait_woodland_owl").assertExists()
+        compose.onNodeWithText("Boards").performScrollTo().performClick()
         compose.onNodeWithText("Board styles").assertExists()
+        compose.onNodeWithText("Numbers").performScrollTo().performClick()
+        compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Number fonts").assertExists()
-        compose.onNodeWithText("Player emblems").assertExists()
-        compose.onNodeWithText("ACHIEVEMENTS").assertExists()
+        compose.onNodeWithTag("nav_records").performClick()
+        compose.onNodeWithText("View achievements").performScrollTo().performClick()
         compose.onNodeWithText("First Grid").assertExists()
-        assertTrue(compose.onAllNodesWithText("Forest", substring = true).fetchSemanticsNodes().isNotEmpty())
         compose.onNodeWithTag("nav_settings").performClick()
         compose.onNodeWithText("Classic number display").assertExists()
         compose.onNodeWithText("Touch feedback").assertExists()
@@ -96,6 +99,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Continue").assertExists()
 
         compose.onNodeWithTag("nav_records").performClick()
+        compose.onNodeWithText("Game history").performScrollTo().performClick()
         compose.onNodeWithText("DAILY HISTORY").assertExists()
         val date = com.playereden.sudokutogether.core.DailyChallenge.today()
         compose.onNodeWithTag("daily_history_" + date).performScrollTo().performClick()
@@ -166,6 +170,7 @@ class PlaySmokeTest {
         compose.onNodeWithText("Continue").assertExists()
         compose.onNodeWithTag("nav_records").performClick()
         compose.onNodeWithTag("nav_records").assertIsSelected()
+        compose.onNodeWithText("Statistics").performScrollTo().performClick()
         compose.onNodeWithText("Best unassisted:", substring = true).assertExists()
     }
 

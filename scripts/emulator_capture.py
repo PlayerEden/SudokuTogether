@@ -82,11 +82,15 @@ def main():
                 tap_text("Leave room")
                 time.sleep(1)
         adb("shell", "input", "swipe", "500", "1750", "500", "500", "450")
-        if tap_text("My profile & records"):
+        if tap_text("Profile"):
             time.sleep(1)
-            adb("shell", "input", "swipe", "500", "1600", "500", "750", "450")
-            time.sleep(1)
-            screenshot("07-daily-history-profile.png")
+            history_opened = tap_text("Game history")
+            if not history_opened:
+                adb("shell", "input", "swipe", "500", "1600", "500", "750", "450")
+                history_opened = tap_text("Game history")
+            if history_opened:
+                time.sleep(1)
+                screenshot("07-daily-history-profile.png")
     except Exception as exc:
         print("Optional Daily screenshot flow could not complete:", exc, flush=True)
     print("Visual QA screenshot collection finished", flush=True)

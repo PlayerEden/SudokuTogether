@@ -8,8 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.text.TextLayoutResult
 import com.playereden.sudokutogether.core.*
 import org.junit.Assert.*
 import org.junit.Rule
@@ -17,33 +15,35 @@ import org.junit.Test
 
 class WoodlandUiTest {
     @get:Rule val compose = createComposeRule()
-    @Test fun largeTextKeepsTheBasicIconActionAndLockedMilestonesReachable() {
+    @Test fun largeTextKeepsLockedProgressAndTheBasicIconActionReachable() {
         var selected: String? = null
+        val data = LocalPlayerData(records = listOf(GameRecord("one", SOLO, "SOLVED", "p", 1000, 1, 1000)))
         compose.setContent { SudokuTogetherTheme { CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, 2f)) {
             Box(Modifier.width(320.dp).fillMaxHeight()) {
-                SudokuApp(GameUiState(page = Page.PROFILE, appearance = Appearance(portrait = "woodland_owl")),
+                SudokuApp(GameUiState(page = Page.PROFILE, profile = data, appearance = Appearance(portrait = "woodland_owl")),
                     polishActions(cosmetic = { group, id -> selected = "$group:$id" }), {})
             }
         } } }
         compose.onNodeWithTag("nav_collection").performClick()
-        compose.onNodeWithText("Woodland").performScrollTo()
-        val titleLayout = mutableListOf<TextLayoutResult>()
-        compose.onNodeWithText("Woodland").performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(titleLayout) }
-        assertEquals("The collection title must stay whole at large text", 1, titleLayout.single().lineCount)
-        compose.onNodeWithText("Use basic icon").performScrollTo().assertIsDisplayed().performClick()
-        compose.runOnIdle { assertEquals("emblem:tile", selected) }
-        compose.onNodeWithTag("portrait_woodland_cat").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithTag("portrait_woodland_cat").performScrollTo().performClick()
         compose.onNodeWithText("Complete 15 puzzles").assertIsDisplayed()
+        compose.onNodeWithText("1 of 15 completed").assertIsDisplayed()
+        compose.onNodeWithText("Use icon").assertDoesNotExist()
+        compose.onNodeWithText("Close").performClick()
+        compose.onNodeWithText("Basic").performScrollTo().performClick()
+        compose.onNodeWithTag("portrait_woodland_cat").assertDoesNotExist()
+        compose.onNodeWithTag("cosmetic_emblem_tile").performScrollTo().performClick()
+        compose.onNodeWithText("Use icon").performClick()
+        compose.runOnIdle { assertEquals("emblem:tile", selected) }
     }
-    @Test fun collectionOffersAStarterAnimalAndKeepsLockedRequirementsVisible() {
+    @Test fun previewingAnAvailableIconLeavesItUnequippedUntilUse() {
         var selected: String? = null
         compose.setContent { SudokuTogetherTheme { SudokuApp(GameUiState(page = Page.PROFILE), polishActions(cosmetic = { group, id -> selected = "$group:$id" }), {}) } }
         compose.onNodeWithTag("nav_collection").performClick()
-        compose.onNodeWithText("Woodland").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("portrait_woodland_owl").performScrollTo().performClick()
+        compose.runOnIdle { assertNull(selected) }
+        compose.onNodeWithText("Use icon").assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals("portrait:woodland_owl", selected) }
-        compose.onNodeWithTag("portrait_woodland_rabbit").performScrollTo().assertIsNotEnabled()
-        compose.onNodeWithText("Complete 1 puzzle").assertIsDisplayed()
     }
     @Test fun anAssistedCompletedPuzzleUnlocksTheRabbitAndOldEmblemsRemain() {
         val data = LocalPlayerData(records = listOf(GameRecord("one",SOLO,"SOLVED","p",1000,1,1000,assisted = true,hintsUsed = 1)))
@@ -51,10 +51,10 @@ class WoodlandUiTest {
         compose.setContent { SudokuTogetherTheme { SudokuApp(GameUiState(page = Page.PROFILE,profile = data),polishActions(cosmetic = { group,id -> selected = "$group:$id" }),{}) } }
         compose.onNodeWithTag("nav_collection").performClick()
         compose.onNodeWithTag("portrait_woodland_rabbit").performScrollTo().performClick()
+        compose.onNodeWithText("Use icon").performClick()
         compose.runOnIdle { assertEquals("portrait:woodland_rabbit", selected) }
-        compose.onNodeWithText("Player emblems").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("cosmetic_emblem").performScrollTo()
         compose.onNodeWithTag("cosmetic_emblem_leaf").performScrollTo().assertIsDisplayed().assertIsEnabled().performClick()
+        compose.onNodeWithText("Use icon").performClick()
         compose.runOnIdle { assertEquals("emblem:leaf", selected) }
     }
 }

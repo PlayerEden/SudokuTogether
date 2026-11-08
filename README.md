@@ -78,7 +78,7 @@ Play multiplayer on a trusted home network. Optional room codes control who can 
 
 ## Build
 
-Install JDK 17 and Android SDK platform 35/build-tools 35.0.0. Set `ANDROID_HOME` to the SDK directory (or use an untracked `local.properties`).
+Install JDK 17, Android SDK Platform 36 and Build Tools 35.0.0. Set `ANDROID_HOME` to the SDK directory (or use an untracked `local.properties`).
 
 ```bash
 ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug

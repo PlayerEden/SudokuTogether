@@ -23,6 +23,8 @@ jobs:
           java-version: '17'
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v4
+      - name: Install Android build SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
       - name: Build app and UI instrumentation package
         run: |
           chmod +x gradlew
@@ -35,7 +37,7 @@ jobs:
       - name: Launch emulator, capture UI and run device tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 36
           arch: x86_64
           target: google_apis
           profile: pixel_5

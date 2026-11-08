@@ -16,71 +16,91 @@ import kotlinx.serialization.Serializable
 
 data class Cosmetic(val id: String, val name: String, val requirement: String)
 
+data class CosmeticProgress(val current: Int, val target: Int) {
+    val unlocked: Boolean get() = current >= target
+}
+
 object Cosmetics {
-    private val portraitMilestones = linkedMapOf(
+    private enum class Milestone(val verb: String, val singular: String, val plural: String) {
+        FINISH("Complete", "puzzle", "puzzles"),
+        SOLO("Solve", "solo puzzle", "solo puzzles"),
+        COOP("Complete", "co-op puzzle", "co-op puzzles"),
+        RACE("Win", "versus race", "versus races");
+
+        fun describe(target: Int) = if (target == 0) "Starter"
+            else "$verb $target ${if (target == 1) singular else plural}"
+    }
+
+    private data class CatalogEntry(val id: String, val name: String, val target: Int = 0, val milestone: Milestone = Milestone.SOLO) {
+        fun cosmetic() = Cosmetic(id, name, milestone.describe(target))
+    }
+
+    private val portraitEntries = linkedMapOf(
         "owl" to 0, "fox" to 0, "rabbit" to 1, "bear" to 2,
         "badger" to 3, "hedgehog" to 4, "robin" to 5, "deer" to 6,
         "squirrel" to 8, "otter" to 10, "tortoise" to 12, "cat" to 15
-    ).mapKeys { "woodland_${it.key}" }
-    val portraits: List<Cosmetic> = portraitMilestones.map { (id, count) ->
-        Cosmetic(id, id.removePrefix("woodland_").replaceFirstChar { it.uppercase() },
-            when (count) { 0 -> "Starter"; 1 -> "Complete 1 puzzle"; else -> "Complete $count puzzles" })
+    ).map { (animal, count) ->
+        CatalogEntry("woodland_$animal", animal.replaceFirstChar { it.uppercase() }, count, Milestone.FINISH)
     }
+    private val inkEntries = listOf(
+        CatalogEntry("forest", "Forest"),
+        CatalogEntry("cobalt", "Cobalt", 1),
+        CatalogEntry("amber", "Amber", 3),
+        CatalogEntry("rose", "Rose", 5),
+        CatalogEntry("violet", "Violet", 2, Milestone.RACE)
+    )
+    private val boardEntries = listOf(
+        CatalogEntry("classic", "Classic"),
+        CatalogEntry("linen", "Linen", 2),
+        CatalogEntry("midnight", "Midnight", 5),
+        CatalogEntry("circuit", "Circuit", 3, Milestone.RACE)
+    )
+    private val fontEntries = listOf(
+        CatalogEntry("clear", "Clear"),
+        CatalogEntry("serif", "Bookish", 1),
+        CatalogEntry("mono", "Terminal", 2, Milestone.COOP)
+    )
+    private val emblemEntries = listOf(
+        CatalogEntry("tile", "Gridkeeper"),
+        CatalogEntry("leaf", "First Sprout", 1),
+        CatalogEntry("duo", "Two Minds", 1, Milestone.COOP),
+        CatalogEntry("flash", "Challenger", 1, Milestone.RACE),
+        CatalogEntry("star", "Star Solver", 5),
+        CatalogEntry("laurel", "Champion", 3, Milestone.RACE)
+    )
+    private val entries = (portraitEntries + inkEntries + boardEntries + fontEntries + emblemEntries).associateBy { it.id }
+
+    val portraits = portraitEntries.map(CatalogEntry::cosmetic)
+    val inks = inkEntries.map(CatalogEntry::cosmetic)
+    val boards = boardEntries.map(CatalogEntry::cosmetic)
+    val fonts = fontEntries.map(CatalogEntry::cosmetic)
+    val emblems = emblemEntries.map(CatalogEntry::cosmetic)
+
     fun completedPuzzles(records: List<GameRecord>): Int = records.distinctBy { it.id }.count {
-        (it.mode in listOf(SOLO, DAILY, COOP) && it.result == "SOLVED") ||
-            (it.mode == VERSUS && it.result == "WIN")
-    }
-    val inks = listOf(
-        Cosmetic("forest", "Forest", "Starter"),
-        Cosmetic("cobalt", "Cobalt", "Solve 1 solo puzzle"),
-        Cosmetic("amber", "Amber", "Solve 3 solo puzzles"),
-        Cosmetic("rose", "Rose", "Solve 5 solo puzzles"),
-        Cosmetic("violet", "Violet", "Win 2 versus races")
-    )
-    val boards = listOf(
-        Cosmetic("classic", "Classic", "Starter"),
-        Cosmetic("linen", "Linen", "Solve 2 solo puzzles"),
-        Cosmetic("midnight", "Midnight", "Solve 5 solo puzzles"),
-        Cosmetic("circuit", "Circuit", "Win 3 versus races")
-    )
-    val fonts = listOf(
-        Cosmetic("clear", "Clear", "Starter"),
-        Cosmetic("serif", "Bookish", "Solve 1 solo puzzle"),
-        Cosmetic("mono", "Terminal", "Complete 2 co-op puzzles")
-    )
-    val emblems = listOf(
-        Cosmetic("tile", "Gridkeeper", "Starter"),
-        Cosmetic("leaf", "First Sprout", "Solve 1 solo puzzle"),
-        Cosmetic("duo", "Two Minds", "Complete 1 co-op puzzle"),
-        Cosmetic("flash", "Challenger", "Win 1 versus race"),
-        Cosmetic("star", "Star Solver", "Solve 5 solo puzzles"),
-        Cosmetic("laurel", "Champion", "Win 3 versus races")
-    )
-    fun valid(a: Appearance): Boolean = inks.any { it.id == a.ink } &&
-        boards.any { it.id == a.board } && fonts.any { it.id == a.font } &&
-        emblems.any { it.id == a.emblem } && (a.portrait.isEmpty() || portraits.any { it.id == a.portrait })
-    fun allowed(id: String, records: List<GameRecord>): Boolean {
-        portraitMilestones[id]?.let { return completedPuzzles(records) >= it }
-        val unique = records.distinctBy { it.id }
-        val solo = unique.count { it.mode == SOLO && it.result == "SOLVED" }
-        val wins = unique.count { it.mode == VERSUS && it.result == "WIN" }
-        val coop = unique.count { it.mode == COOP && it.result == "SOLVED" }
-        return when (id) {
-            "forest", "classic", "clear", "tile" -> true
-            "cobalt", "serif", "leaf" -> solo >= 1
-            "duo" -> coop >= 1
-            "flash" -> wins >= 1
-            "star" -> solo >= 5
-            "laurel" -> wins >= 3
-            "linen" -> solo >= 2
-            "amber" -> solo >= 3
-            "rose", "midnight" -> solo >= 5
-            "violet" -> wins >= 2
-            "circuit" -> wins >= 3
-            "mono" -> coop >= 2
+        when (it.mode) {
+            SOLO, DAILY, COOP -> it.result == "SOLVED"
+            VERSUS -> it.result == "WIN"
             else -> false
         }
     }
+
+    /** The same milestone controls the preview and the equip permission. */
+    fun progress(id: String, records: List<GameRecord>): CosmeticProgress? {
+        val entry = entries[id] ?: return null
+        if (entry.target == 0) return CosmeticProgress(0, 0)
+        val current = when (entry.milestone) {
+            Milestone.FINISH -> completedPuzzles(records)
+            Milestone.SOLO -> records.asSequence().distinctBy { it.id }.count { it.mode == SOLO && it.result == "SOLVED" }
+            Milestone.COOP -> records.asSequence().distinctBy { it.id }.count { it.mode == COOP && it.result == "SOLVED" }
+            Milestone.RACE -> records.asSequence().distinctBy { it.id }.count { it.mode == VERSUS && it.result == "WIN" }
+        }
+        return CosmeticProgress(current, entry.target)
+    }
+
+    fun valid(a: Appearance): Boolean = inks.any { it.id == a.ink } &&
+        boards.any { it.id == a.board } && fonts.any { it.id == a.font } &&
+        emblems.any { it.id == a.emblem } && (a.portrait.isEmpty() || portraits.any { it.id == a.portrait })
+    fun allowed(id: String, records: List<GameRecord>): Boolean = progress(id, records)?.unlocked == true
     fun accessible(a: Appearance, records: List<GameRecord>): Appearance = Appearance(
         ink = a.ink.takeIf { allowed(it, records) } ?: "forest",
         board = a.board.takeIf { allowed(it, records) } ?: "classic",

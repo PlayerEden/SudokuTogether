@@ -22,14 +22,14 @@ import androidx.compose.ui.unit.*
 @Composable internal fun HomeScreen(
     state: GameUiState, actions: GameActions,
     fresh: () -> Unit, freshSolo: () -> Unit, freshRace: () -> Unit,
-    help: () -> Unit, journal: (JournalTab) -> Unit,
+    help: () -> Unit, profile: () -> Unit,
     markStyle: GridMatesMarkStyle = GridMatesMarkStyle.CONNECTED_TILES
 ) {
     var mode by rememberSaveable { mutableStateOf("solo") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Column(Modifier.widthIn(max = 480.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            HomeHeader(state, help, { journal(JournalTab.RECORDS) }, markStyle)
+            HomeHeader(state, help, profile, markStyle)
             (state.message ?: state.saveIssue)?.let { Notice(it) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(Triple("solo", "Solo", GameSymbol.PERSON), Triple("together", "Co-op", GameSymbol.PEOPLE),
