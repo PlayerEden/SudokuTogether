@@ -14,6 +14,9 @@ The owner reported a successful v0.11B two-phone smoke test. The current release
 
 ## Product decisions and design references
 
+- **Additional offline cosmetic expansion consideration:** [board-theme and number-font expansion](GRIDMATES_BOARD_THEMES_AND_NUMBER_FONTS_EXPANSION.md) covers distinct new puzzle-board palettes (Parchment/Garden/Ocean/Graphite first), 2–3 pilot number fonts (Pencil/Rounded/Typewriter), reasonable Solo-first unlocks, current v0.11D bundled-font licensing, real 1–9 previews and 2-phone/accessibility/save-upgrade QA. **Planning only**—art and milestone thresholds still need owner review. Preserve all existing board/font IDs and evaluate with the Co-op shared-board design.
+
+
 - **Optional, discardable home-screen UX note:** [Home first-impression usability considerations](GRIDMATES_HOME_FIRST_IMPRESSION_USABILITY_CONSIDERATIONS.md) records screenshot-driven feedback for first-time/older or less tech-confident Sudoku players; test difficulty/Continue meaning, progress counting starting clues, mode labels and Daily wording before touching the current layout. This is **not an approved redesign or release blocker**.
 
 - Local play and nearby Wi-Fi are the core of GridMates. Finish Sudoku before expanding the series or extracting a reusable framework. [Brand and series](GRIDMATES_BRAND_AND_SERIES.md)
