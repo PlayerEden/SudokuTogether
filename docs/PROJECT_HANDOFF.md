@@ -4,9 +4,13 @@ Start from `main`, the canonical Android source and documentation. The [delivery
 
 The November 8 owner decision puts the offline launch first. Complete local play, device QA and Play testing before evaluating a budget for online services. Future service work starts with separately approved, invite-only friend challenges when adoption and earnings can support it. [Release and expansion gates](GRIDMATES_DELIVERY_PLAN.md#online-expansion-after-the-offline-launch)
 
-## Current candidate — v0.11F
+## Current candidate — v0.11G
 
-The v0.11F QA update adds [shared Co-op themes](GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md) and a [Versus result and rematch](GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md). Use the same build on both phones for the physical test. Next product work is the Coach proof and endgame guidance. [QA evidence](V0.11F_LOCAL_MULTIPLAYER_QA.md) · [Delivery plan](GRIDMATES_DELIVERY_PLAN.md)
+Solo and Daily now show Coach targets and proof steps. Collection adds six Ocean portraits with unlocks drawn from existing puzzle history. Nearby uses wire version 7. Install v0.11G on both phones for the pending physical test. [QA evidence and unlocks](V0.11G_COACH_OCEAN_QA.md)
+
+## v0.11F multiplayer candidate
+
+The v0.11F QA update adds [shared Co-op themes](GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md) and a [Versus result and rematch](GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md). [QA evidence](V0.11F_LOCAL_MULTIPLAYER_QA.md) · [Delivery plan](GRIDMATES_DELIVERY_PLAN.md)
 
 The preceding v0.11E candidate adds Profile with statistics, history and achievements, a unified Collection, and **Settings → Progress** export and restore. It targets API 36 and builds a separate production App Bundle. [Draft PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) · [QA evidence](V0.11E_PROFILE_PROGRESS_QA.md)
 
@@ -25,6 +29,7 @@ The owner reported a successful v0.11B two-phone smoke test. The v0.11D audit re
 - Design briefs cover an optional [Share result flow](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md), [profile and result cards](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md), and [coaching and scoring](GRIDMATES_PUZZLE_COACH_AND_SCORING_PROPOSAL.md).
 - Future product ideas include [Ocean and Bug collections and Daily rewards](GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md), [offline gift codes](GRIDMATES_GIFT_CODES_SIMPLE_DESIGN.md), [router-free nearby play](GRIDMATES_OFFLINE_NEARBY_BLUETOOTH_DESIGN.md), and an [optional two-board comparison](GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md) with consent from both players.
 - The [Sudoku research reference](SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md) documents the solving techniques and engine experiments for future coaching and difficulty work.
+- The Home copy test and the board and number font pilots are recorded against the current Co-op implementation. [November 8 proposal review](GRIDMATES_DELIVERY_PLAN.md#november-8-proposal-review)
 
 ## Historical milestones
 
