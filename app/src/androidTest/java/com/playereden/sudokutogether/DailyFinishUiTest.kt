@@ -125,10 +125,10 @@ class DailyFinishUiTest {
         compose.onAllNodesWithText("Today's challenge complete", substring = true).assertCountEquals(0)
         compose.onNodeWithText("Daily challenge complete", substring = false).performScrollTo()
         compose.onNodeWithText("Assisted", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("1 logical hint used").assertIsDisplayed()
+        compose.onNodeWithText("1 Coach hint used").assertIsDisplayed()
         capture("12-old-daily-finish-normal.png")
         scenario!!.recreate()
-        compose.onNodeWithText("1 logical hint used").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("1 Coach hint used").performScrollTo().assertIsDisplayed()
         val saved = LocalPlayerStore(File(context.filesDir, "local-player.json")).current()
         assertEquals(31, saved.dailyProgress.size); assertNull(DailyChallenge.find(saved, oldDate))
         assertEquals(1, saved.records.count { it.id == "fixture-old-daily" })
@@ -138,7 +138,7 @@ class DailyFinishUiTest {
         scenario!!.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
         compose.waitUntil(15000) { context.resources.configuration.screenWidthDp > context.resources.configuration.screenHeightDp }
         EmulatorSystemDialogs.dismiss()
-        compose.onNodeWithText("1 logical hint used").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("1 Coach hint used").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Back home").performScrollTo().assertIsDisplayed()
         capture("19-old-daily-finish-large-landscape.png")
         compose.onNodeWithText("Back home").performClick()
@@ -173,13 +173,13 @@ class DailyFinishUiTest {
         launch(); compose.onNodeWithText("Continue").performScrollTo().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("cell_0").performScrollTo().performClick().assertIsSelected()
-        // At compact 200% text the whole play screen scrolls. Bring the dock
-        // into view before injecting a real touch at its coordinates.
-        println("SUDOKU_SOLO_DOCK_BEFORE_SCROLL: ${compose.onNodeWithTag("number_1").fetchSemanticsNode().boundsInRoot}")
-        compose.onNodeWithTag("number_1").performScrollTo().assertIsDisplayed().performClick()
+        // Short viewports may place the dock below the visible portion of the board.
+        val digit = compose.onNodeWithTag("number_1")
+        if (!digit.isDisplayed()) digit.performScrollTo()
+        digit.assertIsDisplayed().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithText("Puzzle completed").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Puzzle completed").performScrollTo(); capture("16-solo-finish-large-metadata.png")
-        compose.onNodeWithText("1 logical hint used").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("1 Coach hint used").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("New puzzle").performScrollTo().assertIsDisplayed()
         capture("17-solo-finish-large-actions.png")
         val finished = LocalPlayerStore(File(context.filesDir, "local-player.json")).current().activeSolo!!

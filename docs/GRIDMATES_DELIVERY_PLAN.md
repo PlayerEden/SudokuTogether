@@ -1,6 +1,6 @@
 # GridMates delivery plan
 
-**Current candidate · v0.11G.** Solo and Daily have visual Coach proofs, and Collection has six Ocean portraits. v0.11F introduced shared Co-op themes and the Versus finish and rematch flow. [v0.11G QA](V0.11G_COACH_OCEAN_QA.md) · [v0.11F QA](V0.11F_LOCAL_MULTIPLAYER_QA.md)
+**Current candidate · v0.11H.** Solo and Daily Coach explain hidden pairs and X-Wings, can select the suggested square and can reveal a verified digit when deductions run out. [v0.11H QA](V0.11H_COACH_DEPTH_QA.md) · [v0.11G Ocean collection](V0.11G_COACH_OCEAN_QA.md#ocean)
 
 [Draft PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) contains v0.11E's Profile, Collection, portable progress transfer and API 36 release preparation. The merged v0.11D QA checkpoint introduced Versus presence and bundled number styles. [v0.11D audit](V0.11D_INTEGRATION_AND_QA.md)
 
@@ -13,7 +13,7 @@ The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.
 | Gate | Status |
 | --- | --- |
 | Player profile and collection | v0.11E added Profile and Collection. v0.11G adds six Ocean portraits that use the existing completion history. [Ocean milestones](V0.11G_COACH_OCEAN_QA.md#ocean) |
-| Owner updates and transfer | The signed v0.11F to v0.11G install-over passed. The v0.11E split release build restored an exported QA file and reopened the same saved entry and pencil note. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
+| Owner updates and transfer | The signed v0.11G to v0.11H install-over passed. The v0.11E split release build restored an exported QA file and reopened the same saved entry and pencil note. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
 | Android build and signing | The build targets API 36 and supports devices from API 26. The original production certificate was verified and the App Bundle passed local validation. |
 | Device acceptance | Finish current-build co-op and Versus on two physical phones, plus modern Android orientation, TalkBack, and Daily rollover. [LAN gate](https://github.com/PlayerEden/SudokuTogether/issues/12) |
 | Play Console | Confirm signing enrollment, listing and declarations, and run the required testing track. [Launch guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md) |
@@ -33,7 +33,7 @@ The design notes and implementation now share the same source branch. Keep each 
 | Player interface | Versus identities and progress are in v0.11D. The unified Collection and Profile are in v0.11E. | Validate physical Versus reconnect and compact layouts, including large text. |
 | Versus results | v0.11F shows the winner, both filled counts and the local grid at the finish. The host can start a fresh race once both players are present. | Test a complete race and rematch on two phones, including a rival leaving and rejoining at the result. A future two-board comparison requires consent from both players. |
 | Co-op board themes | v0.11F selects from Classic, Linen, Midnight and Circuit in that order of priority. Authored entries keep their personal ink and font, with the existing uniform-number option. | Test both phones across themes, saved-room resume and partner rejoin. Use the device playtest to evaluate a local board override. |
-| Coach | v0.11G opens with a target square and reveals the supporting grid and candidate removals through **Show why**. **Check my work** handles an earlier incorrect entry. | Check small-phone readability, large text, and play near the end of a puzzle. [Coach QA](V0.11G_COACH_OCEAN_QA.md#coach) |
+| Coach | v0.11H shows six deduction patterns, crosses off candidates, and offers one verified digit if its deductions stop short. **Check my work** handles an earlier incorrect entry. | Check the explanations on a phone and continue measuring which valid boards still need a reveal. [Coach QA](V0.11H_COACH_DEPTH_QA.md) |
 | Later design work | Choose a small Daily reward model, consider reusable offline gift codes, and evaluate router-free nearby play separately. | Clear unlock and restore behavior for rewards. Physical connectivity checks before changing the multiplayer transport. |
 
 ## Stages
@@ -42,7 +42,7 @@ The design notes and implementation now share the same source branch. Keep each 
 | --- | --- | --- |
 | 1 — v0.11B, verified QA | Launcher label **Sudoku**; useful Solo/Daily entry checking when an earlier mistake blocks logical hints | Full in-game/app name retained; same icon/package/certificate; explicit solution checks, accurate assisted results, safe Undo/resume, actual v0.11A upgrade test and native UI checks |
 | v0.11C — Nearby/collection refinement | Open nearby joining, optional remembered code, stable header/chat,12 earned Woodland portraits |117 JVM +78 native executions, old-APK continuity and installed-byte proof; renewed physical two-phone testing remains open |
-| 2 — Coach guidance | v0.11G shows a read-only proof preview and progressive explanations for the four supported techniques. | The player places each digit. Verify candidate removal and late puzzles on a phone. An optional apply action is a later design choice. |
+| 2 — Coach guidance | v0.11H adds hidden pairs, both X-Wing orientations, **Go to square** and an explicit reveal fallback to the v0.11G preview. | The player places each digit. Use validated stalls to choose and verify the next explainable rule. |
 | 3 — Share result | Optional finish-screen button, preview, one polished on-device PNG format and native Android sharing for Solo/Daily | Persisted time/difficulty/assistance; no solution digits, invented score or store link; cancellation/export failure preserves the game; physical share-target acceptance |
 | 4 — Profile and card | v0.11E delivers the profile, achievements, history and Collection. Profile-card export follows the Solo and Daily result card. | Preserve owned cosmetics and legacy records. Check empty states, long names, large text and editable sharing privacy. |
 | 5 — Scoring | Versioned, calibrated score with a clear optional breakdown | Distinct deduction/tier accounting across Undo/resume; old scores remain unknown; assistance stays unlimited; assisted/unassisted comparisons stay separate; no arbitrary speed bonus |
@@ -56,6 +56,12 @@ The proposals cover additional work beyond the features in the current QA candid
 The Home screen still places the difficulty picker directly below **Continue** when a Solo puzzle is saved. A short first-use test can check whether players understand that the picker applies to **New puzzle**. The saved-puzzle caption counts givens. If players read it as their own progress, show the number of their entered squares instead. Keep the current mode tabs and Daily card during that comparison. [First-impression proposal](https://github.com/PlayerEden/SudokuTogether/blob/main/docs/GRIDMATES_HOME_FIRST_IMPRESSION_USABILITY_CONSIDERATIONS.md)
 
 For board and number style pilots, compare distinct light, marine and dark palettes on the same real 9×9 sample. Compare candidate font faces using every digit and pencil marks at phone size. v0.11F already shares an equipped Co-op board while rendering each player's own entries, so new themes need an explicit display priority and contrast checks. Review a durable record of earned unlocks before relying on a larger milestone catalog. [Board and font expansion proposal](https://github.com/PlayerEden/SudokuTogether/blob/main/docs/GRIDMATES_BOARD_THEMES_AND_NUMBER_FONTS_EXPANSION.md)
+
+## Word Search review
+
+The Word Search Bookshelf test gives players **Review saved clues** and **Practice again** on a completed book page. For Sudoku, a later Coach practice section could give each difficult pattern a small replayable example and keep practice separate from regular records. The current Coach already lets players revisit a recent unchanged board without counting another hint during the session. [Clue review](https://github.com/PlayerEden/GridMates-Word-Search/blob/14b67265ecafd6baa243112e306c63ee95265699/app/src/main/java/com/playereden/gridmates/wordsearch/WordSearchScreen.kt#L278-L330) · [Practice button](https://github.com/PlayerEden/GridMates-Word-Search/blob/14b67265ecafd6baa243112e306c63ee95265699/app/src/main/java/com/playereden/gridmates/wordsearch/BookPageGameplayScreen.kt#L266-L282)
+
+The Word Search font plan previews the actual puzzle letters in Collection. Carry that idea into Sudoku with all nine digits and pencil marks on the same playable sample grid, sized as they appear on a phone. [Word Search font plan](https://github.com/PlayerEden/GridMates-Word-Search/blob/233e8ff27edfef57bc661c936b0e2854fa162a53/docs/WS04D_B5_FONT_ENGINE_AND_FREE_UNLOCKS_2026-11-06.md)
 
 ## Online expansion after the offline launch
 

@@ -56,15 +56,19 @@ class SudokuCoachTest {
         assertEquals(mapOf(26 to listOf(9), 62 to listOf(2)), pair.eliminations)
     }
 
-    @Test fun pointingAndOtherEliminationsCanBeShownWithoutAPlacement() {
+    @Test fun hiddenPairExplainsWhichOtherCandidatesDisappearAfterPointing() {
         val puzzle = puzzle("000008005205090670000000400360000200092106040054070000000030800020500701006807090")
         val hint = SudokuAssistance.nextCoachHint(puzzle, puzzle.clues)!!
-        assertEquals(listOf(LOCKED_CANDIDATE, LOCKED_CANDIDATE, NAKED_PAIR), hint.steps.map { it.technique })
+        assertEquals(listOf(LOCKED_CANDIDATE, LOCKED_CANDIDATE, NAKED_PAIR), hint.steps.take(3).map { it.technique })
         val pointing = hint.steps.first()
         assertEquals(listOf(48, 50), pointing.sourceCells)
         assertEquals(listOf(51, 52, 53), pointing.targetCells)
         assertEquals(mapOf(51 to listOf(3), 52 to listOf(3), 53 to listOf(3)), pointing.eliminations)
-        assertTrue(hint.steps.all { it.eliminations.isNotEmpty() })
+        val pair = hint.steps.firstOrNull { it.technique.name == "HIDDEN_PAIR" }
+        assertNotNull("The Coach stopped before the hidden pair", pair)
+        assertEquals(listOf(48, 50), pair!!.sourceCells)
+        assertEquals(listOf(2, 3), pair.digits)
+        assertEquals(mapOf(48 to listOf(9), 50 to listOf(9)), pair.eliminations)
         assertNull(SudokuAssistance.nextHint(puzzle, puzzle.clues))
     }
 
@@ -77,6 +81,54 @@ class SudokuCoachTest {
         assertNull(SudokuAssistance.nextCoachHint(classic, changedGiven))
         assertNull(SudokuAssistance.nextCoachHint(classic, listOf(0)))
         assertNull(SudokuAssistance.nextCoachHint(classic, solved.clues))
+    }
+
+    @Test fun xWingFindsExactlyTheSameProofWhenRowsAndColumnsAreSwapped() {
+        // HoDoKu's X-Wing example, after the placements shown in its diagram.
+        // https://hodoku.sourceforge.net/en/show_example.php?file=bf201&tech=X-Wing
+        val rowPuzzle = puzzle("041729030769003402032640719403900170607004903195370024214567398376090541958431267")
+        fun transpose(cell: Int) = cell % 9 * 9 + cell / 9
+        val columnPuzzle = rowPuzzle.copy(clues = rowPuzzle.clues.indices.map { rowPuzzle.clues[transpose(it)] })
+        val corners = listOf(13, 16, 40, 43)
+        for ((grid, sources, target) in listOf(
+            Triple(rowPuzzle, corners, 31),
+            Triple(columnPuzzle, corners.map(::transpose).sorted(), transpose(31))
+        )) {
+            val hint = SudokuAssistance.nextCoachHint(grid, grid.clues)
+            assertNotNull("No proof for the X-Wing", hint)
+            val step = hint!!.steps.first()
+            assertEquals("X_WING", step.technique.name)
+            assertEquals(sources, step.sourceCells)
+            assertEquals(listOf(target), step.targetCells)
+            assertEquals(listOf(5), step.digits)
+            assertEquals(mapOf(target to listOf(5)), step.eliminations)
+            assertEquals(0, Sudoku.solutionCount(grid.clues.toMutableList().apply { this[target] = 5 }))
+            assertEquals(HumanSudoku.Grade.BEYOND_CURRENT_LOGIC, HumanSudoku.assess(grid).grade)
+        }
+    }
+
+    @Test fun stalledUniqueBoardHasAnExplicitOneSquareReveal() {
+        val puzzle = puzzle("100007090030020008009600500005300900010080002600004000300000010041000007007000300")
+        val board = puzzle.clues.toMutableList()
+        // The first solution is reachable in 300 nodes. Proving it unique takes longer.
+        assertNull(Sudoku.uniqueSolutionWithin(board, maxNodes = 300))
+        val hint = SudokuAssistance.nextCoachHint(puzzle, board)
+        assertNotNull("The Coach has no help for this stalled position", hint)
+        val reveal = hint!!.steps.single()
+        assertEquals("SOLUTION_REVEAL", reveal.technique.name)
+        assertTrue(reveal.sourceCells.isEmpty())
+        assertTrue(reveal.eliminations.isEmpty())
+        val target = reveal.targetCells.single()
+        val digit = reveal.digits.single()
+        assertEquals(0, board[target])
+        assertEquals(1, Sudoku.solutionCount(board.toMutableList().apply { this[target] = digit }))
+        assertEquals(puzzle.clues, board)
+        assertNull(SudokuAssistance.nextHint(puzzle, board))
+    }
+
+    @Test fun ambiguousBoardNeverOffersAReveal() {
+        val puzzle = Puzzle("ambiguous", List(81) { 0 })
+        assertNull(SudokuAssistance.nextCoachHint(puzzle, puzzle.clues))
     }
 
     private fun puzzle(clues: String) = Puzzle("coach-reference", clues.map { it.digitToInt() })

@@ -19,6 +19,7 @@ object SudokuAssistance {
         val technique: HumanSudoku.Technique,
         val sourceCells: List<Int>,
         val targetCells: List<Int>,
+        /** The placed digit or the candidates that support the elimination. */
         val digits: List<Int>,
         val explanation: String,
         /** Candidates removed from each target at this step, empty for placements. */
@@ -81,7 +82,7 @@ object SudokuAssistance {
             "${leadIn}Row ${cell / 9 + 1}, column ${cell % 9 + 1}: $basis")
     }
 
-    /** Shows each elimination through the first placement, or until the solver has no further deduction. */
+    /** Shows each elimination through a placement or an optional solution reveal. */
     fun nextCoachHint(puzzle: Puzzle, visible: List<Int>): CoachHint? {
         if (!hasUnchangedGivens(puzzle, visible)) return null
         val steps = HumanSudoku.coachSteps(visible)

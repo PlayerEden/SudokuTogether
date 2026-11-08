@@ -26,7 +26,20 @@ object Sudoku {
     fun hasUniqueSolutionWithin(clues: List<Int>, maxNodes: Int): Boolean =
         maxNodes > 0 && countSolutions(clues, limit = 2, maxNodes = maxNodes.toLong()) == 1
 
-    private fun countSolutions(clues: List<Int>, limit: Int, maxNodes: Long): Int? {
+    /** Returns a solution only if the search proves uniqueness within its budget. */
+    internal fun uniqueSolutionWithin(clues: List<Int>, maxNodes: Int): List<Int>? {
+        if (maxNodes <= 0) return null
+        var solution: List<Int>? = null
+        val count = countSolutions(clues, limit = 2, maxNodes = maxNodes.toLong()) {
+            solution = it.toList()
+        }
+        return if (count == 1) solution else null
+    }
+
+    private fun countSolutions(
+        clues: List<Int>, limit: Int, maxNodes: Long,
+        onFirstSolution: ((IntArray) -> Unit)? = null
+    ): Int? {
         if (clues.size != 81 || clues.any { it !in 0..9 } || limit < 1 || conflicts(clues).isNotEmpty()) return 0
         val board = clues.toIntArray(); val rows = IntArray(9); val cols = IntArray(9); val boxes = IntArray(9)
         for (i in 0..80) if (board[i] != 0) {
@@ -50,7 +63,11 @@ object Sudoku {
                 if (count == 0) return
                 if (count < least) { best = i; candidates = mask; least = count; if (count == 1) break }
             }
-            if (best == -1) { found++; return }
+            if (best == -1) {
+                if (found == 0) onFirstSolution?.invoke(board)
+                found++
+                return
+            }
             val r = best / 9; val c = best % 9; val box = best / 27 * 3 + c / 3
             while (candidates != 0 && found < limit && !exhausted) {
                 val bit = candidates and -candidates; candidates = candidates xor bit

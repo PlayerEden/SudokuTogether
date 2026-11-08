@@ -9,7 +9,15 @@ package com.playereden.sudokutogether.core
  * generation benchmarks and player calibration are complete.
  */
 object HumanSudoku {
-    enum class Technique { NAKED_SINGLE, HIDDEN_SINGLE, LOCKED_CANDIDATE, NAKED_PAIR }
+    enum class Technique(val label: String) {
+        NAKED_SINGLE("Only one digit fits"),
+        HIDDEN_SINGLE("Only one square fits"),
+        LOCKED_CANDIDATE("Locked candidate"),
+        NAKED_PAIR("Naked pair"),
+        HIDDEN_PAIR("Hidden pair"),
+        X_WING("X-Wing"),
+        SOLUTION_REVEAL("One-number reveal")
+    }
     enum class Grade { EASY, MEDIUM, HARD, BEYOND_CURRENT_LOGIC, INVALID }
 
     data class Step(
@@ -35,6 +43,7 @@ object HumanSudoku {
     }
 
     private const val ALL = 0x3FE // bits 1 through 9
+    private const val COACH_SEARCH_NODES = 200_000
     private val units: List<IntArray> = buildList {
         for (r in 0..8) add(IntArray(9) { r * 9 + it })
         for (c in 0..8) add(IntArray(9) { it * 9 + c })
@@ -51,6 +60,11 @@ object HumanSudoku {
     private fun digits(mask: Int) = (1..9).filter { mask and (1 shl it) != 0 }
     private fun single(mask: Int) = mask != 0 && mask and (mask - 1) == 0
 
+    private fun candidatePositions(unit: IntArray, candidates: IntArray, digitBit: Int): Int =
+        unit.indices.fold(0) { positions, index ->
+            if (candidates[unit[index]] and digitBit != 0) positions or (1 shl index) else positions
+        }
+
     /** Safe for generator calibration; never mutates the input puzzle. */
     fun assess(puzzle: Puzzle): Assessment {
         val givens = puzzle.clues
@@ -61,9 +75,20 @@ object HumanSudoku {
     }
 
     internal fun coachSteps(visible: List<Int>): List<SudokuAssistance.CoachStep> {
-        if (!hasUniqueSolution(visible)) return emptyList()
+        val firstEmpty = visible.indexOf(0)
+        if (firstEmpty < 0) return emptyList()
+        // Validate before offering deductions. Keep the solution out of the deduction engine.
+        val solution = Sudoku.uniqueSolutionWithin(visible, COACH_SEARCH_NODES) ?: return emptyList()
         val proof = mutableListOf<SudokuAssistance.CoachStep>()
         solve(visible, proof)
+        if (proof.lastOrNull()?.eliminations?.isEmpty() != true) {
+            val target = proof.lastOrNull()?.targetCells?.first() ?: firstEmpty
+            proof.add(SudokuAssistance.CoachStep(
+                Technique.SOLUTION_REVEAL, emptyList(), listOf(target), listOf(solution[target]),
+                "The Coach ran out of deduction steps. You can reveal one number to keep going.",
+                emptyMap()
+            ))
+        }
         return proof.toList()
     }
 
@@ -129,17 +154,25 @@ object HumanSudoku {
             val affected = targets.filter { board[it] == 0 && candidates[it] and mask != 0 }
                 .distinct().sorted()
             if (affected.isEmpty()) return false
-            val removed = digits(mask)
+            val removed = if (technique == Technique.HIDDEN_PAIR) {
+                digits(affected.fold(0) { result, cell -> result or (candidates[cell] and mask) })
+            } else digits(mask)
             if (proof != null) {
                 val eliminations = affected.associateWith { digits(candidates[it] and mask) }
-                val explanation = if (technique == Technique.NAKED_PAIR) {
-                    "Two cells in ${unitName(sourceUnit)} share the candidates ${removed.joinToString(" and ")}. " +
-                        "Remove those digits from the other cells in that unit."
-                } else {
-                    "In ${unitName(sourceUnit)}, ${removed.single()} can only go in ${unitName(targetUnit)}. " +
-                        "Remove it from candidates elsewhere in ${unitName(targetUnit)}."
+                val support = if (technique == Technique.HIDDEN_PAIR) digits(ALL and mask.inv()) else removed
+                val explanation = when (technique) {
+                    Technique.NAKED_PAIR ->
+                        "Two cells in ${unitName(sourceUnit)} share the candidates ${removed.joinToString(" and ")}. " +
+                            "Remove those digits from the other cells in that unit."
+                    Technique.HIDDEN_PAIR ->
+                        "In ${unitName(sourceUnit)}, ${support.joinToString(" and ")} can only go in these two squares. " +
+                            "Keep those two candidates and cross off any others in the two squares."
+                    Technique.LOCKED_CANDIDATE ->
+                        "In ${unitName(sourceUnit)}, ${removed.single()} can only go in ${unitName(targetUnit)}. " +
+                            "Remove it from candidates elsewhere in ${unitName(targetUnit)}."
+                    else -> reason
                 }
-                proof.add(SudokuAssistance.CoachStep(technique, source, affected, removed,
+                proof.add(SudokuAssistance.CoachStep(technique, source, affected, support,
                     explanation, eliminations))
             }
             for (cell in affected) candidates[cell] = candidates[cell] and mask.inv()
@@ -238,6 +271,60 @@ object HumanSudoku {
                             "Two cells reserve digits ${digits(mask).joinToString("/")} in unit ${unitIndex + 1}",
                             pair, unitIndex)) {
                         moved = true; break
+                    }
+                }
+            }
+            if (moved) continue
+            // Additional Coach techniques leave puzzle supply and difficulty grading alone.
+            if (proof == null) break
+
+            hiddenPairs@ for ((unitIndex, unit) in units.withIndex()) {
+                val positions = IntArray(10) { digit -> candidatePositions(unit, candidates, 1 shl digit) }
+                for (first in 1..8) {
+                    if (Integer.bitCount(positions[first]) != 2) continue
+                    for (second in first + 1..9) {
+                        if (positions[first] != positions[second]) continue
+                        val pairMask = (1 shl first) or (1 shl second)
+                        val pair = unit.filter { candidates[it] and pairMask == pairMask }
+                        if (eliminate(pair, ALL and pairMask.inv(), Technique.HIDDEN_PAIR,
+                                "$first and $second are confined to two squares", pair, unitIndex)) {
+                            moved = true
+                            break@hiddenPairs
+                        }
+                    }
+                }
+            }
+            if (moved) continue
+
+            // The two base rows (or columns) must each use the digit in the same two cover lines.
+            xWings@ for (baseStart in listOf(0, 9)) {
+                val coverStart = 9 - baseStart
+                val (baseName, coverName) = if (baseStart == 0) "rows" to "columns" else "columns" to "rows"
+                for (digit in 1..9) {
+                    val bit = 1 shl digit
+                    val positions = IntArray(9) { candidatePositions(units[baseStart + it], candidates, bit) }
+                    for (first in 0..7) {
+                        val mask = positions[first]
+                        if (Integer.bitCount(mask) != 2) continue
+                        for (second in first + 1..8) {
+                            if (positions[second] != mask) continue
+                            val cover = (0..8).filter { mask and (1 shl it) != 0 }
+                            val corners = cover.flatMap {
+                                listOf(units[baseStart + first][it], units[baseStart + second][it])
+                            }.sorted()
+                            val targets = cover.flatMap { units[coverStart + it].asIterable() }
+                                .filter { it !in corners }
+                            val coverNumbers = cover.joinToString(" and ") { (it + 1).toString() }
+                            val explanation = "In $baseName ${first + 1} and ${second + 1}, " +
+                                "$digit can only go in $coverName $coverNumbers. " +
+                                "Those $coverName use their $digit in the shaded squares. " +
+                                "Cross off $digit elsewhere in those $coverName."
+                            if (eliminate(targets, bit, Technique.X_WING, explanation, corners,
+                                    baseStart + first)) {
+                                moved = true
+                                break@xWings
+                            }
+                        }
                     }
                 }
             }

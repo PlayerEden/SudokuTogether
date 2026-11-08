@@ -27,6 +27,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import com.playereden.sudokutogether.core.*
@@ -362,7 +363,7 @@ private fun roomStatusText(state: GameUiState): String {
                             (if (assisted) "Assisted" else "Unassisted"),
                             color = Ink, fontSize = 12.sp)
                         if (finished.hintsUsed > 0)
-                            Text("${finished.hintsUsed} logical hint" +
+                            Text("${finished.hintsUsed} Coach hint" +
                                 (if (finished.hintsUsed == 1) "" else "s") + " used",
                                 color = Muted, fontSize = 11.sp)
                         if (finished.checksUsed > 0)
@@ -446,7 +447,8 @@ private fun roomStatusText(state: GameUiState): String {
 
 @Composable internal fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: ((Int) -> Unit)?,
     boardTheme: String, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean,
-    proofTargets: Set<Int> = emptySet(), proofSources: Set<Int> = emptySet()) {
+    proofTargets: Set<Int> = emptySet(), proofSources: Set<Int> = emptySet(),
+    proofEliminations: Map<Int, List<Int>> = emptyMap()) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -480,6 +482,7 @@ private fun roomStatusText(state: GameUiState): String {
             for (col in 0..8) {
                 val i = row * 9 + col; val cell = snapshot.cells[i]; val given = snapshot.puzzle.clues[i] != 0
                 val noteNumbers = (1..9).filter { cell.notes and (1 shl (it - 1)) != 0 }
+                val crossedOff = proofEliminations[i].orEmpty()
                 val content = "Row ${row + 1} column ${col + 1}, " + when { given -> "clue ${cell.value}"; cell.value != 0 -> "value ${cell.value}"; noteNumbers.isNotEmpty() -> "empty, notes ${noteNumbers.joinToString(" ")}"; else -> "empty" }
                 val authored = when {
                     given -> defaultStyle
@@ -497,8 +500,8 @@ private fun roomStatusText(state: GameUiState): String {
                     (row / 3 == selected / 27 && col / 3 == (selected % 9) / 3)
                 )
                 val background = when {
-                    proofTarget -> if (darkBoard) Color(0xFF555336) else AmberLight
                     proofSource -> if (darkBoard) Color(0xFF305C55) else TealLight
+                    proofTarget -> if (darkBoard) Color(0xFF555336) else AmberLight
                     i == selected -> if (darkBoard) Color(0xFF555336) else AmberLight
                     i == partner -> if (darkBoard) Color(0xFF305C55) else TealLight
                     i in conflicts -> if (darkBoard) Color(0xFF63362C) else Color(0xFFF8E7DF)
@@ -515,9 +518,11 @@ private fun roomStatusText(state: GameUiState): String {
                 val tag = if (select == null) "coach_cell_$i" else "cell_$i"
                 val semantics = if (select == null && !proofTarget && !proofSource) Modifier.clearAndSetSemantics {}
                     else Modifier.testTag(tag).semantics(mergeDescendants = true) {
-                        contentDescription = content
+                        contentDescription = if (crossedOff.isEmpty()) content else
+                            "$content, cross off ${crossedOff.joinToString(" and ")}"
                         this.selected = i == selected
                         stateDescription = when {
+                            proofTarget && proofSource -> "Hint target and proof square"
                             proofTarget -> "Hint target"
                             proofSource -> "Proof square"
                             i == selected -> "Selected square"
@@ -536,7 +541,17 @@ private fun roomStatusText(state: GameUiState): String {
                             for (c in 0..2) {
                                 val n = r * 3 + c + 1
                                 Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                    if (n in noteNumbers) Text(n.toString(), color = if (darkBoard) authoredInk else Muted, style = noteStyle.copy(fontFamily = authoredFont), maxLines = 1, softWrap = false)
+                                    if (n in noteNumbers) {
+                                        val removed = n in crossedOff
+                                        val color = when {
+                                            removed -> if (darkBoard) Color(0xFFFFB7A6) else Brick
+                                            darkBoard -> authoredInk
+                                            else -> Muted
+                                        }
+                                        Text(n.toString(), color = color, style = noteStyle.copy(fontFamily = authoredFont),
+                                            textDecoration = if (removed) TextDecoration.LineThrough else null,
+                                            maxLines = 1, softWrap = false)
+                                    }
                                 }
                             }
                         }
