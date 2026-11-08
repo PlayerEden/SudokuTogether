@@ -1,6 +1,4 @@
 # GridMates — Brand and Puzzle Series Vision
-
-**Implementation baseline:** Continue from v0.11A on `feat/gridmates-coach-launcher`, based on `feat/gridmates-brand-copy` at92ebc3b. [Staged delivery plan](GRIDMATES_DELIVERY_PLAN.md) owns the current order; earlier v0.10D/development references below are design-time context. Stage1 is launcher polish and explicit entry checking; sharing/profile/scoring/monetization are later stages.
 **Decision recorded:** 2026-11-03  
 **Status:** User-approved creative naming decision; implementation, trademark/store clearance and launch assets pending  
 **Canonical game repo:** https://github.com/PlayerEden/SudokuTogether  

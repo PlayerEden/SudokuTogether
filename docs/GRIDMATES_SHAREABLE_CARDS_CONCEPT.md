@@ -1,7 +1,5 @@
 # GridMates: Sudoku — Shareable Cards and Social Sharing (Concept)
 
-**Implementation baseline:** Continue from v0.11A on `feat/gridmates-coach-launcher`, based on `feat/gridmates-brand-copy` at92ebc3b. [Staged delivery plan](GRIDMATES_DELIVERY_PLAN.md) owns the current order; earlier v0.10D/development references below are design-time context. Stage1 is launcher polish and explicit entry checking; sharing/profile/scoring/monetization are later stages.
-
 **Created:** 2026-11-03  
 **Status:** **Owner strongly interested in exploring this; design proposal, not an approved implementation spec or shipped feature.**  
 **Audience:** Work implementation chat + GridMates series product planning  

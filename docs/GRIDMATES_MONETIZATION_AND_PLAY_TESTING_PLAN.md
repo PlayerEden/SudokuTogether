@@ -1,7 +1,5 @@
 # GridMates: Sudoku — Monetization and Play Testing Direction
 
-**Implementation baseline:** Continue from v0.11A on `feat/gridmates-coach-launcher`, based on `feat/gridmates-brand-copy` at92ebc3b. [Staged delivery plan](GRIDMATES_DELIVERY_PLAN.md) owns the current order; earlier v0.10D/development references below are design-time context. Stage1 is launcher polish and explicit entry checking; sharing/profile/scoring/monetization are later stages.
-
 **Decision date:** 2026-11-03
 **Status:** Owner-approved ad **format and restraint principle**; detailed frequency/pricing/integration remain proposals. **Not implemented or released.**
 **Product:** GridMates: Sudoku, with possible future reuse of business patterns in other GridMates puzzle games.
