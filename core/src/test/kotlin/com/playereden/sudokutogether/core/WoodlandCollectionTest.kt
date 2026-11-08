@@ -23,9 +23,10 @@ class WoodlandCollectionTest {
         assertEquals(listOf("tile", "leaf", "duo", "flash", "star", "laurel"), Cosmetics.emblems.map { it.id })
     }
     @Test fun twelveAnimalsHaveTwoStarterChoicesAndVisibleMilestones() {
-        assertEquals(12, Cosmetics.portraits.size)
-        assertEquals(12, Cosmetics.portraits.map { it.id }.toSet().size)
-        assertEquals(setOf("woodland_owl", "woodland_fox"), Cosmetics.portraits.filter { Cosmetics.allowed(it.id, emptyList()) }.map { it.id }.toSet())
+        val woodland = Cosmetics.portraits.filter { it.id.startsWith("woodland_") }
+        assertEquals(12, woodland.size)
+        assertEquals(12, woodland.map { it.id }.toSet().size)
+        assertEquals(setOf("woodland_owl", "woodland_fox"), woodland.filter { Cosmetics.allowed(it.id, emptyList()) }.map { it.id }.toSet())
         assertFalse(Cosmetics.allowed("woodland_rabbit", emptyList()))
         assertTrue(Cosmetics.allowed("woodland_rabbit", listOf(record("first", assisted = true))))
     }

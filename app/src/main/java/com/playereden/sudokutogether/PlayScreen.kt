@@ -444,8 +444,9 @@ private fun roomStatusText(state: GameUiState): String {
     }
 }
 
-@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit,
-    boardTheme: String, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean) {
+@Composable internal fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: ((Int) -> Unit)?,
+    boardTheme: String, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean,
+    proofTargets: Set<Int> = emptySet(), proofSources: Set<Int> = emptySet()) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -489,11 +490,15 @@ private fun roomStatusText(state: GameUiState): String {
                 }
                 val authoredFont = fontFor(authored.font)
                 val authoredInk = inkFor(authored.ink, darkBoard)
+                val proofTarget = i in proofTargets
+                val proofSource = i in proofSources
                 val sameHouse = selected in 0..80 && (
                     row == selected / 9 || col == selected % 9 ||
                     (row / 3 == selected / 27 && col / 3 == (selected % 9) / 3)
                 )
                 val background = when {
+                    proofTarget -> if (darkBoard) Color(0xFF555336) else AmberLight
+                    proofSource -> if (darkBoard) Color(0xFF305C55) else TealLight
                     i == selected -> if (darkBoard) Color(0xFF555336) else AmberLight
                     i == partner -> if (darkBoard) Color(0xFF305C55) else TealLight
                     i in conflicts -> if (darkBoard) Color(0xFF63362C) else Color(0xFFF8E7DF)
@@ -501,17 +506,28 @@ private fun roomStatusText(state: GameUiState): String {
                     sameHouse -> if (darkBoard) Color(0xFF213B3E) else Color(0xFFF0F3EB)
                     else -> boardPaper
                 }
-                Box(Modifier.weight(1f).fillMaxHeight().background(background).then(if (i == partner || i == selected) Modifier.border(2.dp, boardEdge) else Modifier)
-                    .clickable(role = Role.Button) { select(i) }.testTag("cell_$i").semantics(mergeDescendants = true) {
-                         contentDescription = content
-                         this.selected = i == selected
-                         stateDescription = when {
-                             i == selected -> "Selected square"
-                             i == partner -> "Partner's selected square"
-                             i in conflicts -> "Conflicting value"
-                             else -> "Puzzle square"
-                         }
-                     }, contentAlignment = Alignment.Center) {
+                val outline = when {
+                    proofTarget -> Modifier.border(2.dp, if (darkBoard) Color(0xFFFFD386) else Gold)
+                    i == partner || i == selected -> Modifier.border(2.dp, boardEdge)
+                    else -> Modifier
+                }
+                val click = if (select == null) Modifier else Modifier.clickable(role = Role.Button) { select(i) }
+                val tag = if (select == null) "coach_cell_$i" else "cell_$i"
+                val semantics = if (select == null && !proofTarget && !proofSource) Modifier.clearAndSetSemantics {}
+                    else Modifier.testTag(tag).semantics(mergeDescendants = true) {
+                        contentDescription = content
+                        this.selected = i == selected
+                        stateDescription = when {
+                            proofTarget -> "Hint target"
+                            proofSource -> "Proof square"
+                            i == selected -> "Selected square"
+                            i == partner -> "Partner's selected square"
+                            i in conflicts -> "Conflicting value"
+                            else -> "Puzzle square"
+                        }
+                    }
+                Box(Modifier.weight(1f).fillMaxHeight().background(background).then(outline).then(click).then(semantics),
+                    contentAlignment = Alignment.Center) {
                     if (cell.value != 0) Text(cell.value.toString(), style = digitStyle.copy(fontFamily = authoredFont),
                         maxLines = 1, softWrap = false, fontWeight = if (given) FontWeight.Bold else FontWeight.Normal,
                         color = if (i in conflicts) (if (darkBoard) Color(0xFFFFB7A6) else Brick) else if (given) neutralInk else authoredInk)

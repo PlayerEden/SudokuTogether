@@ -1,0 +1,39 @@
+{
+  "collection": "Ocean",
+  "source": "Generated Ocean illustration sheet with transparent alpha",
+  "source_sha256": "1253cd7941be635bb28c7acd89c3332a6e9556e4e4865667bbaded4184c92e4d",
+  "source_tiles": "1536×1024, 3 columns and 2 rows",
+  "packaging": "Crop each alpha silhouette and center it at up to 334 px on a 384×384 transparent canvas.",
+  "assets": [
+    {
+      "id": "ocean_octopus",
+      "path": "app/src/main/res/drawable-nodpi/ocean_octopus.png",
+      "sha256": "b7ae0b0b4940b4513bbdb2de3bb2b0ae8ea32d066911c590cf2f8b726253748e"
+    },
+    {
+      "id": "ocean_seal",
+      "path": "app/src/main/res/drawable-nodpi/ocean_seal.png",
+      "sha256": "8618f10cefd54540b7b9922b9921ddbf7ca5bcb9ed5b4b61121c48752948e971"
+    },
+    {
+      "id": "ocean_hermit_crab",
+      "path": "app/src/main/res/drawable-nodpi/ocean_hermit_crab.png",
+      "sha256": "65e38eb91d09d9093f77c3d32f33107860d13bba3b60cebeefdcfd4e42577549"
+    },
+    {
+      "id": "ocean_manta_ray",
+      "path": "app/src/main/res/drawable-nodpi/ocean_manta_ray.png",
+      "sha256": "78c835f2939e45c5b3935461ef24cb0dbc1aa92e774c37ce3f51f81e6ddd9f50"
+    },
+    {
+      "id": "ocean_jellyfish",
+      "path": "app/src/main/res/drawable-nodpi/ocean_jellyfish.png",
+      "sha256": "925bceaef813bc42afa8893a6ef4b9c203696a2645c75bb8b6a88b98b8e2a746"
+    },
+    {
+      "id": "ocean_narwhal",
+      "path": "app/src/main/res/drawable-nodpi/ocean_narwhal.png",
+      "sha256": "96c92945acc2e1e2248a916d48a777a9aa0e84882bfc1697ef2bc4b776dd40ec"
+    }
+  ]
+}

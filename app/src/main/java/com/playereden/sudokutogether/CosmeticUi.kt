@@ -60,11 +60,11 @@ fun styleLabel(a: Appearance): String = listOf(
 ).joinToString(" · ")
 
 private enum class CollectionCategory(val label: String) { ICONS("Player icons"), BOARDS("Boards"), NUMBERS("Numbers") }
-private enum class IconFamily(val label: String) { ALL("All"), BASIC("Basic"), WOODLAND("Woodland") }
+private enum class IconFamily(val label: String) { ALL("All"), BASIC("Basic"), WOODLAND("Woodland"), OCEAN("Ocean") }
 
-private enum class CosmeticGroup(val key: String, val label: String, val useLabel: String, val family: IconFamily? = null) {
-    EMBLEM("emblem", "Basic player icon", "Use icon", IconFamily.BASIC),
-    PORTRAIT("portrait", "Woodland player icon", "Use icon", IconFamily.WOODLAND),
+private enum class CosmeticGroup(val key: String, val label: String, val useLabel: String) {
+    EMBLEM("emblem", "Player icon", "Use icon"),
+    PORTRAIT("portrait", "Player icon", "Use icon"),
     BOARD("board", "Board style", "Use board"),
     INK("ink", "Number color", "Use color"),
     FONT("font", "Number font", "Use font");
@@ -78,14 +78,16 @@ private enum class CosmeticGroup(val key: String, val label: String, val useLabe
     }
 }
 
-private data class CollectionItem(val cosmetic: Cosmetic, val group: CosmeticGroup) {
+private data class CollectionItem(val cosmetic: Cosmetic, val group: CosmeticGroup, val family: IconFamily? = null) {
     val id: String get() = cosmetic.id
     val tag: String get() = if (group == CosmeticGroup.PORTRAIT) "portrait_$id" else "cosmetic_${group.key}_$id"
+    val previewLabel: String get() = family?.let { "${it.label} player icon" } ?: group.label
     fun isEquipped(look: Appearance): Boolean = group.withItem(look, id) == look
 }
 
-private val iconItems = Cosmetics.emblems.map { CollectionItem(it, CosmeticGroup.EMBLEM) } +
-    Cosmetics.portraits.map { CollectionItem(it, CosmeticGroup.PORTRAIT) }
+private val iconItems = Cosmetics.emblems.map { CollectionItem(it, CosmeticGroup.EMBLEM, IconFamily.BASIC) } +
+    Cosmetics.woodlandPortraits.map { CollectionItem(it, CosmeticGroup.PORTRAIT, IconFamily.WOODLAND) } +
+    Cosmetics.oceanPortraits.map { CollectionItem(it, CosmeticGroup.PORTRAIT, IconFamily.OCEAN) }
 private val boardItems = Cosmetics.boards.map { CollectionItem(it, CosmeticGroup.BOARD) }
 private val inkItems = Cosmetics.inks.map { CollectionItem(it, CosmeticGroup.INK) }
 private val fontItems = Cosmetics.fonts.map { CollectionItem(it, CosmeticGroup.FONT) }
@@ -120,7 +122,7 @@ private val allCollectionItems = iconItems + boardItems + inkItems + fontItems
     when (category) {
         CollectionCategory.ICONS -> {
             CollectionChoices(IconFamily.entries, family, { it.label }, Role.RadioButton) { family = it }
-            val icons = iconItems.filter { family == IconFamily.ALL || it.group.family == family }
+            val icons = iconItems.filter { family == IconFamily.ALL || it.family == family }
             Text("${icons.count { progress.getValue(it.id).unlocked }} of ${icons.size} available",
                 style = MaterialTheme.typography.bodySmall, color = Muted)
             CosmeticGrid(icons, progress, look, !state.busy, open)
@@ -191,7 +193,7 @@ private val allCollectionItems = iconItems + boardItems + inkItems + fontItems
     singleColumn: Boolean, modifier: Modifier, open: () -> Unit) {
     val equipped = item.isEquipped(look)
     val status = when { equipped -> "Selected"; progress.unlocked -> "Available"; else -> "Locked" }
-    val family = item.group.family?.label
+    val family = item.family?.label
     Surface(onClick = open, enabled = enabled, modifier = modifier.testTag(item.tag).semantics {
         role = Role.Button
         selected = equipped
@@ -214,22 +216,23 @@ private val allCollectionItems = iconItems + boardItems + inkItems + fontItems
         if (singleColumn) {
             Row(Modifier.heightIn(min = 92.dp).padding(10.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                CosmeticSwatch(item.group, sample, Modifier.size(58.dp))
+                CosmeticSwatch(item, sample, Modifier.size(58.dp))
                 Box(Modifier.weight(1f)) { label() }
             }
         } else {
             Column(Modifier.heightIn(min = minHeight).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                CosmeticSwatch(item.group, sample, Modifier.align(Alignment.CenterHorizontally).size(52.dp))
+                CosmeticSwatch(item, sample, Modifier.align(Alignment.CenterHorizontally).size(52.dp))
                 label()
             }
         }
     }
 }
 
-@Composable private fun CosmeticSwatch(group: CosmeticGroup, look: Appearance, modifier: Modifier) {
-    if (group.family != null) {
+@Composable private fun CosmeticSwatch(item: CollectionItem, look: Appearance, modifier: Modifier) {
+    if (item.family != null) {
         AnimalPortrait(look, modifier.clearAndSetSemantics {})
     } else {
+        val group = item.group
         val dark = group == CosmeticGroup.BOARD && look.board in listOf("midnight", "circuit")
         val color = if (group == CosmeticGroup.BOARD) boardFillFor(look.board) else Cream
         val scale = LocalDensity.current.fontScale.coerceAtLeast(1f)
@@ -247,8 +250,8 @@ private val allCollectionItems = iconItems + boardItems + inkItems + fontItems
     val canUse = progress.unlocked && !equipped
     AlertDialog(onDismissRequest = close, title = { Text(item.cosmetic.name) }, text = {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (item.group.family != null) AnimalPortrait(sample, Modifier.size(78.dp).clearAndSetSemantics {})
-            Text(item.group.label, color = Muted, style = MaterialTheme.typography.bodySmall)
+            if (item.family != null) AnimalPortrait(sample, Modifier.size(78.dp).clearAndSetSemantics {})
+            Text(item.previewLabel, color = Muted, style = MaterialTheme.typography.bodySmall)
             Text(when { equipped -> "Selected"; progress.unlocked -> "Available to use"; else -> "Locked" },
                 color = Forest, style = MaterialTheme.typography.titleSmall)
             if (!progress.unlocked) {
@@ -257,7 +260,7 @@ private val allCollectionItems = iconItems + boardItems + inkItems + fontItems
                     color = Muted, style = MaterialTheme.typography.bodySmall)
                 MilestoneTrack(progress.current, progress.target)
             }
-            if (item.group.family == null) {
+            if (item.family == null) {
                 StylePreview(sample, state.uniformNumbers && item.group == CosmeticGroup.BOARD)
                 if (state.uniformNumbers && item.group != CosmeticGroup.BOARD) {
                     Text("Turn off Classic number display in Settings to see this style in a puzzle.",

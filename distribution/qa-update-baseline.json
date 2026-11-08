@@ -3,10 +3,10 @@
   "channel": "qa",
   "application_id": "com.playereden.sudokutogether.qa",
   "signer_sha256": "949731a60cb187405282efc8233d6e68ab5b46e9bf6765f70aa2b60dcc543b2c",
-  "version_code": 22,
+  "version_code": 23,
   "minimum_sdk": 26,
-  "apk_sha256": "b4c223019ea62cab75d8b8616e30f81ead6cd063e13a50b5dee5e1dc6c07b48d",
-  "product_source_commit": "ccef4d44c896ed809984a6059ca9da099cab9a53",
-  "evidence": "docs/V0.11F_LOCAL_MULTIPLAYER_QA.md",
-  "purpose": "Verified v0.11F owner QA candidate, rehearsed as an in-place update from v0.11E."
+  "apk_sha256": "c9996f3358da3921a0abe8700752423bdea95b299f83ff99acb24140fccf1d18",
+  "product_source_commit": "789b210f903dc58b669c8ff091a67cf709270611",
+  "evidence": "docs/V0.11G_COACH_OCEAN_QA.md",
+  "purpose": "Verified v0.11G owner QA candidate, rehearsed as an in-place update from v0.11F."
 }

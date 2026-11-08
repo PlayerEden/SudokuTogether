@@ -28,12 +28,20 @@ private fun animalDrawable(id: String): Int? = when (id) {
     "woodland_otter" -> R.drawable.woodland_otter
     "woodland_tortoise" -> R.drawable.woodland_tortoise
     "woodland_cat" -> R.drawable.woodland_cat
+    "ocean_octopus" -> R.drawable.ocean_octopus
+    "ocean_seal" -> R.drawable.ocean_seal
+    "ocean_hermit_crab" -> R.drawable.ocean_hermit_crab
+    "ocean_manta_ray" -> R.drawable.ocean_manta_ray
+    "ocean_jellyfish" -> R.drawable.ocean_jellyfish
+    "ocean_narwhal" -> R.drawable.ocean_narwhal
     else -> null
 }
 
-internal fun identityStyleName(appearance: Appearance): String =
-    Cosmetics.portraits.firstOrNull { it.id == appearance.portrait }?.let { "${it.name} · Woodland" }
-        ?: "${emblemName(appearance.emblem)} · Basic"
+internal fun identityStyleName(appearance: Appearance): String {
+    Cosmetics.oceanPortraits.firstOrNull { it.id == appearance.portrait }?.let { return "${it.name} · Ocean" }
+    Cosmetics.woodlandPortraits.firstOrNull { it.id == appearance.portrait }?.let { return "${it.name} · Woodland" }
+    return "${emblemName(appearance.emblem)} · Basic"
+}
 
 @Composable internal fun AnimalPortrait(appearance: Appearance, modifier: Modifier = Modifier.size(48.dp)) {
     val drawable = animalDrawable(appearance.portrait)

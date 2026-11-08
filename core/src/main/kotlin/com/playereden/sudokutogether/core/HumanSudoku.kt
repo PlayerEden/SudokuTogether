@@ -54,15 +54,33 @@ object HumanSudoku {
     /** Safe for generator calibration; never mutates the input puzzle. */
     fun assess(puzzle: Puzzle): Assessment {
         val givens = puzzle.clues
-        if (givens.size != 81 || givens.any { it !in 0..9 } ||
-            Sudoku.conflicts(givens).isNotEmpty() ||
-            Sudoku.solutionCount(givens) != 1) {
+        if (!hasUniqueSolution(givens)) {
             return Assessment(Grade.INVALID, false, false, emptyList(), givens.count { it == 0 })
         }
         return solve(givens)
     }
 
-    private fun solve(givens: List<Int>): Assessment {
+    internal fun coachSteps(visible: List<Int>): List<SudokuAssistance.CoachStep> {
+        if (!hasUniqueSolution(visible)) return emptyList()
+        val proof = mutableListOf<SudokuAssistance.CoachStep>()
+        solve(visible, proof)
+        return proof.toList()
+    }
+
+    private fun hasUniqueSolution(grid: List<Int>): Boolean =
+        grid.size == 81 && grid.all { it in 0..9 } && Sudoku.conflicts(grid).isEmpty() &&
+            Sudoku.solutionCount(grid) == 1
+
+    private fun unitName(unitIndex: Int): String = when (unitIndex) {
+        in 0..8 -> "row ${unitIndex + 1}"
+        in 9..17 -> "column ${unitIndex - 8}"
+        else -> "box ${unitIndex - 17}"
+    }
+
+    private fun solve(
+        givens: List<Int>,
+        proof: MutableList<SudokuAssistance.CoachStep>? = null
+    ): Assessment {
         val board = givens.toIntArray()
         val candidates = IntArray(81) { cell ->
             if (board[cell] != 0) 0 else {
@@ -73,22 +91,59 @@ object HumanSudoku {
         }
         val steps = mutableListOf<Step>()
 
-        fun placed(cell: Int, digit: Int, technique: Technique, reason: String) {
+        fun placed(cell: Int, digit: Int, technique: Technique, reason: String, unitIndex: Int? = null) {
+            val target = listOf(cell)
+            val placedDigit = listOf(digit)
+            if (proof != null) {
+                val source = if (unitIndex == null) {
+                    peers[cell].filter { board[it] != 0 }.distinctBy { board[it] }
+                } else {
+                    // Occupied squares and matching peers are board evidence. Any other
+                    // missing candidate is explained by an earlier elimination in the proof.
+                    units[unitIndex].filter { it != cell }.mapNotNull { other ->
+                        if (board[other] != 0) other else peers[other].firstOrNull { board[it] == digit }
+                    }.distinct().sorted()
+                }
+                val location = "Row ${cell / 9 + 1}, column ${cell % 9 + 1}"
+                val explanation = if (unitIndex == null) {
+                    "$location has only one candidate left: $digit."
+                } else {
+                    "$location is the only place for $digit in ${unitName(unitIndex)}."
+                }
+                proof.add(SudokuAssistance.CoachStep(technique, source, target, placedDigit,
+                    explanation, emptyMap()))
+            }
             board[cell] = digit
             candidates[cell] = 0
             val bit = (1 shl digit).inv()
             for (peer in peers[cell]) if (board[peer] == 0) {
                 candidates[peer] = candidates[peer] and bit
             }
-            steps.add(Step(technique, listOf(cell), listOf(digit), reason))
+            steps.add(Step(technique, target, placedDigit, reason))
         }
 
-        fun eliminate(targets: Iterable<Int>, mask: Int, technique: Technique, reason: String): Boolean {
+        fun eliminate(
+            targets: Iterable<Int>, mask: Int, technique: Technique, reason: String,
+            source: List<Int>, sourceUnit: Int, targetUnit: Int = sourceUnit
+        ): Boolean {
             val affected = targets.filter { board[it] == 0 && candidates[it] and mask != 0 }
                 .distinct().sorted()
             if (affected.isEmpty()) return false
+            val removed = digits(mask)
+            if (proof != null) {
+                val eliminations = affected.associateWith { digits(candidates[it] and mask) }
+                val explanation = if (technique == Technique.NAKED_PAIR) {
+                    "Two cells in ${unitName(sourceUnit)} share the candidates ${removed.joinToString(" and ")}. " +
+                        "Remove those digits from the other cells in that unit."
+                } else {
+                    "In ${unitName(sourceUnit)}, ${removed.single()} can only go in ${unitName(targetUnit)}. " +
+                        "Remove it from candidates elsewhere in ${unitName(targetUnit)}."
+                }
+                proof.add(SudokuAssistance.CoachStep(technique, source, affected, removed,
+                    explanation, eliminations))
+            }
             for (cell in affected) candidates[cell] = candidates[cell] and mask.inv()
-            steps.add(Step(technique, affected, digits(mask), reason))
+            steps.add(Step(technique, affected, removed, reason))
             return true
         }
 
@@ -102,6 +157,7 @@ object HumanSudoku {
             if (naked != null) {
                 placed(naked, Integer.numberOfTrailingZeros(candidates[naked]),
                     Technique.NAKED_SINGLE, "Only one digit fits this square")
+                if (proof != null) break
                 continue
             }
 
@@ -114,13 +170,16 @@ object HumanSudoku {
                     val locations = unit.filter { board[it] == 0 && candidates[it] and bit != 0 }
                     if (locations.size == 1) {
                         placed(locations.single(), digit, Technique.HIDDEN_SINGLE,
-                            "Only place for $digit in unit ${unitIndex + 1}")
+                            "Only place for $digit in unit ${unitIndex + 1}", unitIndex)
                         moved = true
                         break
                     }
                 }
             }
-            if (moved) continue
+            if (moved) {
+                if (proof != null) break
+                continue
+            }
 
             // Pointing: candidates of a digit in one 3x3 box lie in the same row/column.
             for (b in 0..8) {
@@ -133,13 +192,15 @@ object HumanSudoku {
                     val row = positions.first() / 9
                     if (positions.all { it / 9 == row } &&
                         eliminate(units[row].asIterable().filter { box(it) != b }, bit,
-                            Technique.LOCKED_CANDIDATE, "Box ${b + 1} confines $digit to row ${row + 1}")) {
+                            Technique.LOCKED_CANDIDATE, "Box ${b + 1} confines $digit to row ${row + 1}",
+                            positions, 18 + b, row)) {
                         moved = true; break
                     }
                     val col = positions.first() % 9
                     if (positions.all { it % 9 == col } &&
                         eliminate(units[9 + col].asIterable().filter { box(it) != b }, bit,
-                            Technique.LOCKED_CANDIDATE, "Box ${b + 1} confines $digit to column ${col + 1}")) {
+                            Technique.LOCKED_CANDIDATE, "Box ${b + 1} confines $digit to column ${col + 1}",
+                            positions, 18 + b, 9 + col)) {
                         moved = true; break
                     }
                 }
@@ -157,7 +218,8 @@ object HumanSudoku {
                     val box = box(positions.first())
                     if (positions.all { box(it) == box } &&
                         eliminate(units[18 + box].asIterable().filter { it !in unit }, bit,
-                            Technique.LOCKED_CANDIDATE, "Line ${unitIndex + 1} confines $digit to box ${box + 1}")) {
+                            Technique.LOCKED_CANDIDATE, "Line ${unitIndex + 1} confines $digit to box ${box + 1}",
+                            positions, unitIndex, 18 + box)) {
                         moved = true; break
                     }
                 }
@@ -172,7 +234,9 @@ object HumanSudoku {
                 for ((mask, pair) in pairMasks) {
                     if (pair.size != 2) continue
                     if (eliminate(unit.asIterable().filter { it !in pair }, mask,
-                            Technique.NAKED_PAIR, "Two cells reserve digits ${digits(mask).joinToString("/")} in unit ${unitIndex + 1}")) {
+                            Technique.NAKED_PAIR,
+                            "Two cells reserve digits ${digits(mask).joinToString("/")} in unit ${unitIndex + 1}",
+                            pair, unitIndex)) {
                         moved = true; break
                     }
                 }
