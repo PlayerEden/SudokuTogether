@@ -1,0 +1,82 @@
+package com.playereden.sudokutogether.core
+
+import java.nio.ByteBuffer
+import java.security.MessageDigest
+import java.time.LocalDate
+import java.time.ZoneId
+
+/** Offline, local-calendar daily challenge. Stable for a given YYYY-MM-DD on every device. */
+object DailyChallenge {
+    /** Hard safety limit for active and retained daily sessions. */
+    const val MAX_SAVED_DAYS = 128
+    /** Completed sessions are reviewable up to this window; records live separately. */
+    const val MAX_COMPLETED_DAYS = 31
+    const val DIFFICULTY = "EASY"
+    private const val SALT = "SudokuTogether/daily-v1/"
+
+    fun today(zone: ZoneId = ZoneId.systemDefault(), instant: java.time.Instant = java.time.Instant.now()): String =
+        instant.atZone(zone).toLocalDate().toString()
+
+    fun puzzle(date: String): Puzzle {
+        // Exact ISO parsing makes date identity explicit, unambiguous and testable.
+        require(LocalDate.parse(date).toString() == date) { "Date must be ISO yyyy-MM-dd" }
+        var attempt = 0
+        val rated = PuzzleSupply.nextRated(HumanSudoku.Grade.EASY, emptyList(), {
+            val bytes = MessageDigest.getInstance("SHA-256")
+                .digest("$SALT$date/${attempt++}".toByteArray(Charsets.UTF_8))
+            ByteBuffer.wrap(bytes, 0, 8).long
+        })
+        return rated.puzzle
+    }
+
+    fun open(data: LocalPlayerData, date: String, nowMs: Long, puzzleFactory: () -> Puzzle = { puzzle(date) }): LocalPlayerData {
+        require(LocalDate.parse(date).toString() == date) { "Date must be ISO yyyy-MM-dd" }
+        if (data.dailyProgress.any { it.date == date }) return data
+        require(data.dailyProgress.count { !it.solo.completed } < MAX_SAVED_DAYS) {
+            "Too many unfinished Daily Challenges. Complete an older day before starting another."
+        }
+        val progress = DailyProgress(date, PersonalPlay.newSolo(puzzleFactory(), nowMs))
+        // Keep every unfinished day: a rolling history limit must never silently
+        // discard a player's in-progress puzzle. Trim only finished entries.
+        return retain(data, data.dailyProgress + progress)
+    }
+
+    private fun retain(data: LocalPlayerData, all: List<DailyProgress>): LocalPlayerData {
+        val unfinished = all.filterNot { it.solo.completed }
+        require(unfinished.size <= MAX_SAVED_DAYS) {
+            "Too many unfinished Daily Challenges. Existing progress was not replaced."
+        }
+        val finished = all.filter { it.solo.completed }.sortedBy { it.date }.takeLast(
+            minOf(MAX_COMPLETED_DAYS, MAX_SAVED_DAYS - unfinished.size)
+        )
+        return data.copy(dailyProgress = (unfinished + finished).sortedBy { it.date })
+    }
+
+    fun find(data: LocalPlayerData, date: String): SoloProgress? =
+        data.dailyProgress.firstOrNull { it.date == date }?.solo
+
+    fun update(data: LocalPlayerData, date: String, progress: SoloProgress): LocalPlayerData {
+        require(data.dailyProgress.any { it.date == date && it.solo.id == progress.id })
+        return retain(data, data.dailyProgress.map {
+            if (it.date == date) it.copy(solo = progress) else it
+        })
+    }
+
+    fun complete(data: LocalPlayerData, date: String, progress: SoloProgress): LocalPlayerData {
+        require(progress.completed && Sudoku.complete(progress.puzzle, progress.cells.map { it.value }))
+        val existing = data.records.firstOrNull { it.id == progress.id }
+        require(existing == null || (existing.mode == DAILY && existing.dailyDate == date))
+        if (existing != null && data.dailyProgress.none { it.date == date && it.solo.id == progress.id }) return data
+        val updated = update(data, date, progress)
+        if (existing != null) return updated
+        val record = GameRecord(progress.id, DAILY, "SOLVED", progress.puzzle.id,
+            progress.elapsedMs, progress.moves, progress.finishedAtMs!!,
+            progress.puzzle.difficulty, assisted = progress.assisted,
+            hintsUsed = progress.hintsUsed, dailyDate = date, checksUsed = progress.checksUsed)
+        return updated.copy(records = (updated.records + record).takeLast(MAX_RECORDS))
+    }
+
+    fun completedDays(records: List<GameRecord>): Int =
+        records.filter { it.mode == DAILY && it.result == "SOLVED" && it.dailyDate != null }
+            .map { it.dailyDate }.distinct().size
+}

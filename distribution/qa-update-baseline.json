@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "channel": "qa",
+  "application_id": "com.playereden.sudokutogether.qa",
+  "signer_sha256": "949731a60cb187405282efc8233d6e68ab5b46e9bf6765f70aa2b60dcc543b2c",
+  "version_code": 20,
+  "minimum_sdk": 26,
+  "apk_sha256": "3adb906bd9dc660913a884bbffc55eed5b5ff5e58e0aa0323b3e28cbed207421",
+  "product_source_commit": "d1db739a91e1780221789f4ae848a5504198f99b",
+  "evidence": "docs/V0.11D_INTEGRATION_AND_QA.md",
+  "purpose": "Accepted owner QA sideload baseline, verified by an in-place update from v0.11C."
+}

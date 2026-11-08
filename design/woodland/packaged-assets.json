@@ -1,0 +1,98 @@
+[
+  {
+    "id": "woodland_owl",
+    "original": "design/woodland/originals/owl.png",
+    "originalSha256": "c83aab14e900b4c8c5676cfc8fc155ebb3c360c450a71ead22cc819181d51e05",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_owl.png",
+    "resourceSha256": "9a1efcc4d2c7c90b1f327bc331b0e0de43e699775559979cb49621a02859a46d",
+    "bytes": 113179
+  },
+  {
+    "id": "woodland_fox",
+    "original": "design/woodland/originals/fox.png",
+    "originalSha256": "13ea5efdcb9c53dff977f3ec9b70f0c6f6cce7d1fa2b4679d1156204de18db25",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_fox.png",
+    "resourceSha256": "1ef7b411461fbd3e0cca97a09e19cbc00f509454a3b080db61a26c67af9a663a",
+    "bytes": 110641
+  },
+  {
+    "id": "woodland_rabbit",
+    "original": "design/woodland/originals/rabbit.png",
+    "originalSha256": "88d99546c027583ac5b2750a80dbcfd31dba4c145f41cf63cf12328d2d19b843",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_rabbit.png",
+    "resourceSha256": "508758dd2f85eb217e54a833f5d22bf17ab3a19f839b13a6f73323d019997c79",
+    "bytes": 106936
+  },
+  {
+    "id": "woodland_bear",
+    "original": "design/woodland/originals/bear.png",
+    "originalSha256": "926841a0f4ad4fdae06821a82f0a34012c54a5511433a1d3d247fa82ac33935f",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_bear.png",
+    "resourceSha256": "145a8e6c4d9d8a4b01807a25e82ce7303c04fc04cbb50af0dc8bad71b1f8474e",
+    "bytes": 111625
+  },
+  {
+    "id": "woodland_badger",
+    "original": "design/woodland/originals/badger.png",
+    "originalSha256": "0c8fa5d523b06834ffd0deed4a145b9a3ce9c11a5821abca71d2e6177cf7b85f",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_badger.png",
+    "resourceSha256": "a58a928cad81cb401c2ce27ee53cb508ee7cdca87c92273b5577d08cc48de626",
+    "bytes": 94980
+  },
+  {
+    "id": "woodland_hedgehog",
+    "original": "design/woodland/originals/hedgehog.png",
+    "originalSha256": "4e4536ea3b59cd4cd72b27b39da8680c1d4edf596b4892861ccb01b1b59ced0c",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_hedgehog.png",
+    "resourceSha256": "47e62f402f811ff575b1a56f51f0178742bda07cf53d678530a05a3cf80a39bc",
+    "bytes": 95602
+  },
+  {
+    "id": "woodland_robin",
+    "original": "design/woodland/originals/robin.png",
+    "originalSha256": "5f07e1141ebc6ffb36a9d36590c6172d13a0dabc56072f8069f6ff6b8d788590",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_robin.png",
+    "resourceSha256": "9fed0196db66b6641d69287e4ee42be870185a06e001efad5da0413850f85f12",
+    "bytes": 80611
+  },
+  {
+    "id": "woodland_deer",
+    "original": "design/woodland/originals/deer.png",
+    "originalSha256": "7a19bb97de12b39c4adb2bdbbceae07becebb4f4ad4758f607389f3d1f998673",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_deer.png",
+    "resourceSha256": "d75e9026b1b4048e3fc32338f6a0cbc81f4ab8701ee77e1a2b399d46b5806f10",
+    "bytes": 83946
+  },
+  {
+    "id": "woodland_squirrel",
+    "original": "design/woodland/originals/squirrel.png",
+    "originalSha256": "c9b87830b91c4440cb5d970ef2b7688fd6deceee455d883e85e0d431295b2835",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_squirrel.png",
+    "resourceSha256": "a4b119e7757402bbad38f249c3f00200b530a6e51752fa6d5f7f61da4cb97e3e",
+    "bytes": 89478
+  },
+  {
+    "id": "woodland_otter",
+    "original": "design/woodland/originals/otter.png",
+    "originalSha256": "12f5a45dd1311657735ad6ba687587c439047500bad327a62efc3b4de5fb7fa1",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_otter.png",
+    "resourceSha256": "087aaf1f67b3ab9bc133cc5ab8241039c4e8d4f2abcec1dbd89064f8620b89d7",
+    "bytes": 81715
+  },
+  {
+    "id": "woodland_tortoise",
+    "original": "design/woodland/originals/tortoise.png",
+    "originalSha256": "a78dc7333662369a51393c010d87e152bc6eca1d58db3d0b1a70bbfcf621d485",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_tortoise.png",
+    "resourceSha256": "9b76711055d88f6625e7275d3917ce83003f0ee5edacd5e02295de95235b8902",
+    "bytes": 85275
+  },
+  {
+    "id": "woodland_cat",
+    "original": "design/woodland/originals/cat.png",
+    "originalSha256": "31ff22a614d5000a34fb3e4ee4770b01251825afaa827957afa8e80abe378cde",
+    "resource": "app/src/main/res/drawable-nodpi/woodland_cat.png",
+    "resourceSha256": "a809c2df86b3fd5c61cf1927816bf05f275f20d3ca68ef689ce555b2dee60a1a",
+    "bytes": 96486
+  }
+]
