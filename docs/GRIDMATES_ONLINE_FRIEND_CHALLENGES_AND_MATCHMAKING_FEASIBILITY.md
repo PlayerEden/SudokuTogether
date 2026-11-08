@@ -1,10 +1,28 @@
 # GridMates — Online Friend Challenges, Asynchronous Matches & Matchmaking
 
 **Research date:** 2026-11-08
-**Status:** **Exploration/feasibility reference — not an approved roadmap change, not code implemented and not a decision to require online accounts.**
+**Status:** **Approved as a future, post-offline-release exploration only** (owner decision: 2026-11-08). Not implemented; no chosen provider, account requirement, funded service, or authorization to start backend work. Offline-first game completion, launch, player growth and observed financial sustainability take priority.
 **Applies to:** GridMates: Sudoku first, with reusable concepts for Crossword, Word Search and other GridMates games.
 **Owner question:** How do games like Words With Friends provide internet matchmaking, invites and matches that continue after an app is closed, and how could GridMates offer those features in addition to offline/LAN play?
 **Related:** [Brand and series](GRIDMATES_BRAND_AND_SERIES.md), [Sudoku deep research](SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md), [Shareable cards](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md), [Offline nearby/Bluetooth exploration](GRIDMATES_OFFLINE_NEARBY_BLUETOOTH_DESIGN.md), [Project handoff](PROJECT_HANDOFF.md).
+
+
+## November 8 owner decision — OFFLINE FIRST, REVENUE-SUPPORTED ONLINE LATER
+
+**Firm sequencing decision:** Complete and release a **full-featured offline GridMates: Sudoku**, including stable Solo/Daily and LAN/nearby multiplayer, before working on an internet backend. Use the initial player base and optional respectful monetization (rare between-puzzle ads and the one-time Remove Ads purchase, after compliance/QA) to *potentially* build a fund for later online features. The owner is **not committing to online multiplayer for the initial release**, nor requesting work to start it now. Preserve the local-first mission; online will add ways to play with friends far away rather than replace offline modes.
+
+**Practical release/funding gates for any future cloud prototype:**
+
+1. The core Sudoku game is complete enough for publication; release and two-device/local multiplayer checks are passed, and save/upgrade continuity is trusted.
+2. There is real audience feedback demonstrating demand for remote friends/challenges; don't mistake wishlists or downloads for sustained usage.
+3. If monetization is enabled, observe **actual** recurring net revenue and costs (ad fill/rate, purchases, fees, refunds, privacy obligations). Downloads alone do not produce dependable income. No guaranteed earnings are implied.
+4. Estimate chosen provider's real free-tier limits, notifications, write/read volume, operational work and security/privacy responsibilities; configure usage alerts, hard/soft budget ceilings and a shutoff plan. The initial trial **may fit free quotas**, but there is no promise of free operation or a self-funding service.
+5. Decide on a small, explicitly approved **online feature budget** and operational owner. A tiny closed, friend-only test can be considered sooner only if its costs and risk stay bounded and don't derail offline completion.
+6. Start with **invite-only asynchronous same-puzzle challenges**; then evaluate live remote Versus, live Co-op and optional public matchmaking once a player population warrants it.
+
+**Product rule:** Remote play and online accounts must remain **optional**. If cloud functionality becomes unavailable or unaffordable, offline Solo, Daily, collections and LAN must continue to work. Do not introduce pay-to-win, aggressive ads or forced subscriptions as an online-funding shortcut. Track this as a **future-phase milestone**, not part of the current v0.11D or Google Play initial release acceptance list.
+
+---
 
 ## Executive answer
 
