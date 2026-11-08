@@ -2,6 +2,8 @@
 
 Start from `main`, the canonical Android source and documentation. The [delivery plan](GRIDMATES_DELIVERY_PLAN.md) tracks the next product work. The [v0.11D integration audit](V0.11D_INTEGRATION_AND_QA.md) records exact source, APK and verification details.
 
+> **Owner roadmap decision (Nov 8): OFFLINE SUDOKU FIRST.** Finish the full local/offline game, pass two-phone and release QA, launch, and grow an audience before building internet services. Respectful rare ads and optional Remove Ads may **eventually** help finance a narrowly budgeted online feature, but downloads/revenue are not guaranteed. **No backend work, mandatory account or remote matchmaking in initial launch.** See [future online roadmap and readiness gates](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_ONLINE_FRIEND_CHALLENGES_AND_MATCHMAKING_FEASIBILITY.md) and the [delivery plan](GRIDMATES_DELIVERY_PLAN.md). Begin eventual online work, if approved and sustainable, with asynchronous **friend-only** challenges, not public queues.
+
 ## Current QA milestone — v0.11D
 
 The launcher stays **Sudoku** and the in-app name is **GridMates: Sudoku**. Versus shows both identities and player-filled progress, with a reconnect state that retains the last known opponent. Number styles now use licensed bundled fonts under the existing cosmetic IDs. [Number font assets](GRIDMATES_FONT_ASSETS.md) · [Native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md)
