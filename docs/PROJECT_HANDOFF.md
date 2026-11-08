@@ -14,6 +14,8 @@ The owner reported a successful v0.11B two-phone smoke test. The current release
 
 ## Product decisions and design references
 
+- **Optional, discardable home-screen UX note:** [Home first-impression usability considerations](GRIDMATES_HOME_FIRST_IMPRESSION_USABILITY_CONSIDERATIONS.md) records screenshot-driven feedback for first-time/older or less tech-confident Sudoku players; test difficulty/Continue meaning, progress counting starting clues, mode labels and Daily wording before touching the current layout. This is **not an approved redesign or release blocker**.
+
 - Local play and nearby Wi-Fi are the core of GridMates. Finish Sudoku before expanding the series or extracting a reusable framework. [Brand and series](GRIDMATES_BRAND_AND_SERIES.md)
 - The selected launch model is free-to-install with rare between-puzzle ads and an optional Remove Ads purchase. [Monetization plan](GRIDMATES_MONETIZATION_AND_PLAY_TESTING_PLAN.md) · [Store setup guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md)
 - Design briefs cover an optional [Share result flow](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md), [profile and result cards](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md), and [coaching and scoring](GRIDMATES_PUZZLE_COACH_AND_SCORING_PROPOSAL.md).
