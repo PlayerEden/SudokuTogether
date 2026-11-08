@@ -7,7 +7,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.text.TextLayoutResult
@@ -18,6 +20,7 @@ import com.playereden.sudokutogether.core.GUEST
 import com.playereden.sudokutogether.core.HOST
 import com.playereden.sudokutogether.core.RoomStatus
 import com.playereden.sudokutogether.core.VERSUS
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -74,14 +77,52 @@ class VersusPresenceUiTest {
         compose.onNodeWithText("Reconnect").assertIsDisplayed().performClick()
         compose.runOnIdle {
             assertTrue(resumed)
-            state.value = state.value.copy(snapshot = race.copy(completed = true, winner = HOST))
+            state.value = state.value.copy(snapshot = race.copy(completed = true, winner = HOST, hostProgress = 81))
         }
         compose.onNodeWithText("Your rival won").assertIsDisplayed()
         compose.onNodeWithText("Race complete").assertExists()
-        compose.onNodeWithText("Reconnect").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle { resumed = false }
+        compose.onNodeWithText("Reconnect").performScrollTo().assertIsDisplayed().performClick()
+        compose.runOnIdle { assertTrue(resumed) }
+        compose.onNodeWithText("Next race").assertDoesNotExist()
+        compose.onNodeWithText("Your grid at the finish").performScrollTo().assertIsDisplayed()
 
         compose.runOnIdle { state.value = state.value.copy(connected = true) }
         compose.onNodeWithText("Reconnect").assertDoesNotExist()
+    }
+
+    @Test fun finishSummarizesBothPlayersAndOffersADirectRematchWhenReady() {
+        val finished = race.copy(completed = true, winner = HOST, hostProgress = 81)
+        val state = mutableStateOf(base.copy(snapshot = finished, status = RoomStatus(reserved = true)))
+        val rematches = mutableListOf<String>()
+        var resetRequests = 0
+        val actions = polishActions().copy(rematch = { rematches.add(it) })
+        compose.setContent {
+            SudokuTogetherTheme {
+                CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, 2f)) {
+                    Box(Modifier.width(320.dp).height(480.dp)) {
+                        PlayScreen(state.value, actions, {}, { resetRequests++ }, {}, {})
+                    }
+                }
+            }
+        }
+
+        compose.onNodeWithText("Victory!").performScrollTo().assertIsDisplayed()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+        laneText("versus_you", "$target of $target filled").assertExists()
+        laneText("versus_rival", "7 of $target filled").assertExists()
+        val nextRace = compose.onNodeWithText("Next race")
+        nextRace.performScrollTo().assertIsDisplayed().assertIsNotEnabled()
+        compose.runOnIdle { state.value = state.value.copy(status = RoomStatus(guestActive = true, reserved = true)) }
+        nextRace.performScrollTo().assertIsEnabled().performClick()
+        compose.runOnIdle {
+            assertEquals(listOf(finished.epoch), rematches)
+            assertEquals(0, resetRequests)
+            state.value = state.value.copy(snapshot = race.copy(epoch = "next", hostProgress = given, guestProgress = given))
+        }
+        compose.onNodeWithText("Victory!").assertDoesNotExist()
+        laneText("versus_you", "0 of $target filled").assertExists()
+        laneText("versus_rival", "0 of $target filled").assertExists()
     }
 
     @Test fun largeTextOnAShortPhoneKeepsTheBoardAndKeypadReachable() {

@@ -64,6 +64,72 @@ class VersusTest {
         }
     }
 
+    @Test fun rematchKeepsTheFinishedResultUntilTheSameRivalReturns() {
+        val hostEvents = LinkedBlockingQueue<HostEvent>()
+        val guestEvents = LinkedBlockingQueue<ClientEvent>()
+        val game = GameSession.create(fixture(), mode = VERSUS)
+        val nextPuzzle = fixture().copy(id = "next-puzzle")
+        HostServer(game, listener = hostEvents::offer).use { host ->
+            val port = host.start()
+            val token = GuestClient(listener = guestEvents::offer).use { guest ->
+                guest.connect("127.0.0.1", port, host.code, "Rival")
+                val welcome = await(guestEvents) { it.token != null }
+                val joined = welcome.snapshot!!
+                assertFalse(host.nextRace(joined.epoch, nextPuzzle, afterFinish = true))
+                guest.submit(joined.move(0, number = 2))
+                val placed = await(guestEvents) { it.snapshot?.guestProgress == 78 }.snapshot!!
+                guest.submit(placed.move(1, kind = Kind.NOTE, number = 2))
+                await(guestEvents) { it.snapshot?.cells?.get(1)?.notes == 2 }
+                for (i in joined.puzzle.clues.indices.filter { joined.puzzle.clues[it] == 0 }) {
+                    assertTrue(host.submitLocal(game.snapshot().move(i, number = solution[i])).accepted)
+                }
+                val finished = await(guestEvents) { it.snapshot?.completed == true }.snapshot!!
+                assertEquals(HOST, finished.winner)
+                assertEquals(81, finished.hostProgress)
+                assertEquals(78, finished.guestProgress)
+                assertEquals(2, finished.cells[0].value)
+                assertTrue(finished.guestCells.isEmpty())
+                welcome.token!!
+            }
+            await(hostEvents) { it.snapshot.completed && !it.status.guestActive }
+            val finished = game.snapshot()
+            assertFalse(host.nextRace(finished.epoch, nextPuzzle, afterFinish = true))
+            assertEquals(finished, game.snapshot())
+
+            GuestClient(listener = guestEvents::offer).use { guest ->
+                guest.connect("127.0.0.1", port, "", "Rival", token)
+                val welcome = await(guestEvents) { it.token == token }
+                val returned = welcome.snapshot!!
+                assertEquals(finished.epoch, returned.epoch)
+                assertEquals(HOST, returned.winner)
+                assertFalse(welcome.status!!.guestActive)
+                assertFalse(host.nextRace(finished.epoch, nextPuzzle, afterFinish = true))
+                guest.setForeground(true)
+                await(guestEvents) { it.status?.guestActive == true }
+                assertFalse(host.nextRace(finished.epoch, nextPuzzle, afterFinish = false))
+                assertFalse(host.nextRace("old-epoch", nextPuzzle, afterFinish = true))
+                host.setForeground(false)
+                assertFalse(host.nextRace(finished.epoch, nextPuzzle, afterFinish = true))
+                host.setForeground(true)
+                assertFalse(host.nextRace(finished.epoch, nextPuzzle, afterFinish = true) { false })
+                assertTrue(host.nextRace(finished.epoch, nextPuzzle, afterFinish = true))
+                val next = await(guestEvents) { event -> event.snapshot?.let { it.epoch != finished.epoch } == true }.snapshot!!
+                assertEquals(finished.sessionId, next.sessionId)
+                assertEquals(nextPuzzle, next.puzzle)
+                assertEquals("Rival", next.guestName)
+                assertEquals(77, next.hostProgress)
+                assertEquals(77, next.guestProgress)
+                assertEquals(nextPuzzle.clues.map(::Cell), next.cells)
+                assertTrue(next.guestCells.isEmpty())
+                assertNull(next.winner)
+                assertFalse(next.completed)
+                assertFalse(host.nextRace(finished.epoch, nextPuzzle, afterFinish = true))
+                assertEquals(ResultCode.WRONG_GAME, host.submitLocal(finished.move(0)).code)
+                assertTrue(host.nextRace(next.epoch, fixture(), afterFinish = false))
+            }
+        }
+    }
+
     @Test fun tamperedRaceProgressOrOwnershipIsRejectedOnSaveAndWire() {
         val game = GameSession.create(fixture(), mode = VERSUS)
         game.admitGuest("Rival")

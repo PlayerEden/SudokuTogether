@@ -90,8 +90,12 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
                 if (session.requiresCode && hello.token == null && hello.code != code) { attempts.add(now); reject("That room code is incorrect.") }
                 val identity = try { session.admitGuest(hello.name, hello.token, hello.appearance) } catch (e: Exception) { reject(e.message ?: "Could not join this room.") }
                 incoming.soTimeout = 10_000
-                val link = Link(incoming, ::drop); admitted = link; peer = link; guestActive = true; partnerCell = -1; syncPresence()
-                Protocol.write(incoming.getOutputStream(), Message("welcome", snapshot = session.snapshotForGuest(), status = status(), token = identity.token, lines = chatHistory.toList()))
+                val snapshot = session.snapshotForGuest()
+                val link = Link(incoming, ::drop); admitted = link; peer = link; partnerCell = -1
+                // A returning rival is ready for a rematch after sending foreground presence.
+                guestActive = snapshot.mode != VERSUS || !snapshot.completed
+                syncPresence()
+                Protocol.write(incoming.getOutputStream(), Message("welcome", snapshot = snapshot, status = status(), token = identity.token, lines = chatHistory.toList()))
                 emit()
             }
             val link = admitted!!
@@ -146,13 +150,23 @@ class HostServer(val session: GameSession, private val listener: (HostEvent) -> 
     }
     // Preserve the seed overload for older tests and deterministic fixtures.
     fun newPuzzle(seed: Long) = newPuzzle(Sudoku.generate(seed))
-    fun newPuzzle(puzzle: Puzzle) {
-        synchronized(lock) {
-            session.newPuzzle(puzzle)
-            partnerCell = -1
-            peer?.send(Message("select", cell = -1))
-            publish()
-        }
+    fun newPuzzle(puzzle: Puzzle) = synchronized(lock) { startPuzzle(puzzle) }
+
+    fun nextRace(epoch: String, puzzle: Puzzle, afterFinish: Boolean, canStart: () -> Boolean = { true }): Boolean = synchronized(lock) {
+        val current = session.snapshot()
+        if (closed || current.mode != VERSUS || current.epoch != epoch || current.completed != afterFinish)
+            return@synchronized false
+        if (afterFinish && (peer == null || !hostActive || !guestActive)) return@synchronized false
+        if (!canStart()) return@synchronized false
+        startPuzzle(puzzle)
+        true
+    }
+
+    private fun startPuzzle(puzzle: Puzzle) {
+        session.newPuzzle(puzzle)
+        partnerCell = -1
+        peer?.send(Message("select", cell = -1))
+        publish()
     }
     override fun close() = synchronized(lock) {
         if (!closed) {

@@ -55,6 +55,7 @@ object Cosmetics {
         CatalogEntry("midnight", "Midnight", 5),
         CatalogEntry("circuit", "Circuit", 3, Milestone.RACE)
     )
+    private val sharedBoardOrder = listOf("classic", "linen", "midnight", "circuit")
     private val fontEntries = listOf(
         CatalogEntry("clear", "Clear"),
         CatalogEntry("serif", "Bookish", 1),
@@ -75,6 +76,10 @@ object Cosmetics {
     val boards = boardEntries.map(CatalogEntry::cosmetic)
     val fonts = fontEntries.map(CatalogEntry::cosmetic)
     val emblems = emblemEntries.map(CatalogEntry::cosmetic)
+
+    /** The room's display priority is independent of either player's unlocks. */
+    fun sharedCoopBoard(hostBoard: String, guestBoard: String?): String =
+        sharedBoardOrder[maxOf(0, sharedBoardOrder.indexOf(hostBoard), sharedBoardOrder.indexOf(guestBoard))]
 
     fun completedPuzzles(records: List<GameRecord>): Int = records.distinctBy { it.id }.count {
         when (it.mode) {

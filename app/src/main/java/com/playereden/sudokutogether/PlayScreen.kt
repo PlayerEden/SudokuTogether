@@ -49,7 +49,9 @@ import kotlinx.coroutines.delay
         if (shortStack) {
             // A short window must be able to scroll the header and dock too;
             // reserving their height would give the active grid no viewport.
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            val race = snapshot?.takeIf { it.mode == VERSUS }
+            val scroll = key(race?.epoch, race?.completed) { rememberScrollState() }
+            Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
                 PlayTopBar(state, leave, help, { details = true }) { chatOpen = true; actions.chatVisible(true) }
                 if (snapshot == null) OpeningPuzzle(Modifier.fillMaxWidth().height(160.dp))
                 else {
@@ -96,8 +98,10 @@ import kotlinx.coroutines.delay
                 if (state.address.isNotBlank()) SelectionContainer { Text("Join address\n${state.address}", color = Forest, fontSize = 13.sp) }
                 Text("Keep both apps open while you play.", color = Muted, fontSize = 13.sp)
                 if (state.role == HOST) {
-                    TextButton({ details = false; new() }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(if (state.snapshot?.mode == VERSUS) "Next race" else "New puzzle")
+                    if (snapshot?.mode != VERSUS || !snapshot.completed) {
+                        TextButton({ details = false; new() }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
+                            Text(if (snapshot?.mode == VERSUS) "Next race" else "New puzzle")
+                        }
                     }
                     if (state.snapshot?.guestName != null) TextButton({ details = false; replace() }, enabled = !state.busy,
                         modifier = Modifier.heightIn(min = 48.dp)) { Text("Replace partner") }
@@ -171,10 +175,17 @@ import kotlinx.coroutines.delay
     val snapshot = state.snapshot ?: return
     BoxWithConstraints(modifier) {
         val viewportHeight = if (maxHeight.value.isFinite()) maxHeight else maxWidth + 160.dp
-        val contentModifier = if (scrollable) Modifier.fillMaxSize().verticalScroll(rememberScrollState()) else Modifier.fillMaxWidth()
+        val race = snapshot.takeIf { it.mode == VERSUS }
+        val contentModifier = if (scrollable) {
+            val scroll = key(race?.epoch, race?.completed) { rememberScrollState() }
+            Modifier.fillMaxSize().verticalScroll(scroll)
+        } else Modifier.fillMaxWidth()
         Column(contentModifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (snapshot.completed) PuzzleFinishCard(state, actions, new)
+            if (snapshot.completed) {
+                if (race != null) VersusResults(state, race, { actions.rematch(race.epoch) }) { actions.showJoin(true) }
+                else PuzzleFinishCard(state, actions, new)
+            }
             PlayGridViewport(state, actions, roomStatus, viewportHeight - 8.dp)
             if (state.role != SOLO && snapshot.mode != VERSUS) PartnerStrip(state)
             if (snapshot.mode == COOP && snapshot.completed && snapshot.guestName != null) {
@@ -197,7 +208,15 @@ import kotlinx.coroutines.delay
 /** Measure related content in the same layout pass; no layout-to-state feedback. */
 @Composable private fun PlayGridViewport(state: GameUiState, actions: GameActions, roomStatus: Boolean, viewportHeight: Dp) {
     val snapshot = state.snapshot ?: return
+    val coOp = state.role != SOLO && snapshot.mode == COOP
+    val boardTheme = if (coOp) {
+        Cosmetics.sharedCoopBoard(snapshot.hostAppearance.board, snapshot.guestAppearance.board.takeIf { snapshot.guestName != null })
+    } else state.appearance.board
+    val sharedBoardName = if (coOp && snapshot.guestName != null && boardTheme != "classic") {
+        Cosmetics.boards.firstOrNull { it.id == boardTheme }?.name
+    } else null
     val caption = when {
+        snapshot.completed && snapshot.mode == VERSUS -> if (snapshot.winner == state.role) "Your solved grid" else "Your grid at the finish"
         snapshot.completed -> "Your finished grid"
         state.selected !in 0..80 -> "Tap a square, then choose a number."
         snapshot.puzzle.clues[state.selected] != 0 -> "R${state.selected / 9 + 1} · C${state.selected % 9 + 1} · Starting clue"
@@ -210,9 +229,10 @@ import kotlinx.coroutines.delay
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (state.role != SOLO && snapshot.mode == VERSUS) {
-                    if (roomStatus) VersusPresence(state, snapshot) { actions.showJoin(true) }
+                    if (roomStatus && !snapshot.completed) VersusPresence(state, snapshot) { actions.showJoin(true) }
                 } else {
                     if (roomStatus && state.role != SOLO) Text(roomStatusText(state), color = Forest, fontSize = 11.sp, lineHeight = 16.sp)
+                    if (sharedBoardName != null) Text("Shared board · $sharedBoardName", color = Forest, fontSize = 11.sp, lineHeight = 16.sp)
                     PuzzleMeta(state)
                 }
             }
@@ -228,13 +248,13 @@ import kotlinx.coroutines.delay
         val gridPixels = (viewportHeight.roundToPx() - gridTop - label.height - frame - gap).coerceIn(minGrid, maxGrid)
         val gridSize = gridPixels.toDp()
         val grid = subcompose("grid") {
-            Surface(shape = RoundedCornerShape(16.dp), color = boardFillFor(state.appearance.board), shadowElevation = 3.dp,
+            Surface(shape = RoundedCornerShape(16.dp), color = boardFillFor(boardTheme), shadowElevation = 3.dp,
                 border = BorderStroke(1.dp, Rule), modifier = Modifier.testTag("board_frame")) {
                 Box(Modifier.padding(8.dp)) {
                     val haptics = LocalHapticFeedback.current
                     SudokuBoard(snapshot, state.selected, if (state.role == SOLO || snapshot.mode == VERSUS) -1 else state.partnerCell,
                         gridSize, { if (state.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove); actions.select(it) },
-                        state.appearance, state.role == SOLO, state.uniformNumbers)
+                        boardTheme, state.appearance, state.role == SOLO, state.uniformNumbers)
                 }
             }
         }.single().measure(Constraints.fixed(gridPixels + frame, gridPixels + frame))
@@ -326,8 +346,6 @@ private fun roomStatusText(state: GameUiState): String {
                 Text(when {
                     state.dailyDate != null -> "Daily challenge complete"
                     state.role == SOLO -> "Puzzle completed"
-                    snapshot.mode == VERSUS && snapshot.winner == state.role -> "Victory!"
-                    snapshot.mode == VERSUS -> "Your rival won"
                     else -> "Solved together!"
                 }, color = Forest, fontSize = 20.sp, fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.SemiBold)
@@ -362,9 +380,7 @@ private fun roomStatusText(state: GameUiState): String {
                     }
                 } else if (state.role == HOST || state.role == SOLO) {
                     Button(onClick = new, modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)) {
-                        Text(if (state.role == SOLO) "New puzzle"
-                            else if (snapshot.mode == VERSUS) "Next race"
-                            else "New puzzle")
+                        Text("New puzzle")
                     }
                 } else Text("Your host can start the next puzzle.", color = Muted, fontSize = 12.sp)
                 if (state.role == SOLO) TextButton(onClick = actions.profile) {
@@ -428,7 +444,8 @@ private fun roomStatusText(state: GameUiState): String {
     }
 }
 
-@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean) {
+@Composable private fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: (Int) -> Unit,
+    boardTheme: String, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -439,17 +456,12 @@ private fun roomStatusText(state: GameUiState): String {
     val noteStyle = TextStyle(fontSize = noteSize, lineHeight = noteSize, platformStyle = PlatformTextStyle(includeFontPadding = false))
     val conflicts = remember(snapshot.cells) { Sudoku.conflicts(snapshot.cells.map { it.value }) }
     val selectedValue = snapshot.cells.getOrNull(selected)?.value ?: 0
-    val darkBoard = localStyle.board == "midnight" || localStyle.board == "circuit"
+    val darkBoard = boardTheme == "midnight" || boardTheme == "circuit"
     val defaultStyle = Appearance()
     val soloNumbers = localStyle.withNumberDisplay(uniformNumbers)
     val hostNumbers = snapshot.hostAppearance.withNumberDisplay(uniformNumbers)
     val guestNumbers = snapshot.guestAppearance.withNumberDisplay(uniformNumbers)
-    val boardPaper = when (localStyle.board) {
-        "linen" -> Color(0xFFFFF6DF)
-        "midnight" -> Color(0xFF152A36)
-        "circuit" -> Color(0xFF102A2B)
-        else -> Paper
-    }
+    val boardPaper = boardFillFor(boardTheme)
     val boardRule = if (darkBoard) Color(0xFF49616B) else Rule
     val boardEdge = if (darkBoard) Color(0xFFA9C8C3) else Forest
     val neutralInk = if (darkBoard) Color(0xFFF2F2E9) else Ink
