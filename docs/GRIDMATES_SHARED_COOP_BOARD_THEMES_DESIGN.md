@@ -1,7 +1,8 @@
 # GridMates: Sudoku — Shared Co-op Board Themes & Personal Number Styles
 
 **Owner idea:** November 7, 2026  
-**Status:** Product design proposal for Work-chat review; **not implemented, no UI/transport/save changes yet**.  
+**Status** — v0.11F implements automatic theme selection in Co-op. Both phones use the current room appearances. The selected theme stays visible during a temporary disconnect and can change when a player changes their equipped appearance. [Implementation and QA](V0.11F_LOCAL_MULTIPLAYER_QA.md)
+
 **Reference game source:** draft PR #28, branch [feat/gridmates-nearby-animals](https://github.com/PlayerEden/SudokuTogether/tree/feat/gridmates-nearby-animals) (v0.11C). Start any future implementation from the newest integrated source, **not from the earlier development-branch Android snapshot**.  
 **Related:** [Collections, Daily rewards and fonts](GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md), [GridMates Brand & Series](GRIDMATES_BRAND_AND_SERIES.md), [Project Handoff](PROJECT_HANDOFF.md).
 

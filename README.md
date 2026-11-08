@@ -4,7 +4,9 @@ The full Android source, tests and design history live on `main`. [Start here](C
 
 **v0.11D QA** adds both players' identities and progress to the Versus screen, reconnect feedback, and consistent bundled number styles. The signed update uses the installed Sudoku QA app's identity. [Repository audit and upgrade evidence](docs/V0.11D_INTEGRATION_AND_QA.md)
 
-**v0.11E test candidate** adds Profile and Collection, portable progress backup, and the Android 16 build and signing path. [Candidate PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) · [QA evidence](docs/V0.11E_PROFILE_PROGRESS_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md)
+**v0.11F test candidate** adds shared Co-op themes, Versus finish summaries and a same-room rematch. [QA evidence](docs/V0.11F_LOCAL_MULTIPLAYER_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md)
+
+**v0.11E** introduced Profile and Collection, portable progress backup, and the Android 16 build and signing path. [Candidate PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) · [QA evidence](docs/V0.11E_PROFILE_PROGRESS_QA.md)
 
 ## Earlier QA milestones
 

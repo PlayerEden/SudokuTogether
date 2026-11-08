@@ -1,7 +1,8 @@
 # GridMates: Sudoku — Versus Post-Match Puzzle Comparison
 
 **Proposed:** November 6, 2026  
-**Status:** User-suggested feature idea; **design/review only, not implemented or an approved release gate**.  
+**Status** — v0.11F implements the progress summary from scope tier A. The results card shows both counts and the player's own grid appears below it. The host can start a rematch with both players present. The two-board and replay designs remain proposals. [Implementation and QA](V0.11F_LOCAL_MULTIPLAYER_QA.md)
+
 **Relevant game source:** \`feat/gridmates-nearby-animals\` (draft PR #28, v0.11C), stacked on prior v0.11 source. Keep current checkpoint, protocol, saves and QA intact.  
 **Related:** [Share Result UX](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md), [Shareable Cards](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md), [Sudoku Research Study](SUDOKU_DEEP_RESEARCH_AND_GAME_DESIGN_REFERENCE.md), [Brand Vision](GRIDMATES_BRAND_AND_SERIES.md).
 
@@ -108,4 +109,4 @@ Current \`SavedSession.history\` is bounded to **256** edits, \`recent\` to **12
 - [ ] Backward compatible saves/protocol if possible; if protocol changes, version negotiation and safe rejection for older app builds.
 - [ ] No score/accuracy/history claims unless actual metadata are stored and verified.
 
-**Decision state:** An attractive, low-pressure feature idea from the owner. This document **does not authorize immediate coding, protocol changes or new production release**. Preserve the existing game and staged work priorities. 
+The optional two-board comparison remains a separate design decision. Any future version needs explicit consent and a protocol review.
