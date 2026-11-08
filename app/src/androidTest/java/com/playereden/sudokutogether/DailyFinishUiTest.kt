@@ -173,10 +173,10 @@ class DailyFinishUiTest {
         launch(); compose.onNodeWithText("Continue").performScrollTo().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithTag("cell_0").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("cell_0").performScrollTo().performClick().assertIsSelected()
-        // At compact 200% text the whole play screen scrolls. Bring the dock
-        // into view before injecting a real touch at its coordinates.
-        println("SUDOKU_SOLO_DOCK_BEFORE_SCROLL: ${compose.onNodeWithTag("number_1").fetchSemanticsNode().boundsInRoot}")
-        compose.onNodeWithTag("number_1").performScrollTo().assertIsDisplayed().performClick()
+        // Short viewports may place the dock below the visible portion of the board.
+        val digit = compose.onNodeWithTag("number_1")
+        if (!digit.isDisplayed()) digit.performScrollTo()
+        digit.assertIsDisplayed().performClick()
         compose.waitUntil(20000) { compose.onAllNodesWithText("Puzzle completed").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Puzzle completed").performScrollTo(); capture("16-solo-finish-large-metadata.png")
         compose.onNodeWithText("1 Coach hint used").performScrollTo().assertIsDisplayed()
