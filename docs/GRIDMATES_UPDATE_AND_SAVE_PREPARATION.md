@@ -50,7 +50,7 @@ For now, workflow APK artifacts expire after 14 days. A chat file and an Actions
 
 When the next APK has passed native acceptance, retain its original bytes as a uniquely tagged GitHub **prerelease**, with its receipt and checksum. Then update one checked-in current-QA index/readme entry to point to that exact immutable asset. Do not replace older release assets or point people to an unverified newest workflow run. Advance the accepted baseline in the same reviewed delivery record. The future current index must include package, signer, version, source, checksum, exact asset URL, and native retention evidence.
 
-v0.11D is an owner sideload delivery. Open the accepted APK with Android's standard installer and choose **Update** while Sudoku is installed.
+For the v0.11F owner sideload, open the QA APK in Android's installer and choose **Update** while Sudoku is installed. [Signed update and save-retention evidence](V0.11F_LOCAL_MULTIPLAYER_QA.md)
 
 ## Portable backup and restore
 

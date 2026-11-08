@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.playereden.sudokutogether.core.GUEST
+import com.playereden.sudokutogether.core.HOST
 import com.playereden.sudokutogether.core.Snapshot
 
 @Composable internal fun VersusPresence(state: GameUiState, snapshot: Snapshot, reconnect: () -> Unit) {
@@ -50,12 +51,7 @@ import com.playereden.sudokutogether.core.Snapshot
                 fontSize = 12.sp, lineHeight = 16.sp,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                VersusLane("You", presence.self, presence.target, Forest, GreenTint, false,
-                    Modifier.weight(1f).testTag("versus_you"))
-                VersusLane("Rival", presence.rival, presence.target, Gold, GoldTint,
-                    presence.phase == VersusPhase.LIVE, Modifier.weight(1f).testTag("versus_rival"))
-            }
+            VersusLanes(presence)
             if (state.role == GUEST && !state.connected) {
                 TextButton(
                     onClick = reconnect, enabled = !state.busy,
@@ -63,6 +59,38 @@ import com.playereden.sudokutogether.core.Snapshot
                 ) { Text("Reconnect") }
             }
         }
+    }
+}
+
+@Composable internal fun VersusResults(state: GameUiState, snapshot: Snapshot, nextRace: () -> Unit, reconnect: () -> Unit) {
+    val presence = versusPresenceState(snapshot, state.role, state.status, state.connected)
+    GamePanel(Modifier.widthIn(max = 440.dp).fillMaxWidth(), color = GoldTint, padding = 12.dp) {
+        Eyebrow("Race complete")
+        SectionTitle(if (snapshot.winner == state.role) "Victory!" else "Your rival won",
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        VersusLanes(presence)
+        when {
+            state.role == HOST -> {
+                if (!state.status.guestActive) {
+                    Text("Waiting for your rival to return.", color = Muted, fontSize = 12.sp)
+                }
+                GamePrimaryButton(if (state.busy) "Opening race…" else "Next race", nextRace, state.canRematch)
+            }
+            !state.connected -> GamePrimaryButton("Reconnect", reconnect, !state.busy)
+            else -> Text(
+                if (state.status.hostActive) "Your host can start another race." else "Waiting for your host to return.",
+                color = Muted, fontSize = 12.sp
+            )
+        }
+    }
+}
+
+@Composable private fun VersusLanes(presence: VersusPresenceState) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        VersusLane("You", presence.self, presence.target, Forest, GreenTint, false,
+            Modifier.weight(1f).testTag("versus_you"))
+        VersusLane("Rival", presence.rival, presence.target, Gold, GoldTint,
+            presence.phase == VersusPhase.LIVE, Modifier.weight(1f).testTag("versus_rival"))
     }
 }
 

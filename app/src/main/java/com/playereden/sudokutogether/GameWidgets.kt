@@ -95,8 +95,8 @@ internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTING
         letterSpacing = 1.3.sp, fontWeight = FontWeight.SemiBold)
 }
 
-@Composable internal fun SectionTitle(title: String, detail: String? = null) {
-    Text(title, style = MaterialTheme.typography.titleMedium, color = Forest, modifier = Modifier.semantics { heading() })
+@Composable internal fun SectionTitle(title: String, detail: String? = null, modifier: Modifier = Modifier) {
+    Text(title, style = MaterialTheme.typography.titleMedium, color = Forest, modifier = modifier.semantics { heading() })
     if (detail != null) Text(detail, style = MaterialTheme.typography.bodySmall, color = Muted)
 }
 

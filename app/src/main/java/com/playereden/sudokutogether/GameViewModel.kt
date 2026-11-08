@@ -48,6 +48,8 @@ data class GameUiState(
     val requireRoomCode: Boolean = false
 ) {
     val canEdit: Boolean get() = snapshot != null && !snapshot.completed && !busy && pendingId == null && ((role == SOLO && !localSaveBlocked) || (role != SOLO && !status.paused && (snapshot.mode != VERSUS || status.guestActive) && (role == HOST || connected)))
+    internal val canRematch: Boolean get() = role == HOST && !busy && status.hostActive && status.guestActive &&
+        snapshot?.mode == VERSUS && snapshot.completed
 }
 
 class GameViewModel @JvmOverloads constructor(
@@ -87,6 +89,7 @@ class GameViewModel @JvmOverloads constructor(
     private val settingsLocked: Boolean get() = _state.value.busy || backupLocked
     private val generation = AtomicLong()
     private val localStartLock = Any()
+    private val roomPresenceLock = Any()
     @Volatile private var server: HostServer? = null
     @Volatile private var guest: GuestClient? = null
     @Volatile private var guestResume: SavedSession? = null
@@ -604,7 +607,7 @@ class GameViewModel @JvmOverloads constructor(
                             unreadChat = if (previous.chatVisible) 0 else previous.unreadChat + if (event.chat?.player == GUEST) 1 else 0)
                     }
                 } }
-                server = hosted; val port = hosted.start(); hosted.setForeground(visible)
+                server = hosted; val port = hosted.start(); publishRoomPresence()
                 if (generation.get() != current) { hosted.close(); return@launch }
                 val address = discovery.localAddresses().firstOrNull()?.let { "$it:$port" } ?: "Connect this phone to home Wi-Fi"
                 _state.update { it.copy(busy = false, roomCode = if (session.requiresCode) hosted.code else "", address = address, resumeHost = if (versus) it.resumeHost else true, resumeRace = if (versus) true else it.resumeRace, saveIssue = null) }
@@ -663,9 +666,10 @@ class GameViewModel @JvmOverloads constructor(
                 }
             }
             try {
-                guest = client; client.connect(endpoint.host, endpoint.port, code, name, identity?.token, _state.value.appearance)
+                guest = client
+                client.connect(endpoint.host, endpoint.port, code, name, identity?.token, _state.value.appearance)
                 if (generation.get() != current) { client.close(); return@launch }
-                client.setForeground(visible)
+                publishRoomPresence()
                 val formatted = if (endpoint.host.contains(':')) "[${endpoint.host}]:${endpoint.port}" else "${endpoint.host}:${endpoint.port}"
                 preferences.edit().putString("lastAddress", formatted).apply()
             } catch (e: Exception) {
@@ -740,7 +744,12 @@ class GameViewModel @JvmOverloads constructor(
         if (active && _state.value.page == Page.HOME) {
             _state.update { it.copy(todayDate = DailyChallenge.today()) }
         }
-        viewModelScope.launch(workDispatcher) { server?.setForeground(active); guest?.setForeground(active) }
+        viewModelScope.launch(workDispatcher) { publishRoomPresence() }
+    }
+    private fun publishRoomPresence() = synchronized(roomPresenceLock) {
+        val active = visible
+        server?.setForeground(active)
+        guest?.setForeground(active)
     }
     fun replacePartner() { viewModelScope.launch(workDispatcher) {
         try { server?.replaceGuest() } catch (_: Exception) { _state.update { it.copy(message = "Couldn't save the partner change. Try again.") } }
@@ -752,16 +761,38 @@ class GameViewModel @JvmOverloads constructor(
             if (before.dailyDate != null) home() else solo(false)
             return
         }
+        if (before.role == HOST && !(before.snapshot?.mode == VERSUS && before.snapshot.completed)) {
+            startNextRoomPuzzle(before)
+        }
+    }
+    fun rematch(epoch: String) {
+        val before = _state.value
+        if (before.canRematch && before.snapshot?.epoch == epoch) startNextRoomPuzzle(before)
+    }
+    private fun startNextRoomPuzzle(before: GameUiState) {
+        val snapshot = before.snapshot ?: return
         val token = generation.get()
         _state.update { it.copy(busy = true, message = null) }
         viewModelScope.launch(workDispatcher) {
             try {
                 val host = server ?: return@launch
-                val difficulty = host.session.snapshot().puzzle.difficulty
+                val difficulty = snapshot.puzzle.difficulty
                     ?.takeIf { it in listOf("EASY", "MEDIUM", "HARD") }
                     ?: before.selectedDifficulty
                 val puzzle = nextPuzzle(difficulty, token)
-                if (generation.get() == token) host.newPuzzle(puzzle)
+                if (generation.get() != token) return@launch
+                if (snapshot.mode != VERSUS) {
+                    host.newPuzzle(puzzle)
+                    return@launch
+                }
+                val started = host.nextRace(snapshot.epoch, puzzle, afterFinish = snapshot.completed) {
+                    generation.get() == token && (!snapshot.completed || visible)
+                }
+                if (!started && snapshot.completed && visible) _state.update {
+                    if (generation.get() == token && it.snapshot?.epoch == snapshot.epoch)
+                        it.copy(message = "Wait for your rival to return, then try again.")
+                    else it
+                }
             } catch (_: Exception) {
                 if (generation.get() == token) {
                     _state.update { it.copy(message = "Couldn't save a new puzzle. Your current puzzle is still here.") }

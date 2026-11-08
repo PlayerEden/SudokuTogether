@@ -56,7 +56,17 @@ class MainActivity : ComponentActivity() {
                     model.previewProgressBackup(restore)
                 }
             }
-            val actions = remember { GameActions(model::setName, model::host, model::showJoin, model::home, model::join, model::select, model::number, model::toggleNotes, model::erase, model::undo, model::replacePartner, model::newPuzzle, model::solo, model::showProfile, model::hostRace, model::sendChat, model::chatVisible, model::chooseCosmetic, model::setUniformNumbers, model::setTouchFeedback, model::setDifficulty, model::requestHint, model::dismissHint, model::setAutoCleanNotes, model::daily, model::openDaily, model::checkWork, model::setRequireRoomCode) }
+            val actions = remember {
+                GameActions(
+                    model::setName, model::host, model::showJoin, model::home, model::join,
+                    model::select, model::number, model::toggleNotes, model::erase, model::undo,
+                    model::replacePartner, model::newPuzzle, model::solo, model::showProfile, model::hostRace,
+                    model::sendChat, model::chatVisible, model::chooseCosmetic, model::setUniformNumbers,
+                    model::setTouchFeedback, model::setDifficulty, model::requestHint, model::dismissHint,
+                    model::setAutoCleanNotes, model::daily, model::openDaily, model::checkWork,
+                    model::setRequireRoomCode, rematch = model::rematch
+                )
+            }
             DisposableEffect(state.page) {
                 if (state.page == Page.PLAY) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
