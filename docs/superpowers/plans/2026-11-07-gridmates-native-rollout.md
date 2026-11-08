@@ -85,14 +85,14 @@ On a fresh API 26 emulator, the parent build at `290ad06` passed all four chat a
 
 Start from the integrated v0.11D checkpoint. Use the native navigation and reuse the existing record and unlock models.
 
-- [ ] Route the bottom Profile tab and home avatar to the same profile. Make records, Daily history and achievements reachable from there.
-- [ ] Group Collection into Player icons, Boards and Numbers. Keep both basic emblems and Woodland portraits in the icon browser and retain their existing eligibility rules.
-- [ ] Verify that tapping a locked icon shows its real progress. Confirm that a separate equip action selects an available icon and that saved styles and records survive the upgrade.
+- [x] Route the bottom Profile tab and home avatar to the same profile. Make records, Daily history and achievements reachable from there.
+- [x] Group Collection into Player icons, Boards and Numbers. Keep both basic emblems and Woodland portraits in the icon browser and retain their existing eligibility rules.
+- [x] Verify that tapping a locked icon shows its real progress. Confirm that a separate equip action selects an available icon and that saved styles and records survive the upgrade.
 
 ## First release preparation alongside Stage 3
 
-- [ ] Use Android SDK 36 for builds and API 36 for the hosted visual suite. Verify the supported SDK floor and both signing paths.
-- [ ] Produce the signed App Bundle alongside the existing production APK in the manual workflow. Fail before upload if either artifact cannot be verified.
-- [ ] Add portable progress export and restore to Settings. Validate the file before preview, require confirmation before replacing progress, and recover the destination profile and settings if a restore is interrupted.
-- [ ] Rehearse a signed v0.11D update with real saved games. Exercise backup transfer between independent local profiles and verify old room saves and destination identity.
+- [x] Use Android SDK 36 for builds and API 36 for the hosted visual suite. Verify the supported SDK floor and both signing paths.
+- [x] Produce the signed App Bundle alongside the existing production APK in the manual workflow. Fail before upload if either artifact cannot be verified. Local signing and Bundletool validation passed.
+- [x] Add portable progress export and restore to Settings. Validate the file before preview, require confirmation before replacing progress, and recover the destination profile and settings if a restore is interrupted.
+- [x] Rehearse a signed v0.11D update with real saved games. Exercise backup transfer between independent local profiles and verify old room saves and destination identity.
 - [ ] Complete current-build physical Wi-Fi, TalkBack and Play Console acceptance.

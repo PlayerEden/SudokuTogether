@@ -1,10 +1,20 @@
 # GridMates delivery plan
 
-**Current milestone · v0.11D QA.** Start from `main`. The signed update adds Versus player presence and bundled number styles. The [integration audit](V0.11D_INTEGRATION_AND_QA.md) records the exact upgrade evidence and remaining gates.
+**Current candidate · v0.11E.** [Draft PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) adds Profile and Collection, portable progress transfer and API 36 release preparation. The merged v0.11D QA checkpoint contains Versus presence and bundled number styles. [v0.11D audit](V0.11D_INTEGRATION_AND_QA.md)
 
 The owner reported a successful basic two-phone test on v0.11B. [Playtest findings](V0.11B_OWNER_PLAYTEST_2026-11-04.md) guided v0.11C's open nearby joining, optional room codes, clearer chat and Woodland portraits. The current build still needs its own physical co-op and Versus pass.
 
-The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md) tracks the delivered font and Versus stages and the planned Profile and Collection improvements.
+The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md) tracks the delivered font, Versus and Profile and Collection stages.
+
+## First release checklist
+
+| Gate | Status |
+| --- | --- |
+| Player profile and collection | Implemented in v0.11E and exercised on Android 8. The native checks cover profile navigation, 200% text, icon unlock requirements and explicit equip. |
+| Owner updates and transfer | The signed v0.11D to v0.11E install-over passed. Settings now offers a portable progress file and a preview before restore. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
+| Android build and signing | The build targets API 36 and supports devices from API 26. The original production certificate was verified and the App Bundle passed local validation. |
+| Device acceptance | Finish current-build co-op and Versus on two physical phones, plus modern Android orientation, TalkBack, and Daily rollover. [LAN gate](https://github.com/PlayerEden/SudokuTogether/issues/12) |
+| Play Console | Confirm signing enrollment, listing and declarations, and run the required testing track. [Launch guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md) |
 
 ## Product direction
 
@@ -18,7 +28,7 @@ The design notes and implementation now share the same source branch. Keep each 
 | --- | --- | --- |
 | QA updates | Preserve the QA identity and increase the build number for each update. | [v0.11D upgrade rehearsal](V0.11D_INTEGRATION_AND_QA.md) |
 | Font consistency | Bundled faces use the existing `clear`, `serif` and `mono` IDs. Preview follows Classic number display. | Native preview check passed. Compare the same equipped style on two physical phones. |
-| Player interface | Versus identities and progress are in v0.11D. The unified Collection and Profile organization are the next stages in the native rollout. | Validate physical Versus reconnect and compact layouts. Keep older icon selections usable. |
+| Player interface | Versus identities and progress are in v0.11D. The unified Collection and Profile are in v0.11E. | Validate physical Versus reconnect and compact layouts, including large text. |
 | Versus results | Start with the result and progress already known to both clients. A later full board comparison requires an authoritatively finished race and consent from both players. | The race still keeps opponent entries private. Declining or disconnecting leaves the results usable. |
 | Co-op board themes | Resolve a common board from the players' equipped themes. Keep authored digits in each player's personal ink/font. | Both phones agree on the board and show legible numbers across themes and reconnects. Final ranking, timing and an accessibility override are open choices. |
 | Coach | Use the Sudoku research for visible proofs of the four supported techniques and helpful endgame guidance. | Verified examples with candidate eliminations, 1–2 cells left, and an earlier incorrect entry. Preserve existing difficulty grades. |
@@ -34,10 +44,12 @@ The design notes and implementation now share the same source branch. Keep each 
 | 3 — Share result | Optional finish-screen button, preview, one polished on-device PNG format and native Android sharing for Solo/Daily | Persisted time/difficulty/assistance; no solution digits, invented score or store link; cancellation/export failure preserves the game; physical share-target acceptance |
 | 4 — Player profile | Chosen avatar/style, earned badge showcase, concise honest statistics; profile-card export afterward | Preserve owned cosmetics/history and legacy records; accessible defaults, empty-state and long-name layouts; editable sharing privacy |
 | 5 — Scoring | Versioned, calibrated score with a clear optional breakdown | Distinct deduction/tier accounting across Undo/resume; old scores remain unknown; assistance stays unlimited; assisted/unassisted comparisons stay separate; no arbitrary speed bonus |
-| Release work alongside stages | Reconcile stacked source, target API36+, production signing/AAB, modern-device/accessibility QA, Play setup/testing and accurate store materials | Follow the launch guide and actual account eligibility. No publication or source promotion is implied. Basic two-phone co-op is owner-reported successful; the remaining physical lifecycle/complete-game/versus checklist is open |
+| Release work alongside stages | Verify current-build physical co-op and Versus, modern-device accessibility, and Play setup and testing | Use the API 36 and signed App Bundle evidence above. The full physical lifecycle, complete-game and Versus checklist is open. |
 | After a clean beta | Rare between-puzzle ads and optional one-time Remove Ads | The free model is decided; price/frequency remain open. Test consent, purchases/restoration and interruption-free play before live use |
 
 The five new proposal files remain design references. An approved product direction is distinct from implemented, tested or released software. Global leaderboards, remote play, cloud backup, paid randomized cosmetics, Split Clues and framework extraction remain separate future decisions/gates.
+
+Online matchmaking belongs after the offline game is complete and adoption can support the ongoing service costs.
 
 ## First APK scope
 

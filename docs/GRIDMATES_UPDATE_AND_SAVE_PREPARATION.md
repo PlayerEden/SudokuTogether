@@ -1,6 +1,6 @@
 # GridMates APK updates and progress preservation
 
-The current accepted QA baseline is v0.11D. The [integration audit](V0.11D_INTEGRATION_AND_QA.md) records the original v0.11C to v0.11D install-over check. This guide records the original packaging design and the separate portable backup proposal.
+The merged v0.11D baseline has a verified in-place upgrade from v0.11C. The v0.11E candidate adds portable backup and restore alongside the signed QA update. [v0.11D audit](V0.11D_INTEGRATION_AND_QA.md) · [v0.11E candidate](https://github.com/PlayerEden/SudokuTogether/pull/33)
 
 ## What the owner asked for
 
@@ -52,21 +52,15 @@ When the next APK has passed native acceptance, retain its original bytes as a u
 
 v0.11D is an owner sideload delivery. Open the accepted APK with Android's standard installer and choose **Update** while Sudoku is installed.
 
-## Portable backup follow-up — proposed, not implemented
+## Portable backup and restore
 
-Add **Settings → Progress → Back up progress / Restore backup** after the UI layout review. Keep ordinary autosaving automatic; players do not need to manually export before every normal same-identity update.
+In v0.11E, open **Settings → Progress → Back up progress** and choose where to save the file. On the receiving installation, open **Restore backup**, choose the file, and review its saved date, Daily puzzles and game records. Choose **Restore** to replace that installation's offline progress and settings.
 
-The export should be one versioned offline file, containing allowlisted Solo/Daily progress and records, plus the known preference fields above. Include format/schema/export-time/app-version metadata. Do not export whole application directories, room codes, network addresses, guest tokens, live room state or signing material. Leave the destination installation's `playerId` intact; portable progress is not an online identity/account transfer. Recalculate unlock access from imported records before equipping a requested style.
+The versioned file carries saved Solo and Daily boards, completed records from all modes, and the allowlisted player preferences. Styles are checked against the imported record history. Restore uses the receiving installation's identity. Room saves and their admission details live in separate device-local files.
 
-Restore sequence:
+The app validates the file before showing a preview. It checks size, schema, types, playable Solo boards and Daily date consistency. Before replacement it commits a private recovery journal for both local stores. An interrupted or failed restore recovers the prior profile and preferences or pauses further writes until recovery can complete.
 
-1. Read with a size limit and strictly validate format/schema/types, boards, history and records using the existing validators; reject unknown future schemas without touching current files.
-2. Show a preview of the incoming progress and explain that restore replaces the current offline progress. Permit cancellation without writes. Do not restore during an active room/session.
-3. Preserve and verify a complete recovery snapshot of both existing progress and allowlisted preferences before replacement.
-4. Apply the imported records/progress with the current installation ID, write preferences, reload through the real app and verify the resulting state. Roll back both stores on failure; never report success based only on a write call.
-5. Use Android's explicit document picker/share actions to save outside the app; no broad storage permission or automatic upload. Treat this as a private backup, distinct from a public spoiler-free Share result image.
-
-Do not mark this portable backup as shipped, and do not add a nonfunctional backup button to the Android app. A future `.qa` → production/Play transition changes package identity and needs an explicit transfer path; it is not automatically covered by QA install-over continuity.
+The Play variant uses a separate Android package. Export the file from the updated QA app before moving progress to that variant. Routine QA updates use Android's in-place update and existing saves.
 
 ## Verification and remaining gates
 

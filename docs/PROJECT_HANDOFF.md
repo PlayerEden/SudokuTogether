@@ -2,17 +2,22 @@
 
 Start from `main`, the canonical Android source and documentation. The [delivery plan](GRIDMATES_DELIVERY_PLAN.md) tracks the next product work. The [v0.11D integration audit](V0.11D_INTEGRATION_AND_QA.md) records exact source, APK and verification details.
 
-## Current QA milestone — v0.11D
+## Current candidate — v0.11E
+
+[Draft PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) adds Profile with statistics, history and achievements, a unified Collection, and **Settings → Progress** export and restore. It targets API 36 and builds a separate production App Bundle. Continue the candidate from that PR. The remaining release checks cover the current build on real phones, modern Android accessibility, and Play Console setup and testing. [QA evidence](V0.11E_PROFILE_PROGRESS_QA.md) · [Delivery plan](GRIDMATES_DELIVERY_PLAN.md)
+
+## Merged QA milestone — v0.11D
 
 The launcher stays **Sudoku** and the in-app name is **GridMates: Sudoku**. Versus shows both identities and player-filled progress, with a reconnect state that retains the last known opponent. Number styles now use licensed bundled fonts under the existing cosmetic IDs. [Number font assets](GRIDMATES_FONT_ASSETS.md) · [Native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md)
 
 The previous [v0.11C checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11c-nearby-woodland-qa) retains open nearby joining, optional code protection and Woodland portraits. Its [exact APK receipt](V0.11C_DELIVERY_RECEIPT.md) is the reference for the 19 → 20 upgrade rehearsal. Keep earlier source and APK checkpoints for recovery. [QA update guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md)
 
-The owner reported a successful v0.11B two-phone smoke test. The current release gates include a fresh two-phone co-op and Versus pass, modern Android accessibility checks, and production signing and store setup. [Current gates and evidence](V0.11D_INTEGRATION_AND_QA.md)
+The owner reported a successful v0.11B two-phone smoke test. The v0.11D audit records the next physical co-op and Versus acceptance cases. [Current gates and evidence](V0.11D_INTEGRATION_AND_QA.md)
 
 ## Product decisions and design references
 
 - Local play and nearby Wi-Fi are the core of GridMates. Finish Sudoku before expanding the series or extracting a reusable framework. [Brand and series](GRIDMATES_BRAND_AND_SERIES.md)
+- Revisit online matchmaking after the offline game is complete and player adoption can support the service's operating costs.
 - The selected launch model is free-to-install with rare between-puzzle ads and an optional Remove Ads purchase. [Monetization plan](GRIDMATES_MONETIZATION_AND_PLAY_TESTING_PLAN.md) · [Store setup guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md)
 - Design briefs cover an optional [Share result flow](GRIDMATES_SHARE_RESULTS_UX_DESIGN.md), [profile and result cards](GRIDMATES_SHAREABLE_CARDS_CONCEPT.md), and [coaching and scoring](GRIDMATES_PUZZLE_COACH_AND_SCORING_PROPOSAL.md).
 - Future product ideas include [Ocean and Bug collections and Daily rewards](GRIDMATES_COLLECTIONS_DAILY_REWARDS_AND_FONTS_DESIGN.md), [offline gift codes](GRIDMATES_GIFT_CODES_SIMPLE_DESIGN.md), [router-free nearby play](GRIDMATES_OFFLINE_NEARBY_BLUETOOTH_DESIGN.md), [post-match puzzle comparison](GRIDMATES_VERSUS_POST_MATCH_COMPARISON_DESIGN.md) and [shared co-op board themes](GRIDMATES_SHARED_COOP_BOARD_THEMES_DESIGN.md).
