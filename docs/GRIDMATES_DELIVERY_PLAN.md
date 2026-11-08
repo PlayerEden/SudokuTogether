@@ -49,7 +49,11 @@ The design notes and implementation now share the same source branch. Keep each 
 
 The five new proposal files remain design references. An approved product direction is distinct from implemented, tested or released software. Global leaderboards, remote play, cloud backup, paid randomized cosmetics, Split Clues and framework extraction remain separate future decisions/gates.
 
-Online matchmaking belongs after the offline game is complete and adoption can support the ongoing service costs.
+## Online expansion after the offline launch
+
+The November 8 owner decision puts the complete offline game and a clean Google Play release first. Solo, Daily, nearby Co-op and Versus work without an account. The game will be free to install. Rare between-puzzle ads and a one-time Remove Ads purchase are the approved monetization directions, subject to testing and store requirements.
+
+A later online phase requires its own approval. Evaluate player demand, retention, net earnings and ongoing service costs after launch. Set a budget ceiling before prototyping. If the phase is sustainable, start with invite-only asynchronous friend challenges, then consider remote Versus and Co-op. Public matchmaking depends on an active player base. Offline play remains available during service outages. [Online feasibility and funding gates](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_ONLINE_FRIEND_CHALLENGES_AND_MATCHMAKING_FEASIBILITY.md)
 
 ## First APK scope
 
