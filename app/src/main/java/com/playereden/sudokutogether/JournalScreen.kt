@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -104,7 +105,7 @@ internal enum class ProfileSection(val title: String) {
 
     val milestones = Achievements.progress(records)
     val earned = milestones.filter { it.unlocked }
-    GamePanel(Modifier.fillMaxWidth(), color = GoldTint.copy(alpha = .55f), padding = 14.dp) {
+    GamePanel(Modifier.fillMaxWidth(), color = GoldTint.copy(alpha = .55f).compositeOver(Cream), padding = 14.dp) {
         SectionTitle("Achievements", "${earned.size} of ${milestones.size} earned")
         earned.firstOrNull()?.let {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -213,7 +214,9 @@ internal enum class ProfileSection(val title: String) {
     val milestones = Achievements.progress(records)
     Text("${milestones.count { it.unlocked }} of ${milestones.size} earned", style = MaterialTheme.typography.bodyMedium, color = Muted)
     milestones.forEach { progress ->
-        GamePanel(Modifier.fillMaxWidth(), color = if (progress.unlocked) GoldTint.copy(alpha = .45f) else Paper, padding = 14.dp) {
+        GamePanel(Modifier.fillMaxWidth(),
+            color = if (progress.unlocked) GoldTint.copy(alpha = .45f).compositeOver(Cream) else Paper,
+            padding = 14.dp) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 GameIcon(GameSymbol.TROPHY, if (progress.unlocked) Gold else Muted, Modifier.size(22.dp))
                 Column(Modifier.weight(1f)) { SectionTitle(progress.title, progress.description) }
