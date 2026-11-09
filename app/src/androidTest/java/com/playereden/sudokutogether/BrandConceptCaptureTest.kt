@@ -23,7 +23,7 @@ class BrandConceptCaptureTest {
         select = {}, number = {}, toggleNotes = {}, erase = {}, undo = {}, replacePartner = {}, newPuzzle = {},
         solo = {}, profile = {}, hostRace = {}, sendChat = {}, chatVisible = {}, cosmetic = { _, _ -> },
         uniformNumbers = {}, touchFeedback = {}, difficulty = {}, hint = {}, dismissHint = {}, autoCleanNotes = {}, daily = {}, openDaily = {})
-    @Test fun capturesThreeOriginalMarksOnTheSameHomeScreen() {
+    @Test fun capturesThreeMarksOnTheSameHomeScreen() {
         var seed = 1964L
         val puzzle = PuzzleSupply.nextRated(HumanSudoku.Grade.EASY, emptyList(), { seed++ }).puzzle
         val progress = PersonalPlay.newSolo(puzzle, 1000L).copy(elapsedMs = 112000L)

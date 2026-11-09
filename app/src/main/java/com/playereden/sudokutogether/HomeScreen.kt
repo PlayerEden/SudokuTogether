@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.*
     state: GameUiState, actions: GameActions,
     fresh: () -> Unit, freshSolo: () -> Unit, freshRace: () -> Unit,
     help: () -> Unit, profile: () -> Unit,
-    markStyle: GridMatesMarkStyle = GridMatesMarkStyle.CONNECTED_TILES
+    markStyle: GridMatesMarkStyle = GridMatesMarkStyle.SUDOKU_GRID
 ) {
     var mode by rememberSaveable { mutableStateOf("solo") }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp),
@@ -49,7 +49,8 @@ import androidx.compose.ui.unit.*
                 }
             }
             val active = state.profile.activeSolo
-            val unfinished = mode == "solo" && state.resumeSolo && active?.completed == false
+            val savedSolo = active?.takeIf { mode == "solo" && state.resumeSolo && !it.completed }
+            val unfinished = savedSolo != null
             Surface(shape = RoundedCornerShape(25.dp), color = NightForest) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(when {
@@ -59,13 +60,18 @@ import androidx.compose.ui.unit.*
                         else -> "Classic 9×9"
                     }, color = OnForest, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
                         fontSize = 27.sp, lineHeight = 31.sp)
-                    if (unfinished) Text(difficultyName(active?.puzzle?.difficulty) + " · " +
-                        (active?.cells?.count { it.value != 0 } ?: 0) + "/81 · " + formatElapsed(active?.elapsedMs ?: 0L),
+                    if (savedSolo != null) {
+                        val editable = savedSolo.puzzle.clues.indices.filter { savedSolo.puzzle.clues[it] == 0 }
+                        val entered = editable.count { savedSolo.cells[it].value != 0 }
+                        Text("${difficultyName(savedSolo.puzzle.difficulty)} · $entered of ${editable.size} filled · " +
+                            formatElapsed(savedSolo.elapsedMs),
+                            color = OnForest.copy(alpha = .8f), style = MaterialTheme.typography.bodyMedium)
+                        GamePrimaryButton("Continue", { actions.solo(true) },
+                            !state.busy && !state.localSaveBlocked, light = true)
+                        Text("New puzzle difficulty", color = OnForest.copy(alpha = .8f),
+                            style = MaterialTheme.typography.bodyMedium)
+                    } else if (mode != "solo") Text(if (mode == "together") "Same Wi-Fi" else "Private boards · Same Wi-Fi",
                         color = OnForest.copy(alpha = .8f), style = MaterialTheme.typography.bodyMedium)
-                    else if (mode != "solo") Text(if (mode == "together") "Same Wi-Fi" else "Private boards · Same Wi-Fi",
-                        color = OnForest.copy(alpha = .8f), style = MaterialTheme.typography.bodyMedium)
-                    if (unfinished) GamePrimaryButton("Continue", { actions.solo(true) },
-                        !state.busy && !state.localSaveBlocked, light = true)
                     DifficultyPicker(state, actions)
                     if (mode != "solo") Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         .toggleable(state.requireRoomCode, enabled = !state.busy, role = Role.Switch, onValueChange = actions.requireRoomCode)
