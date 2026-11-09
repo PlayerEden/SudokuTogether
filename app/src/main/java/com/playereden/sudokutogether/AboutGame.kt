@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
-@Composable internal fun AboutGame(onDismiss: () -> Unit, share: () -> Unit) {
+@Composable internal fun AboutGame(onDismiss: () -> Unit, share: (() -> Unit)?) {
     AlertDialog(
         modifier = Modifier.testTag("about_gridmates"),
         onDismissRequest = onDismiss,
@@ -25,9 +25,12 @@ import androidx.compose.ui.unit.dp
                 Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodySmall)
                 HorizontalDivider()
                 Text("Progress is stored on this phone. Uninstalling or clearing app data can erase it.")
-                OutlinedButton(share, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                    GameIcon(GameSymbol.SHARE, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp)); Text("Share APK")
+                if (share != null) {
+                    OutlinedButton(share, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                        GameIcon(GameSymbol.SHARE, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Share APK")
+                    }
                 }
             }
         },

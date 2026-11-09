@@ -48,6 +48,7 @@ class NearbyVisualAuditTest {
             compose.waitUntil(10000) { compose.onAllNodesWithText("Room chat").fetchSemanticsNodes().isEmpty() }
             compose.runOnIdle { shown.value = GameUiState(page = Page.PROFILE, appearance = Appearance(portrait = "woodland_owl")) }
             compose.onNodeWithTag("nav_collection").performClick()
+            compose.onNodeWithText("Woodland").performScrollTo().performClick()
             compose.onNodeWithTag("portrait_woodland_bear").performScrollTo().assertIsDisplayed()
             NativeWindowCapture.save(activity, File(context.getExternalFilesDir("screenshots"), "v011c-collection.png"))
         }

@@ -3,15 +3,19 @@ package com.playereden.sudokutogether
 import android.os.Bundle
 import android.content.ClipData
 import android.content.Intent
+import android.net.Uri
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.FileProvider
@@ -28,8 +32,30 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val background = Cream.toArgb()
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(background, Forest.toArgb()), navigationBarStyle = SystemBarStyle.light(background, Forest.toArgb()))
+        val shareStandaloneApk = if (applicationInfo.splitSourceDirs.isNullOrEmpty()) ::shareApk else null
         setContent {
             val state by model.state.collectAsStateWithLifecycle()
+            val progressBackup by model.progressBackup.collectAsStateWithLifecycle()
+            var pendingExport by rememberSaveable { mutableStateOf<Uri?>(null) }
+            var pendingRestore by rememberSaveable { mutableStateOf<Uri?>(null) }
+            val saveProgress = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+                pendingExport = uri
+            }
+            val openProgress = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                pendingRestore = uri
+            }
+            LaunchedEffect(pendingExport, pendingRestore, state.busy) {
+                if (state.busy) return@LaunchedEffect
+                val export = pendingExport
+                val restore = pendingRestore
+                if (export != null) {
+                    pendingExport = null
+                    model.exportProgressBackup(export)
+                } else if (restore != null) {
+                    pendingRestore = null
+                    model.previewProgressBackup(restore)
+                }
+            }
             val actions = remember { GameActions(model::setName, model::host, model::showJoin, model::home, model::join, model::select, model::number, model::toggleNotes, model::erase, model::undo, model::replacePartner, model::newPuzzle, model::solo, model::showProfile, model::hostRace, model::sendChat, model::chatVisible, model::chooseCosmetic, model::setUniformNumbers, model::setTouchFeedback, model::setDifficulty, model::requestHint, model::dismissHint, model::setAutoCleanNotes, model::daily, model::openDaily, model::checkWork, model::setRequireRoomCode) }
             DisposableEffect(state.page) {
                 if (state.page == Page.PLAY) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -37,7 +63,26 @@ class MainActivity : ComponentActivity() {
                 onDispose { window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
             }
             SudokuTogetherTheme {
-                SudokuApp(state, actions, ::shareApk)
+                SudokuApp(
+                    state,
+                    actions,
+                    shareStandaloneApk,
+                    settingsLocked = progressBackup.working || progressBackup.recoveryRequired,
+                    settingsExtra = {
+                        ProgressBackupSettings(
+                            progressBackup,
+                            enabled = !state.busy && !state.localSaveBlocked,
+                            export = { saveProgress.launch("GridMates-Sudoku-progress.json") },
+                            open = { openProgress.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }
+                        )
+                    }
+                )
+                ProgressBackupRestoreDialog(
+                    progressBackup.preview,
+                    enabled = !state.busy,
+                    dismiss = model::dismissProgressBackupPreview,
+                    restore = model::confirmProgressBackupRestore
+                )
             }
         }
     }

@@ -3,6 +3,7 @@ package com.playereden.sudokutogether
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,12 +22,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 
-internal enum class JournalTab { RECORDS, COLLECTION, SETTINGS }
+internal enum class JournalTab(val title: String) {
+    // Keep the old enum name for Activity state saved by earlier versions.
+    RECORDS("Profile"), COLLECTION("Collection"), SETTINGS("Settings")
+}
 internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTINGS, HELP, RIGHT, BACK, PENCIL, ERASE, UNDO, CHECK, PALETTE, CHAT, CLOCK, LOCK, SHARE, COPY }
 
 /** Original, consistent line icons; no emoji or downloaded asset dependency. */
@@ -91,7 +96,7 @@ internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTING
 }
 
 @Composable internal fun SectionTitle(title: String, detail: String? = null) {
-    Text(title, style = MaterialTheme.typography.titleMedium, color = Forest)
+    Text(title, style = MaterialTheme.typography.titleMedium, color = Forest, modifier = Modifier.semantics { heading() })
     if (detail != null) Text(detail, style = MaterialTheme.typography.bodySmall, color = Muted)
 }
 
@@ -108,36 +113,51 @@ internal enum class GameSymbol { GRID, PERSON, PEOPLE, TROPHY, CALENDAR, SETTING
 }
 
 @Composable internal fun GameNavigation(page: Page, tab: JournalTab, play: () -> Unit, journal: (JournalTab) -> Unit, enabled: Boolean = true) {
-    val fullLabels = listOf("Play", "Records", "Collection", "Settings")
-    val labels = if (LocalDensity.current.fontScale > 1.5f) listOf("Play", "Stats", "Styles", "More") else fullLabels
+    val largeText = LocalDensity.current.fontScale > 1.3f
     Surface(color = Paper, shadowElevation = 8.dp) {
-        Row(Modifier.fillMaxWidth().widthIn(max = 560.dp).padding(horizontal = 8.dp)) {
-            listOf("play", "records", "collection", "settings").forEachIndexed { index, id ->
-                val selected = if (index == 0) page == Page.HOME else page == Page.PROFILE && tab == JournalTab.entries[index - 1]
-                val label = labels[index]
-                val symbol = listOf(GameSymbol.GRID, GameSymbol.TROPHY, GameSymbol.PALETTE, GameSymbol.SETTINGS)[index]
-                Column(Modifier.weight(1f).testTag("nav_$id")
-                    .selectable(selected, enabled = enabled, onClick = { if (index == 0) play() else journal(JournalTab.entries[index - 1]) }, role = Role.Tab)
-                    .semantics { contentDescription = fullLabels[index] }
-                    .heightIn(min = 68.dp).padding(horizontal = 2.dp, vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Box(Modifier.size(42.dp, 27.dp).background(if (selected) GreenTint else Color.Transparent, RoundedCornerShape(9.dp)), contentAlignment = Alignment.Center) {
-                        GameIcon(symbol, if (selected) Forest else Muted, Modifier.size(20.dp))
-                    }
-                    Text(label, color = if (selected) Forest else Muted, fontSize = 11.sp, lineHeight = 13.sp,
-                        textAlign = TextAlign.Center, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
-                }
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Row(Modifier.widthIn(max = 560.dp).fillMaxWidth().padding(horizontal = 6.dp).selectableGroup()) {
+                NavigationItem("Play", "play", GameSymbol.GRID, page == Page.HOME, enabled, play,
+                    Modifier.weight(if (largeText) .67f else 1f))
+                // Retain the existing automation tag for the destination formerly called Records.
+                NavigationItem(JournalTab.RECORDS.title, "records", GameSymbol.PERSON,
+                    page == Page.PROFILE && tab == JournalTab.RECORDS, enabled, { journal(JournalTab.RECORDS) },
+                    Modifier.weight(if (largeText) .93f else 1f))
+                NavigationItem(JournalTab.COLLECTION.title, "collection", GameSymbol.PALETTE,
+                    page == Page.PROFILE && tab == JournalTab.COLLECTION, enabled, { journal(JournalTab.COLLECTION) },
+                    Modifier.weight(if (largeText) 1.31f else 1f))
+                NavigationItem(JournalTab.SETTINGS.title, "settings", GameSymbol.SETTINGS,
+                    page == Page.PROFILE && tab == JournalTab.SETTINGS, enabled, { journal(JournalTab.SETTINGS) },
+                    Modifier.weight(if (largeText) 1.09f else 1f))
             }
         }
     }
 }
 
-@Composable internal fun JournalHeader(title: String, subtitle: String?, home: () -> Unit) {
+@Composable private fun NavigationItem(label: String, id: String, symbol: GameSymbol, selected: Boolean,
+    enabled: Boolean, open: () -> Unit, modifier: Modifier) {
+    Column(modifier.testTag("nav_$id")
+        .selectable(selected, enabled = enabled, onClick = open, role = Role.Tab)
+        .semantics { contentDescription = label }
+        .heightIn(min = 68.dp).padding(horizontal = 2.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Box(Modifier.size(42.dp, 27.dp).background(if (selected) GreenTint else Color.Transparent, RoundedCornerShape(9.dp)),
+            contentAlignment = Alignment.Center) {
+            GameIcon(symbol, if (selected) Forest else Muted, Modifier.size(20.dp))
+        }
+        Text(label, color = if (selected) Forest else Muted, fontSize = 11.sp, lineHeight = 13.sp,
+            textAlign = TextAlign.Center, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            modifier = Modifier.clearAndSetSemantics {})
+    }
+}
+
+@Composable internal fun JournalHeader(title: String, subtitle: String? = null, back: (() -> Unit)? = null,
+    backLabel: String = "Back home") {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        IconButton(home, modifier = Modifier.size(48.dp).background(Paper, RoundedCornerShape(14.dp))
-            .semantics { contentDescription = "Back home" }) { GameIcon(GameSymbol.BACK) }
+        if (back != null) IconButton(back, modifier = Modifier.size(48.dp).background(Paper, RoundedCornerShape(14.dp))
+            .semantics { contentDescription = backLabel }) { GameIcon(GameSymbol.BACK) }
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.headlineMedium, color = Forest)
+            Text(title, style = MaterialTheme.typography.headlineMedium, color = Forest, modifier = Modifier.semantics { heading() })
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Muted)
         }
     }

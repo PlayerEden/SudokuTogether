@@ -19,7 +19,14 @@ object Sudoku {
         val hash = MessageDigest.getInstance("SHA-256").digest(clues.joinToString("").toByteArray()).take(8).joinToString("") { "%02x".format(it) }
         return Puzzle("standard-$hash", clues.toList())
     }
-    fun solutionCount(clues: List<Int>, limit: Int = 2): Int {
+    fun solutionCount(clues: List<Int>, limit: Int = 2): Int =
+        checkNotNull(countSolutions(clues, limit, Long.MAX_VALUE))
+
+    /** An incomplete search cannot establish uniqueness for an imported board. */
+    fun hasUniqueSolutionWithin(clues: List<Int>, maxNodes: Int): Boolean =
+        maxNodes > 0 && countSolutions(clues, limit = 2, maxNodes = maxNodes.toLong()) == 1
+
+    private fun countSolutions(clues: List<Int>, limit: Int, maxNodes: Long): Int? {
         if (clues.size != 81 || clues.any { it !in 0..9 } || limit < 1 || conflicts(clues).isNotEmpty()) return 0
         val board = clues.toIntArray(); val rows = IntArray(9); val cols = IntArray(9); val boxes = IntArray(9)
         for (i in 0..80) if (board[i] != 0) {
@@ -27,8 +34,15 @@ object Sudoku {
             val box = i / 27 * 3 + i % 9 / 3; boxes[box] = boxes[box] or bit
         }
         var found = 0
+        var remaining = maxNodes
+        var exhausted = false
         fun search() {
             if (found >= limit) return
+            if (remaining == 0L) {
+                exhausted = true
+                return
+            }
+            remaining--
             var best = -1; var candidates = 0; var least = 10
             for (i in 0..80) if (board[i] == 0) {
                 val mask = 0x3fe and (rows[i / 9] or cols[i % 9] or boxes[i / 27 * 3 + i % 9 / 3]).inv()
@@ -38,7 +52,7 @@ object Sudoku {
             }
             if (best == -1) { found++; return }
             val r = best / 9; val c = best % 9; val box = best / 27 * 3 + c / 3
-            while (candidates != 0 && found < limit) {
+            while (candidates != 0 && found < limit && !exhausted) {
                 val bit = candidates and -candidates; candidates = candidates xor bit
                 board[best] = Integer.numberOfTrailingZeros(bit)
                 rows[r] = rows[r] or bit; cols[c] = cols[c] or bit; boxes[box] = boxes[box] or bit
@@ -46,7 +60,8 @@ object Sudoku {
                 rows[r] = rows[r] xor bit; cols[c] = cols[c] xor bit; boxes[box] = boxes[box] xor bit; board[best] = 0
             }
         }
-        search(); return found
+        search()
+        return found.takeUnless { exhausted }
     }
     fun conflicts(values: List<Int>): Set<Int> {
         if (values.size != 81) return emptySet()

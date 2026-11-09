@@ -2,15 +2,19 @@
 
 Start from `main`, the canonical Android source and documentation. The [delivery plan](GRIDMATES_DELIVERY_PLAN.md) tracks the next product work. The [v0.11D integration audit](V0.11D_INTEGRATION_AND_QA.md) records exact source, APK and verification details.
 
-> **Owner roadmap decision (Nov 8): OFFLINE SUDOKU FIRST.** Finish the full local/offline game, pass two-phone and release QA, launch, and grow an audience before building internet services. Respectful rare ads and optional Remove Ads may **eventually** help finance a narrowly budgeted online feature, but downloads/revenue are not guaranteed. **No backend work, mandatory account or remote matchmaking in initial launch.** See [future online roadmap and readiness gates](https://github.com/PlayerEden/SudokuTogether/blob/development/docs/GRIDMATES_ONLINE_FRIEND_CHALLENGES_AND_MATCHMAKING_FEASIBILITY.md) and the [delivery plan](GRIDMATES_DELIVERY_PLAN.md). Begin eventual online work, if approved and sustainable, with asynchronous **friend-only** challenges, not public queues.
+The November 8 owner decision puts the offline launch first. Complete local play, device QA and Play testing before evaluating a budget for online services. Future service work starts with separately approved, invite-only friend challenges when adoption and earnings can support it. [Release and expansion gates](GRIDMATES_DELIVERY_PLAN.md#online-expansion-after-the-offline-launch)
 
-## Current QA milestone — v0.11D
+## Current candidate — v0.11E
+
+[Draft PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) adds Profile with statistics, history and achievements, a unified Collection, and **Settings → Progress** export and restore. It targets API 36 and builds a separate production App Bundle. Continue the candidate from that PR. The remaining release checks cover the current build on real phones, modern Android accessibility, and Play Console setup and testing. [QA evidence](V0.11E_PROFILE_PROGRESS_QA.md) · [Delivery plan](GRIDMATES_DELIVERY_PLAN.md)
+
+## Merged QA milestone — v0.11D
 
 The launcher stays **Sudoku** and the in-app name is **GridMates: Sudoku**. Versus shows both identities and player-filled progress, with a reconnect state that retains the last known opponent. Number styles now use licensed bundled fonts under the existing cosmetic IDs. [Number font assets](GRIDMATES_FONT_ASSETS.md) · [Native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.md)
 
 The previous [v0.11C checkpoint](https://github.com/PlayerEden/SudokuTogether/tree/checkpoint/v0.11c-nearby-woodland-qa) retains open nearby joining, optional code protection and Woodland portraits. Its [exact APK receipt](V0.11C_DELIVERY_RECEIPT.md) is the reference for the 19 → 20 upgrade rehearsal. Keep earlier source and APK checkpoints for recovery. [QA update guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md)
 
-The owner reported a successful v0.11B two-phone smoke test. The current release gates include a fresh two-phone co-op and Versus pass, modern Android accessibility checks, and production signing and store setup. [Current gates and evidence](V0.11D_INTEGRATION_AND_QA.md)
+The owner reported a successful v0.11B two-phone smoke test. The v0.11D audit records the next physical co-op and Versus acceptance cases. [Current gates and evidence](V0.11D_INTEGRATION_AND_QA.md)
 
 ## Product decisions and design references
 

@@ -99,9 +99,12 @@ class DailyFinishUiTest {
         NativeWindowCapture.save(requireNotNull(captureActivity), file)
     }
     private var captureActivity: MainActivity? = null
-    private fun profile() = compose.onNodeWithTag("nav_records").performClick()
+    private fun history() {
+        compose.onNodeWithTag("nav_records").performClick()
+        compose.onNodeWithText("Game history").performScrollTo().performClick()
+    }
     @Test fun anOlderDailyKeepsItsFinishDetailsAfterItsReviewBoardIsPruned() {
-        launch(); profile()
+        launch(); history()
         compose.onNodeWithTag("daily_history_$recentDate").performScrollTo().assertIsDisplayed()
         capture("10-daily-history-normal.png")
         compose.onNodeWithText("Show all 32").performScrollTo().performClick()
@@ -143,7 +146,7 @@ class DailyFinishUiTest {
     }
     @Test fun historyDatesAndActionsFitAt200PercentOnACompactPhoneAndLandscape() {
         shell("wm size 640x1136"); shell("settings put system font_scale 2.0")
-        launch(); profile()
+        launch(); history()
         compose.onNodeWithTag("daily_history_$recentDate").performScrollTo().assertIsDisplayed()
         val layouts = mutableListOf<TextLayoutResult>()
         compose.onNodeWithText(recentDate, useUnmergedTree = true)

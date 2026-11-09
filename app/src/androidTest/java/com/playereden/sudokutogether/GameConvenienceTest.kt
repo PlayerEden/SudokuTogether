@@ -45,7 +45,11 @@ class GameConvenienceTest {
 
     @Test fun journalDestinationsAreOneTapAway() {
         compose.onNodeWithTag("nav_collection").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Player icons").assertIsSelected()
+        compose.onNodeWithText("Numbers").performScrollTo().performClick()
         compose.onNodeWithText("Number colors").assertExists()
+        compose.onNodeWithText("Number fonts").assertExists()
+        compose.onNodeWithText("Boards").performScrollTo().performClick()
         compose.onNodeWithText("Board styles").assertExists()
         compose.onNodeWithTag("nav_collection").assertIsSelected()
         compose.onNodeWithTag("nav_settings").assertIsDisplayed().performClick()
@@ -53,6 +57,7 @@ class GameConvenienceTest {
         compose.onNodeWithText("Clean pencil marks").assertExists()
         compose.onNodeWithTag("nav_settings").assertIsSelected()
         compose.onNodeWithTag("nav_records").performClick()
+        compose.onNodeWithText("Game history").performScrollTo().performClick()
         compose.onNodeWithText("DAILY HISTORY").assertExists()
         compose.onNodeWithTag("nav_play").performClick()
         compose.onNodeWithText("New puzzle").assertExists()

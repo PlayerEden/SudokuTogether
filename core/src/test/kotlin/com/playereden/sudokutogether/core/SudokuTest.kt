@@ -19,6 +19,11 @@ class SudokuTest {
         assertEquals(0, Sudoku.solutionCount(invalid))
         assertEquals(0, Sudoku.solutionCount(listOf(1, 2)))
     }
+    @Test fun boundedUniquenessRejectsAnIncompleteSearchAndAnAmbiguousBoard() {
+        assertFalse(Sudoku.hasUniqueSolutionWithin(fixture().clues, 1))
+        assertFalse(Sudoku.hasUniqueSolutionWithin(List(81) { 0 }, 100_000))
+        assertTrue(Sudoku.hasUniqueSolutionWithin(fixture().clues, 100_000))
+    }
     @Test fun onlyAFullLegalBoardPreservingCluesCompletes() {
         assertTrue(Sudoku.complete(fixture(), solution))
         assertFalse(Sudoku.complete(fixture(), fixture().clues))
