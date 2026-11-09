@@ -1,6 +1,6 @@
 # GridMates delivery plan
 
-**Current candidate · v0.11I.** **How to play → Coach practice** offers six one-move lessons, including hidden pairs and X-Wings. [v0.11I QA](V0.11I_COACH_PRACTICE_QA.md) · [v0.11H Coach](V0.11H_COACH_DEPTH_QA.md) · [v0.11G Ocean collection](V0.11G_COACH_OCEAN_QA.md#ocean)
+**Current candidate · v0.11J.** A numbered Sudoku mark, clearer Home progress, and an even Profile achievements tint follow the owner’s phone screenshots. [v0.11J audit and QA](V0.11J_FOCUSED_AUDIT_QA.md) · [v0.11I Coach practice](V0.11I_COACH_PRACTICE_QA.md) · [v0.11G Ocean collection](V0.11G_COACH_OCEAN_QA.md#ocean)
 
 [Draft PR #33](https://github.com/PlayerEden/SudokuTogether/pull/33) contains v0.11E's Profile, Collection, portable progress transfer and API 36 release preparation. The merged v0.11D QA checkpoint introduced Versus presence and bundled number styles. [v0.11D audit](V0.11D_INTEGRATION_AND_QA.md)
 
@@ -13,14 +13,14 @@ The [native rollout plan](superpowers/plans/2026-11-07-gridmates-native-rollout.
 | Gate | Status |
 | --- | --- |
 | Player profile and collection | v0.11E added Profile and Collection. v0.11G adds six Ocean portraits that use the existing completion history. [Ocean milestones](V0.11G_COACH_OCEAN_QA.md#ocean) |
-| Owner updates and transfer | The signed v0.11H to v0.11I install-over passed. The v0.11E split release build restored an exported QA file and reopened the same saved entry and pencil note. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
+| Owner updates and transfer | The signed v0.11I to v0.11J install-over passed. The v0.11E split release build restored an exported QA file and reopened the same saved entry and pencil note. [Progress transfer guide](GRIDMATES_UPDATE_AND_SAVE_PREPARATION.md) |
 | Android build and signing | The build targets API 36 and supports devices from API 26. The original production certificate was verified and the App Bundle passed local validation. |
 | Device acceptance | Finish current-build co-op and Versus on two physical phones, plus modern Android orientation, TalkBack, and Daily rollover. [LAN gate](https://github.com/PlayerEden/SudokuTogether/issues/12) |
 | Play Console | Confirm signing enrollment, listing and declarations, and run the required testing track. [Launch guide](GOOGLE_PLAY_FROM_SCRATCH_LAUNCH_GUIDE.md) |
 
 ## Product direction
 
-Keep classic Sudoku, quick offline play, thoughtful nearby multiplayer and a profile worth keeping. Use short visible labels and disclose detail when requested. “Good puzzles. Good company.” is the favored tagline candidate, suitable for share cards/store exploration; final artwork remains open. Preserve the current native palette and icon. Crossword follows Sudoku completion.
+Keep classic Sudoku, quick offline play, thoughtful nearby multiplayer and a profile worth keeping. Use short visible labels and disclose detail when requested. “Good puzzles. Good company.” is the favored tagline candidate, suitable for share cards/store exploration; final artwork remains open. Use the native palette and numbered Sudoku mark. Crossword follows Sudoku completion.
 
 ## November 5–7 playtest follow-up
 
@@ -53,7 +53,7 @@ The proposals cover additional work beyond the features in the current QA candid
 
 ## November 8 proposal review
 
-The Home screen still places the difficulty picker directly below **Continue** when a Solo puzzle is saved. A short first-use test can check whether players understand that the picker applies to **New puzzle**. The saved-puzzle caption counts givens. If players read it as their own progress, show the number of their entered squares instead. Keep the current mode tabs and Daily card during that comparison. [First-impression proposal](https://github.com/PlayerEden/SudokuTogether/blob/main/docs/GRIDMATES_HOME_FIRST_IMPRESSION_USABILITY_CONSIDERATIONS.md)
+The owner screenshot showed **Easy** on the saved puzzle and **Medium** selected directly below **Continue**. v0.11J names that picker **New puzzle difficulty** and counts entries in editable squares for the saved-puzzle caption. A first-use check on a phone can confirm that the distinction is clear. [First-impression proposal](https://github.com/PlayerEden/SudokuTogether/blob/main/docs/GRIDMATES_HOME_FIRST_IMPRESSION_USABILITY_CONSIDERATIONS.md)
 
 For board and number style pilots, compare distinct light, marine and dark palettes on the same real 9×9 sample. Compare candidate font faces using every digit and pencil marks at phone size. v0.11F already shares an equipped Co-op board while rendering each player's own entries, so new themes need an explicit display priority and contrast checks. Review a durable record of earned unlocks before relying on a larger milestone catalog. [Board and font expansion proposal](https://github.com/PlayerEden/SudokuTogether/blob/main/docs/GRIDMATES_BOARD_THEMES_AND_NUMBER_FONTS_EXPANSION.md)
 

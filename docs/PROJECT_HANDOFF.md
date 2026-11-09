@@ -4,7 +4,11 @@ Start from `main`, the canonical Android source and documentation. The [delivery
 
 The November 8 owner decision puts the offline launch first. Complete local play, device QA and Play testing before evaluating a budget for online services. Future service work starts with separately approved, invite-only friend challenges when adoption and earnings can support it. [Release and expansion gates](GRIDMATES_DELIVERY_PLAN.md#online-expansion-after-the-offline-launch)
 
-## Current candidate — v0.11I
+## Current candidate — v0.11J
+
+The launcher, Home and About use a numbered green-and-gold 3×3 mark. Home counts the player’s filled squares and labels the difficulty for the next puzzle. Profile uses an opaque achievements tint. [Focused audit and signed upgrade](V0.11J_FOCUSED_AUDIT_QA.md)
+
+## v0.11I Coach practice candidate
 
 Home’s **How to play → Coach practice** opens six replayable examples. Each exercise uses a separate board and asks for one deduction. Players can see the proof or replay the exercise. [Practice QA](V0.11I_COACH_PRACTICE_QA.md)
 
