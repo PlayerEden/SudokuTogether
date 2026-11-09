@@ -22,7 +22,7 @@ class PlaySmokeTest {
         compose.onNodeWithTag("cosmetic_emblem_tile").assertExists()
         compose.onNodeWithTag("portrait_woodland_owl").assertExists()
         compose.onNodeWithText("Boards").performScrollTo().performClick()
-        compose.onNodeWithText("Board styles").assertExists()
+        compose.onNodeWithTag("cosmetic_board_classic").assertExists()
         compose.onNodeWithText("Numbers").performScrollTo().performClick()
         compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Number fonts").assertExists()

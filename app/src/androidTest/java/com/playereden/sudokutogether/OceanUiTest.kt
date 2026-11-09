@@ -37,7 +37,7 @@ class OceanUiTest {
         compose.onNodeWithTag("portrait_ocean_octopus").performScrollTo().performClick()
         compose.runOnIdle { assertEquals("", appearance.value.portrait) }
         compose.onNodeWithText("Use icon").performClick()
-        compose.onNodeWithTag("portrait_ocean_octopus").assertIsSelected()
+        compose.onNodeWithTag("portrait_ocean_octopus").assertIsSelected().assertIsDisplayed()
         compose.onNodeWithText("Octopus · Ocean").performScrollTo().assertIsDisplayed()
     }
 }

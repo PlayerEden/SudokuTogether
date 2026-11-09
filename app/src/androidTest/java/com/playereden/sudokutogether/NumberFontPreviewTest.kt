@@ -27,7 +27,7 @@ class NumberFontPreviewTest {
         ))
         compose.setContent { SudokuTogetherTheme { SudokuApp(state.value, polishActions(), {}) } }
         compose.onNodeWithTag("nav_collection").performClick()
-        compose.onNodeWithText("Show style preview").performScrollTo().performClick()
+        compose.onNodeWithText("Style preview").performScrollTo().performClick()
         compose.onNodeWithText("Forest · Linen · Clear").performScrollTo().assertIsDisplayed()
         assertEquals(fontFor("clear"), previewDigit("1").layoutInput.style.fontFamily)
         val clue = previewDigit("2").layoutInput.style

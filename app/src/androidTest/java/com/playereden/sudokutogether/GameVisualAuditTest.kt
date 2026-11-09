@@ -76,7 +76,7 @@ class GameVisualAuditTest {
         compose.onNodeWithTag("nav_settings").performClick(); save("settings")
         compose.onNodeWithText("Clean pencil marks").performScrollTo(); save("settings-assistance")
         compose.onNodeWithTag("nav_records").performClick(); save("profile")
-        compose.onNodeWithText("Edit name").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Edit name").performScrollTo().performClick()
         compose.onNodeWithTag("player_name").performTextReplacement("Puzzle partner")
         compose.onNodeWithTag("player_name").performImeAction()
         compose.onNodeWithTag("nav_play").performClick(); save("home-portrait")

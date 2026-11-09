@@ -11,11 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.*
@@ -31,7 +34,8 @@ internal enum class ProfileSection(val title: String) {
     settingsLocked: Boolean, settingsExtra: @Composable () -> Unit
 ) {
     key(tab, section) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 16.dp),
+        val scroll = rememberScrollState()
+        Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 18.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Column(Modifier.widthIn(max = 520.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 val nested = tab == JournalTab.RECORDS && section != ProfileSection.OVERVIEW
@@ -46,7 +50,7 @@ internal enum class ProfileSection(val title: String) {
                         ProfileSection.HISTORY -> HistoryContent(state, actions)
                         ProfileSection.ACHIEVEMENTS -> AchievementsContent(state.profile.records)
                     }
-                    JournalTab.COLLECTION -> CollectionContent(state, actions)
+                    JournalTab.COLLECTION -> CollectionContent(state, actions, scroll)
                     JournalTab.SETTINGS -> SettingsContent(state, actions, help, share, settingsLocked, settingsExtra)
                 }
             }
@@ -54,7 +58,6 @@ internal enum class ProfileSection(val title: String) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable private fun ProfileOverview(
     state: GameUiState, actions: GameActions, openSection: (ProfileSection) -> Unit, collection: () -> Unit
 ) {
@@ -66,13 +69,28 @@ internal enum class ProfileSection(val title: String) {
                 Text(state.name.ifBlank { "Player" }, style = MaterialTheme.typography.titleLarge, color = Forest)
                 Text(identityStyleName(state.appearance), style = MaterialTheme.typography.bodySmall, color = Muted)
             }
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton({ draft = state.name }, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Edit name")
+            OutlinedIconButton(
+                onClick = { draft = state.name },
+                enabled = !state.busy,
+                modifier = Modifier.size(48.dp).semantics { contentDescription = "Edit name" },
+                colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = Paper, contentColor = Forest),
+                border = BorderStroke(1.dp, Rule)
+            ) {
+                GameIcon(GameSymbol.PENCIL, LocalContentColor.current, Modifier.size(20.dp))
             }
-            OutlinedButton(collection, enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Change player icon")
+        }
+        Column {
+            HorizontalDivider(color = Rule)
+            val actionColor = if (state.busy) Muted else Forest
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                    .clickable(enabled = !state.busy, role = Role.Button, onClick = collection)
+                    .heightIn(min = 48.dp).padding(horizontal = 6.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Change icon", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = actionColor)
+                GameIcon(GameSymbol.RIGHT, actionColor, Modifier.size(18.dp))
             }
         }
     }

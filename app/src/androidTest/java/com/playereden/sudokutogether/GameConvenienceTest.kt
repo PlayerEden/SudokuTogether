@@ -50,7 +50,7 @@ class GameConvenienceTest {
         compose.onNodeWithText("Number colors").assertExists()
         compose.onNodeWithText("Number fonts").assertExists()
         compose.onNodeWithText("Boards").performScrollTo().performClick()
-        compose.onNodeWithText("Board styles").assertExists()
+        compose.onNodeWithTag("cosmetic_board_classic").assertExists()
         compose.onNodeWithTag("nav_collection").assertIsSelected()
         compose.onNodeWithTag("nav_settings").assertIsDisplayed().performClick()
         compose.onNodeWithText("Touch feedback").assertExists()
