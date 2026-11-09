@@ -42,6 +42,7 @@ data class GameActions(
 ) {
     var confirmation by remember { mutableStateOf<String?>(null) }
     var helpOpen by rememberSaveable { mutableStateOf(false) }
+    var practiceOpen by rememberSaveable { mutableStateOf(false) }
     var journalTab by rememberSaveable { mutableStateOf(JournalTab.RECORDS) }
     var profileSection by rememberSaveable { mutableStateOf(ProfileSection.OVERVIEW) }
     fun journal(tab: JournalTab, section: ProfileSection = ProfileSection.OVERVIEW) {
@@ -96,8 +97,15 @@ data class GameActions(
                 Text("Co-op: share one board over the same Wi-Fi. Versus: race on private boards. Assistance is Solo-only.", color = Ink)
             }
         },
-        confirmButton = { TextButton(onClick = { helpOpen = false }) { Text("Got it") } }
+        confirmButton = { TextButton(onClick = { helpOpen = false }) { Text("Got it") } },
+        dismissButton = {
+            if (state.page == Page.HOME) {
+                TextButton(onClick = { helpOpen = false; practiceOpen = true }, enabled = !state.busy,
+                    modifier = Modifier.heightIn(min = 48.dp)) { Text("Coach practice") }
+            }
+        }
     )
+    if (practiceOpen) CoachPracticeDialog(state.appearance, state.uniformNumbers) { practiceOpen = false }
     confirmation?.let { kind ->
         val title = when (kind) { "leave" -> "Leave the room?"; "partner" -> "Replace your partner?"; else -> "Start a new puzzle?" }
         val body = when (kind) {
