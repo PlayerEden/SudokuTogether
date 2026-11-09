@@ -1,6 +1,5 @@
 package com.playereden.sudokutogether
 
-import android.view.KeyEvent
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
@@ -12,6 +11,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.playereden.sudokutogether.core.Appearance
 import com.playereden.sudokutogether.core.CoachPractice
 import java.io.File
+import java.io.FileInputStream
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -102,7 +102,10 @@ class CoachPracticeIsolationTest {
         compose.onNodeWithText("Correct").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Practice again").performScrollTo().performClick()
         compose.onNodeWithText("Try another number.").assertDoesNotExist()
-        instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+        instrumentation.uiAutomation.executeShellCommand("input keyevent 4").use { output ->
+            FileInputStream(output.fileDescriptor).use { it.readBytes() }
+        }
+        compose.waitUntil(10000) { compose.onAllNodesWithText("Coach practice").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Coach practice").assertIsDisplayed()
         compose.onNodeWithText("Home").performClick()
         assertArrayEquals(before, save.takeIf { it.isFile }?.readBytes())
