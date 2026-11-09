@@ -4,7 +4,9 @@ The full Android source, tests and design history live on `main`. [Start here](C
 
 **v0.11D QA** adds both players' identities and progress to the Versus screen, reconnect feedback, and consistent bundled number styles. The signed update uses the installed Sudoku QA app's identity. [Repository audit and upgrade evidence](docs/V0.11D_INTEGRATION_AND_QA.md)
 
-**v0.11H test candidate** adds hidden-pair and X-Wing explanations, a direct return to the suggested square and an optional one-number reveal on a stalled board. [Coach and signed upgrade evidence](docs/V0.11H_COACH_DEPTH_QA.md)
+**v0.11I test candidate** adds six one-move lessons in Coach practice. Open **How to play → Coach practice** from Home. [Practice and signed upgrade evidence](docs/V0.11I_COACH_PRACTICE_QA.md)
+
+**v0.11H** adds hidden-pair and X-Wing explanations, a direct return to the suggested square and an optional one-number reveal on a stalled board. [Coach and signed upgrade evidence](docs/V0.11H_COACH_DEPTH_QA.md)
 
 **v0.11G** adds Coach proof steps and six Ocean portraits. [QA evidence](docs/V0.11G_COACH_OCEAN_QA.md) · [Delivery plan](docs/GRIDMATES_DELIVERY_PLAN.md)
 

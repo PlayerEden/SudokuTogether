@@ -448,7 +448,7 @@ private fun roomStatusText(state: GameUiState): String {
 @Composable internal fun SudokuBoard(snapshot: Snapshot, selected: Int, partner: Int, size: Dp, select: ((Int) -> Unit)?,
     boardTheme: String, localStyle: Appearance, solo: Boolean, uniformNumbers: Boolean,
     proofTargets: Set<Int> = emptySet(), proofSources: Set<Int> = emptySet(),
-    proofEliminations: Map<Int, List<Int>> = emptyMap()) {
+    proofEliminations: Map<Int, List<Int>> = emptyMap(), announceAllCells: Boolean = false) {
     val systemScale = LocalDensity.current.fontScale.coerceAtLeast(.5f)
     // A nine-cell row has fixed space. Let surrounding controls scale freely,
     // while fitting grid glyphs and their line heights inside each square.
@@ -516,7 +516,7 @@ private fun roomStatusText(state: GameUiState): String {
                 }
                 val click = if (select == null) Modifier else Modifier.clickable(role = Role.Button) { select(i) }
                 val tag = if (select == null) "coach_cell_$i" else "cell_$i"
-                val semantics = if (select == null && !proofTarget && !proofSource) Modifier.clearAndSetSemantics {}
+                val semantics = if (select == null && !announceAllCells && !proofTarget && !proofSource) Modifier.clearAndSetSemantics {}
                     else Modifier.testTag(tag).semantics(mergeDescendants = true) {
                         contentDescription = if (crossedOff.isEmpty()) content else
                             "$content, cross off ${crossedOff.joinToString(" and ")}"

@@ -4,7 +4,11 @@ Start from `main`, the canonical Android source and documentation. The [delivery
 
 The November 8 owner decision puts the offline launch first. Complete local play, device QA and Play testing before evaluating a budget for online services. Future service work starts with separately approved, invite-only friend challenges when adoption and earnings can support it. [Release and expansion gates](GRIDMATES_DELIVERY_PLAN.md#online-expansion-after-the-offline-launch)
 
-## Current candidate — v0.11H
+## Current candidate — v0.11I
+
+Home’s **How to play → Coach practice** opens six replayable examples. Each exercise uses a separate board and asks for one deduction. Players can see the proof or replay the exercise. [Practice QA](V0.11I_COACH_PRACTICE_QA.md)
+
+## v0.11H Coach candidate
 
 Coach explains hidden pairs and X-Wings in Solo and Daily. **Go to square** returns to the selected cell, and **Reveal number** can show one verified digit on a stalled board. See the upgrade and Android checks before delivery. [Coach depth QA](V0.11H_COACH_DEPTH_QA.md) · [Word Search review](GRIDMATES_DELIVERY_PLAN.md#word-search-review)
 
