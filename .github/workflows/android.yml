@@ -45,7 +45,7 @@ jobs:
           path: |
             SudokuTogether.apk
             SudokuTogether.apk.sha256
-          retention-days: 30
+          retention-days: 14
       - name: Remove temporary signing files
         if: always()
         run: rm -rf "$RUNNER_TEMP/sudoku-signing"
