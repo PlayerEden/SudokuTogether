@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "project": "GridMates: Sudoku",
+  "status": "ART_CANDIDATE_BINARY_NOT_YET_IN_REPO",
+  "style": "gridmates_chibi_v1",
+  "intended_source": "ChatGPT-delivered GridMates_Beta2_Ocean_Woodland_8Icon_ReviewPack.zip",
+  "source_sheet_sha256": "3327785e13347eac065c0b04074a154a3f12a906838ae4423a662a57637d7c1c",
+  "source_baseline": "Farm reviewer PR #101 63 cosmetics; new artwork is staged separately",
+  "stage_target": "app/src/main/res/drawable-nodpi",
+  "items": [
+    {
+      "id": "ocean_seahorse",
+      "name": "Seahorse",
+      "family": "Ocean",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 30
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "27ee1fc261d1dc8bcf58d89b5861409eb794df3429eb3cd37b20d22b274312c6",
+      "source_zip_path": "candidate_icons/ocean_seahorse.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/ocean_seahorse.png"
+    },
+    {
+      "id": "ocean_dolphin",
+      "name": "Dolphin",
+      "family": "Ocean",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 46
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "93e1fc138abbb748736f189a6855233b67659989e78596347fa0bf6c97783565",
+      "source_zip_path": "candidate_icons/ocean_dolphin.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/ocean_dolphin.png"
+    },
+    {
+      "id": "ocean_seashell",
+      "name": "Seashell",
+      "family": "Ocean",
+      "subject_kind": "item",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 67
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "f0112f6d7b094f6e85a27afdb8d261af3d894221083e745cd7297dd4e54078d9",
+      "source_zip_path": "candidate_icons/ocean_seashell.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/ocean_seashell.png"
+    },
+    {
+      "id": "ocean_clownfish",
+      "name": "Clownfish",
+      "family": "Ocean",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 95
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "e4f3917cde1a8321c837b71ac46cad593094be6a569697e983a30cc7cdbbe088",
+      "source_zip_path": "candidate_icons/ocean_clownfish.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/ocean_clownfish.png"
+    },
+    {
+      "id": "woodland_chipmunk",
+      "name": "Chipmunk",
+      "family": "Woodland",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 16
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "1c7d2c9daa5ab1aa05876e2ff61083e8857b5158cb49feea353b413fa8c27bf7",
+      "source_zip_path": "candidate_icons/woodland_chipmunk.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/woodland_chipmunk.png"
+    },
+    {
+      "id": "woodland_beaver",
+      "name": "Beaver",
+      "family": "Woodland",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 39
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "eb0db95a9099d0a27306cb839831476e04d28ea501eb716b9a8fb5e44d995ec6",
+      "source_zip_path": "candidate_icons/woodland_beaver.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/woodland_beaver.png"
+    },
+    {
+      "id": "woodland_woodpecker",
+      "name": "Woodpecker",
+      "family": "Woodland",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 56
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "7b20ceafa81ddde09fe952c4bf26427698d813a43dc16da850528f5a16c53241",
+      "source_zip_path": "candidate_icons/woodland_woodpecker.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/woodland_woodpecker.png"
+    },
+    {
+      "id": "woodland_skunk",
+      "name": "Skunk",
+      "family": "Woodland",
+      "subject_kind": "animal",
+      "category": "portrait",
+      "unlock": {
+        "kind": "completed_puzzles",
+        "target": 90
+      },
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "sha256": "afa873bd3bb05be303787da08a698fe6dabb0786d7182cb29d5fe10b84e39b43",
+      "source_zip_path": "candidate_icons/woodland_skunk.png",
+      "intended_android_path": "app/src/main/res/drawable-nodpi/woodland_skunk.png"
+    }
+  ],
+  "notes": "New PNG files are in the conversation review ZIP, not in this GitHub branch. Never update production main directly; inspect owner phone visual results and add source-backed PNGs in isolated integrated review branch before running QA."
+}
